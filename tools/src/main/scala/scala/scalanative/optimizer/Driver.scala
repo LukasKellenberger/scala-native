@@ -21,7 +21,8 @@ object Driver {
   /** Create driver with default pipeline for this configuration. */
   def apply(config: tools.Config): Driver =
     new Impl(
-      Seq(pass.GlobalBoxingElimination,
+      Seq(pass.DynmethodLowering,
+          pass.GlobalBoxingElimination,
           pass.DeadCodeElimination,
           pass.GlobalValueNumbering,
           pass.MainInjection,
