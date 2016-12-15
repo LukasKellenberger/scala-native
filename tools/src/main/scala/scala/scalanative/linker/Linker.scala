@@ -65,7 +65,8 @@ object Linker {
 
                 // Comparing new signatures with old weak dependencies
                 newDyns
-                  .flatMap(s => weak.collect { case g if g.id == s => g })
+                  .flatMap(s =>
+                    weak.collect { case g if genSignature(g) == s => g })
                   .foreach { global =>
                     direct.push(global)
                     structuralMethods += global
@@ -90,6 +91,7 @@ object Linker {
                         fullSignature
                       }
                     }
+
                     // comparing new dependencies with all signatures
                     if (dyn(genSignature(g))) {
                       direct.push(g)
@@ -107,40 +109,85 @@ object Linker {
         val Global.Member(owner, id) = defn.name
         val defnType                 = defn.ty.asInstanceOf[Type.Function]
 
-        val ty = Type.Function(defnType.args, defnType.ret match {
+        val proxyArgs = defnType.args.map {
+          case Arg(argty, pss) => Arg(Type.box.getOrElse(argty, argty), pss)
+        }
+
+        val proxyTy = Type.Function(proxyArgs, defnType.ret match {
           case Type.Unit => Type.Unit
           case _         => Type.Class(Global.Top("java.lang.Object"))
         })
 
+        val argLabels =
+          Val.Local(fresh(), proxyArgs.head.ty) ::
+            proxyArgs.tail.map {
+              case Arg(argty, _) => Val.Local(fresh(), argty)
+            }.toList
+
         val label =
-          Inst.Label(fresh(), ty.args.map(arg => Val.Local(fresh(), arg.ty)))
+          Inst.Label(fresh(), argLabels)
+
+        println(proxyTy)
+        println(label)
+
+        val unbox = label.params.tail.map {
+          case local: Val.Local if Type.unbox.contains(local.ty) =>
+            Inst.Let(fresh(), Op.Unbox(local.ty, local))
+          case local: Val.Local =>
+            Inst.Let(fresh(), Op.Copy(local))
+        }
+
+        val method =
+          Inst.Let(fresh(), Op.Method(label.params.head, defn.name))
+
+        val callParams =
+          label.params.head ::
+            unbox
+              .zip(label.params.tail)
+              .map {
+                case (let, local) =>
+                  Val.Local(let.name, Type.unbox.getOrElse(local.ty, local.ty))
+              }
+              .toList
+
         val call =
-          Inst.Let(fresh(), Op.Call(defn.ty, label.params.head, label.params))
+          Inst.Let(
+            fresh(),
+            Op.Call(defnType, Val.Local(method.name, Type.Ptr), callParams))
 
         val box = Type.box.get(defnType.ret) match {
           case Some(boxTy) =>
             Inst
               .Let(fresh(), Op.Box(boxTy, Val.Local(call.name, defnType.ret)))
           case None =>
-            Inst
-              .Let(fresh(), Op.As(ty.ret, Val.Local(call.name, defnType.ret)))
+            Inst.Let(fresh(),
+                     Op.As(proxyTy.ret, Val.Local(call.name, defnType.ret)))
         }
-        val retInst = ty.ret match {
+        val retInst = proxyTy.ret match {
           case Type.Unit => Inst.Ret(Val.Unit)
-          case _         => Inst.Ret(Val.Local(box.name, ty.ret))
+          case _         => Inst.Ret(Val.Local(box.name, proxyTy.ret))
         }
 
         Defn.Define(
           Attrs.fromSeq(Seq(Attr.Dyn)),
-          Global.Member(owner, id + "_proxy"),
-          ty,
+          Global.Member(owner, genSignature(defn.name) + "_proxy"),
+          proxyTy,
           Seq(
-            label,
-            call,
-            box,
-            retInst
-          )
+            Seq(label),
+            unbox,
+            Seq(method, call, box, retInst)
+          ).flatten
         )
+      }
+
+      def genSignature(methodName: nir.Global): String = {
+        val fullSignature = methodName.id
+        val index         = fullSignature.lastIndexOf("_")
+        if (index != -1) {
+          fullSignature.substring(0, index)
+        } else {
+          fullSignature
+        }
       }
 
       def isReflProxy(global: Global): Boolean = false
@@ -175,16 +222,33 @@ object Linker {
         processConditional
       }
 
+      val toProxy =
+        structuralMethods
+          .foldLeft(Map[(Global, String), Global]()) {
+            case (acc, g @ Global.Member(owner, _)) =>
+              val sign = genSignature(g)
+              if (!acc.contains((owner, sign))) {
+                acc + ((owner, sign) -> g)
+              } else {
+                acc
+              }
+          }
+          .values
+
       val proxies =
-        structuralMethods.map(g =>
-          genReflProxy(defns.find(_.name == g).get.asInstanceOf[Defn.Define]))
+        toProxy.flatMap { g =>
+          defns.find(defn => defn.name == g && defn.isInstanceOf[Defn.Define]) match {
+            case Some(defn: Defn.Define) => Some(genReflProxy(defn))
+            case opt                     => None
+          }
+        }
 
       println(Shows.showDefns(proxies.toSeq))
 
       val defnss = defns.map {
         case defn @ Defn.Define(attrs, name, ty, insts)
             if structuralMethods.contains(name) =>
-          println(Shows.showDefn(defn))
+          //println(Shows.showDefn(defn))
           Defn.Define(Attrs.fromSeq(attrs.toSeq /* :+ Attr.Dyn*/ ),
                       name,
                       ty,

@@ -14,6 +14,7 @@ sealed abstract class Type {
     case _ =>
       unsupported(s"${this}.elemty($path)")
   }
+
 }
 object Type {
   sealed trait Named extends Type {
