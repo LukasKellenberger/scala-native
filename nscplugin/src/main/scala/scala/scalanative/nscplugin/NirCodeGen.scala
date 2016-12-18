@@ -905,7 +905,7 @@ abstract class NirCodeGen
 
       def genNormalDynamicCall(arrayUpdate: Boolean, focus: Focus) = {
 
-        val methodName   = if (arrayUpdate) "update_i32_class.java.lang.Object" else genSignature(genMethodName(sym))
+        val methodName   = if (arrayUpdate) "update_i32_class.java.lang.Object" else nir.Global.genSignature(genMethodName(sym))
 
         val sig =
           Type.Function(
@@ -941,16 +941,6 @@ abstract class NirCodeGen
       }
 
 
-    }
-
-    def genSignature(methodName: nir.Global): String = {
-      val fullSignature = methodName.id
-      val index = fullSignature.lastIndexOf("_")
-      if(index != -1) {
-        fullSignature.substring(0, index)
-      } else {
-        fullSignature
-      }
     }
 
     def genApply(app: Apply, focus: Focus): Focus = {
