@@ -130,7 +130,7 @@ object Shows {
     case Op.Method(value, name) =>
       sh"method $value, $name"
     case Op.Dynmethod(obj, signature) =>
-      sh"dynmethod $obj $signature"
+      sh"dynmethod $obj " + "\"" + escapeQuotes(signature) + "\""
     case Op.Module(name) =>
       sh"module $name"
     case Op.As(ty, value) =>

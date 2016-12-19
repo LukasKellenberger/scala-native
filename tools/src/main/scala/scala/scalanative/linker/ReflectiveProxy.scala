@@ -112,6 +112,8 @@ object ReflectiveProxy {
             } else {
               acc
             }
+          case (acc, _) =>
+            acc
         }
         .values
 

@@ -66,6 +66,10 @@ object Op extends Base[nir.Op] {
     P("method" ~ Val.parser ~ "," ~ Global.parser map {
       case (value, name) => nir.Op.Method(value, name)
     })
+  val Dynmethod =
+    P("dynmethod" ~ Val.parser ~ Base.stringLit map {
+      case (obj, signature) => nir.Op.Dynmethod(obj, signature)
+    })
   val Module = P("module" ~ Global.parser map (nir.Op.Module(_)))
   val As =
     P("as[" ~ Type.parser ~ "]" ~ Val.parser map {
