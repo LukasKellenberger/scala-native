@@ -1,0 +1,22 @@
+package scala.scalanative
+package optimizer
+package analysis
+
+import PerfectHashMap._
+import org.scalacheck.Properties
+import org.scalacheck.Prop.forAll
+
+object PerfectHashMapTest extends Properties("PerfectHashMap") {
+
+  property("correctness") = forAll { map: Map[String, String] =>
+    val perfectHashMap = PerfectHashMap(DynmethodPerfectHashMap.hash, map)
+
+    map.forall { case (k, v) => perfectHashMap.perfectLookup(k) == v }
+  }
+
+  property("size") = forAll { map: Map[String, String] =>
+    val perfectHashMap = PerfectHashMap(DynmethodPerfectHashMap.hash, map)
+
+    perfectHashMap.size <= map.size + 1
+  }
+}
