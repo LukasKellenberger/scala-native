@@ -52,10 +52,12 @@ object Global {
         fullSignature
       }
     if (proxy) {
-      signature + "_proxy"
+      toProxySignature(signature)
     } else {
       signature
     }
   }
+
+  def toProxySignature(signature: String) = signature + "_proxy"
 
 }

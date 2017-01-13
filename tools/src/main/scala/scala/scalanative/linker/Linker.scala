@@ -8,7 +8,8 @@ import ReflectiveProxy._
 sealed trait Linker {
 
   /** Link the whole world under closed world assumption. */
-  def link(entries: Seq[Global]): (Seq[Global], Seq[Attr.Link], Seq[Defn])
+  def link(entries: Seq[Global])
+    : (Seq[Global], Seq[Attr.Link], Seq[Defn], Seq[String])
 }
 
 object Linker {
@@ -29,7 +30,8 @@ object Linker {
           path.load(global)
       }.flatten
 
-    def link(entries: Seq[Global]): (Seq[Global], Seq[Attr.Link], Seq[Defn]) = {
+    def link(entries: Seq[Global])
+      : (Seq[Global], Seq[Attr.Link], Seq[Defn], Seq[String]) = {
       val resolved    = mutable.Set.empty[Global]
       val unresolved  = mutable.Set.empty[Global]
       val links       = mutable.Set.empty[Attr.Link]
@@ -130,7 +132,10 @@ object Linker {
 
       onComplete()
 
-      (unresolved.toSeq, links.toSeq, defnss.sortBy(_.name.toString))
+      (unresolved.toSeq,
+       links.toSeq,
+       defnss.sortBy(_.name.toString),
+       signatures.toSeq)
     }
   }
 }

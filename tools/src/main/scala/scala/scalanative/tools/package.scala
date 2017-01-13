@@ -37,24 +37,24 @@ package object tools {
   def link(config: Config,
            driver: OptimizerDriver,
            reporter: LinkerReporter = LinkerReporter.empty)
-    : (Seq[nir.Global], Seq[nir.Attr.Link], Seq[nir.Defn]) = {
+    : (Seq[nir.Global], Seq[nir.Attr.Link], Seq[nir.Defn], Seq[String]) = {
     val deps    = driver.passes.flatMap(_.depends).distinct
     val injects = driver.passes.flatMap(_.injects).distinct
     val entry =
       nir.Global.Member(config.entry, "main_class.ssnr.ObjectArray_unit")
-    val (unresolved, links, defns) =
+    val (unresolved, links, defns, dyns) =
       (linker.Linker(config, reporter)).link(entry +: deps)
 
-    (unresolved, links, defns ++ injects)
+    (unresolved, links, defns ++ injects, dyns)
   }
 
   /** Transform high-level closed world to its lower-level counterpart. */
-  def optimize(
-      config: Config,
-      driver: OptimizerDriver,
-      assembly: Seq[nir.Defn],
-      reporter: OptimizerReporter = OptimizerReporter.empty): Seq[nir.Defn] =
-    optimizer.Optimizer(config, driver, assembly, reporter)
+  def optimize(config: Config,
+               driver: OptimizerDriver,
+               assembly: Seq[nir.Defn],
+               reporter: OptimizerReporter = OptimizerReporter.empty,
+               dyns: Seq[String]): Seq[nir.Defn] =
+    optimizer.Optimizer(config, driver, assembly, reporter, dyns)
 
   /** Given low-level assembly, emit LLVM IR for it to the buildDirectory. */
   def codegen(config: Config, assembly: Seq[nir.Defn]): Unit = {
