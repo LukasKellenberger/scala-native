@@ -13,31 +13,15 @@ class DynmethodLowering(implicit fresh: Fresh, top: Top) extends Pass {
 
   override def preInst = {
     case Inst.Let(n, dyn @ Op.Dynmethod(obj, signature)) =>
-      val proxySignature = signature + "_proxy"
+      val typeptr    = Val.Local(fresh(), Type.Ptr)
+      val arrPtrPtr  = Val.Local(fresh(), Type.Ptr)
+      val arrPtr     = Val.Local(fresh(), Type.Ptr)
+      val methptrptr = Val.Local(fresh(), Type.Ptr)
 
-      val typeptr             = Val.Local(fresh(), Type.Ptr)
-      val methodCountPtr      = Val.Local(fresh(), Type.Ptr)
-      val methodCount         = Val.Local(fresh(), Type.I32)
-      val condZero            = Val.Local(fresh(), Type.Bool)
-      val condOne             = Val.Local(fresh(), Type.Bool)
-      val labelZero           = Next(fresh())
-      val labelEndZero        = Next(fresh())
-      val labelOne            = Next(fresh())
-      val labelElse           = Next(fresh())
-      val endifName           = fresh()
-      val dyndispatchTablePtr = Val.Local(fresh(), Type.Ptr)
-      val methptrptrThenn     = Val.Local(fresh(), Type.Ptr)
-      val methptrptrElsee     = Val.Local(fresh(), Type.Ptr)
-      val methptrptr          = Val.Local(fresh(), Type.Ptr)
-      val condNull            = Val.Local(fresh(), Type.Bool)
-      val labelIsNull         = Next(fresh())
-      val labelEndNull        = Next(fresh())
-
-      val tpe2 = Type.Struct(
+      val rtiType = Type.Struct(
         Global.None,
-        Seq(Type.I32,
-            Type.Ptr,
-            Type.Struct(Global.None, Seq(Type.I32, Type.Ptr, Type.Ptr))))
+        Seq(Type.I32, Type.Ptr, Type.Ptr)
+      )
 
       def throwInstrs(): Seq[Inst] = {
 
@@ -68,66 +52,47 @@ class DynmethodLowering(implicit fresh: Fresh, top: Top) extends Pass {
         )
       }
 
+      def throwIfNull(value: Val.Local): Seq[Inst] = {
+        val condNull     = Val.Local(fresh(), Type.Bool)
+        val labelIsNull  = Next(fresh())
+        val labelEndNull = Next(fresh())
+
+        Seq(
+          Seq(
+            Inst.Let(condNull.name,
+                     Op.Comp(Comp.Ieq, Type.Ptr, value, Val.Null)),
+            Inst.If(condNull, labelIsNull, labelEndNull),
+            Inst.Label(labelIsNull.name, Seq())
+          ),
+          throwInstrs(),
+          Seq(
+            Inst.Label(labelEndNull.name, Seq())
+          )
+        ).flatten
+      }
+
+      val methodIndex =
+        top.dyns.zipWithIndex.find(s => s._1 == signature).get._2
+
       Seq(
         Seq( // Load the type information pointer
           Inst.Let(typeptr.name, Op.Load(Type.Ptr, obj)),
-          // Load the pointer of the table size
-          Inst.Let(
-            methodCountPtr.name,
-            Op.Elem(tpe2, typeptr, Seq(Val.I32(0), Val.I32(2), Val.I32(0)))),
-          // Load the table size
-          Inst.Let(methodCount.name, Op.Load(Type.I32, methodCountPtr)),
-          Inst.Let(
-            condZero.name,
-            Op.Comp(Comp.Ieq, Type.I32, methodCount, Val.I32(0))
-          ),
-          Inst.If(condZero, labelZero, labelEndZero),
-          Inst.Label(labelZero.name, Seq())
+          Inst.Let(arrPtrPtr.name,
+                   Op.Elem(rtiType, typeptr, Seq(Val.I32(0), Val.I32(2)))),
+          Inst.Let(arrPtr.name, Op.Load(Type.Ptr, arrPtrPtr))
         ),
-        throwInstrs(),
+        // Test if ptr is null
+        throwIfNull(arrPtr),
         Seq(
-          Inst.Label(labelEndZero.name, Seq()),
-          // Test if size is 1
           Inst.Let(
-            condOne.name,
-            Op.Comp(Comp.Ieq, Type.I32, methodCount, Val.I32(1))
-          ),
-          Inst.If(condOne, labelOne, labelElse),
-          Inst.Label(labelOne.name, Seq()),
-          // If size is 1, method pointer is in the second place of the struct, no need the call C function
-          Inst.Let(
-            methptrptrThenn.name,
-            Op.Elem(tpe2, typeptr, Seq(Val.I32(0), Val.I32(2), Val.I32(1)))),
-          Inst.Jump(
-            Next.Label(endifName,
-                       Seq(Val.Local(methptrptrThenn.name, Type.Ptr)))),
-          Inst.Label(labelElse.name, Seq()),
-          // If the size is greater than 1, call the C function "scalanative_dyndispatch"
-          // with the signature and it's length as argument
-          Inst.Let(
-            dyndispatchTablePtr.name,
-            Op.Elem(tpe2, typeptr, Seq(Val.I32(0), Val.I32(2), Val.I32(0)))),
-          Inst.Let(methptrptrElsee.name,
-                   Op.Call(dyndispatchSig,
-                           dyndispatch,
-                           Seq(dyndispatchTablePtr,
-                               Val.Const(Val.Chars(proxySignature)),
-                               Val.I32(proxySignature.length)))),
-          Inst.Jump(
-            Next.Label(endifName,
-                       Seq(Val.Local(methptrptrElsee.name, Type.Ptr)))),
-          Inst.Label(endifName, Seq(methptrptr)),
-          Inst.Let(n, Op.Load(Type.Ptr, methptrptr)),
-          Inst.Let(
-            condNull.name,
-            Op.Comp(Comp.Ieq, Type.Ptr, Val.Local(n, Type.Ptr), Val.Null)),
-          Inst.If(condNull, labelIsNull, labelEndNull),
-          Inst.Label(labelIsNull.name, Seq())
+            methptrptr.name,
+            Op.Elem(Type.Struct(Global.None, top.dyns.map(_ => Type.Ptr)),
+                    arrPtr,
+                    Seq(Val.I32(0), Val.I32(methodIndex)))),
+          Inst.Let(n, Op.Load(Type.Ptr, methptrptr))
         ),
-        throwInstrs(),
-        Seq(
-          Inst.Label(labelEndNull.name, Seq())
-        )
+        //Test if ptr is null
+        throwIfNull(Val.Local(n, Type.Ptr))
       ).flatten
 
   }
@@ -137,18 +102,9 @@ object DynmethodLowering extends PassCompanion {
   def apply(config: tools.Config, top: Top): Pass =
     new DynmethodLowering()(top.fresh, top)
 
-  val dyndispatchName = Global.Top("scalanative_dyndispatch")
-  val dyndispatchSig =
-    Type.Function(Seq(Arg(Type.Ptr), Arg(Type.Ptr), Arg(Type.I32)), Type.Ptr)
-  val dyndispatch = Val.Global(dyndispatchName, dyndispatchSig)
-
   val excptnGlobal = Global.Top("java.lang.NoSuchMethodException")
   val excptnInitGlobal =
     Global.Member(excptnGlobal, "init_class.java.lang.String")
-
-  override val injects = Seq(
-    Defn.Declare(Attrs.None, dyndispatchName, dyndispatchSig)
-  )
 
   override def depends: Seq[Global] = Seq(excptnGlobal, excptnInitGlobal)
 }
