@@ -38,7 +38,7 @@ addCommandAlias(
 )
 
 lazy val gcSettings = Seq(
-  nativeGC := BoehmGC
+  nativeGC := MarkAndSweepGC
 )
 
 lazy val publishSnapshot =

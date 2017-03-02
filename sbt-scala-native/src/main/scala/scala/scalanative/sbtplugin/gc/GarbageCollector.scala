@@ -32,3 +32,4 @@ case class GarbageCollector(name: String, links: Seq[String] = Nil) {
 
 final object NoGC extends GarbageCollector("nogc")
 final object BoehmGC extends GarbageCollector("boehm", Seq("gc"))
+final object MarkAndSweepGC extends GarbageCollector("markandsweep", Seq())
