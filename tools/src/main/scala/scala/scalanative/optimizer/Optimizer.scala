@@ -47,6 +47,26 @@ object Optimizer {
           case _              => util.unreachable
         }
       }
+
+      val modules = buf.filter {
+        case _: Defn.Module => true
+        case _ => false
+      }
+
+      val moduleArrayName = Global.Top("__MODULES__")
+      val moduleArraySizeName = Global.Top("__MODULES_SIZE__")
+      val moduleArray = Val.Array(Type.Ptr, modules.map {
+        case Defn.Module(_, clsName, _, _) =>
+        Val.Global(clsName member "value", Type.Ptr)
+      })
+      val moduleArrayVar =
+        Defn.Var(Attrs.None, moduleArrayName, Type.Array(Type.Ptr, modules.size), moduleArray)
+
+      val moduleArraySizeVar =
+        Defn.Var(Attrs.None, moduleArraySizeName, Type.Int, Val.Int(modules.size))
+
+      buf += moduleArrayVar
+      buf += moduleArraySizeVar
       buf
     }
 

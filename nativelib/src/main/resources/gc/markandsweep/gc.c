@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include "bitmap.h"
 #include "linked_list.h"
+#include <assert.h>
 
 #define UNW_LOCAL_ONLY
 
@@ -16,7 +17,7 @@
 
 FreeList* free_list = NULL;
 
-#define CHUNK 256*1024
+#define CHUNK 256*1024*1024
 
 #define DEBUG
 
@@ -25,10 +26,16 @@ word_t* heap_start = NULL;
 word_t* heap_end = NULL;
 
 long count = 0;
+long count2 = 0;
+
+extern word_t** __MODULES__;
+extern int __MODULES_SIZE__;
 
 inline static int in_heap(word_t* block) {
     return block >= heap_start && block < heap_end;
 }
+
+void memory_check();
 
 void _mark(word_t* block) {
     bitmap_clear_bit(free_list->bitmap, block);
@@ -43,6 +50,8 @@ void _mark(word_t* block) {
         if(in_heap(field_addr)) {
             if (bitmap_get_bit(free_list->bitmap, field_addr)) {
                 mark(field_addr);
+            } else {
+                count2++;
             }
         }
     }
@@ -58,6 +67,7 @@ void mark(word_t* block) {
     if (bitmap_get_bit(free_list->bitmap, block) && tag == tag_allocated) {
         _mark(block);
     } else {
+        count2++;
         /*word_t* start = free_list->list->start
         //printf("could be inner pointer\n");
         word_t* current = block;
@@ -93,7 +103,7 @@ void mark_roots() {
         unw_word_t p = rsp;
         while(p < rbp) {
             word_t* pp = *(word_t**)p;
-            if(in_heap(pp)) {
+            if(in_heap(pp - 1)) {
                 mark(pp - 1);
                 p += 4;
             } else {
@@ -102,42 +112,54 @@ void mark_roots() {
         }
     }
 
-    /*word_t** module = __modules__;
-    int nb_modules = __modules_size__;
+    word_t** module = __MODULES__;
+    int nb_modules = __MODULES_SIZE__;
 
     for(int i=0; i < nb_modules; i++) {
         word_t* addr = module[i] - 1;
-        //printf("mark module %p\n", addr);
-        fflush(stdout);
         if(in_heap(addr)) {
+            //printf("mark module %p\n", addr);
+            //fflush(stdout);
             mark(addr);
         }
-    }*/
+    }
 }
 
 void sweep() {
     word_t* current = free_list->list->start;
     word_t* previous_list_elem = NULL;
 
+    assert(current + header_unpack_size(current) <= free_list->list->start + free_list->list->size/sizeof(word_t));
+
+
     free_list->list->first = NULL;
 
     word_t* end = free_list->list->start + (free_list->list->size / sizeof(word_t));
 
-    while(current < end) {
+    size_t total = 0;
+    size_t heap_size = free_list->list->size / sizeof(word_t);
 
-        size_t size = header_unpack_size(current) ;
+    while(current < end) {
+        size_t previous_size = previous_list_elem == NULL ? 0 : header_unpack_size(previous_list_elem);
+        size_t size = header_unpack_size(current);
         //Bit set means that it was not mark and thus not reachable, add it to free_list
         if(bitmap_get_bit(free_list->bitmap, current)) {
             #if defined(DEBUG)
                 memset(current+1, 0, size * sizeof(word_t));
             #endif
             previous_list_elem = free_list_add_block(free_list, current, previous_list_elem);
+             if(previous_list_elem != NULL) {
+                total += header_unpack_size(previous_list_elem) + 1;
+                assert(size == header_unpack_size(previous_list_elem) || size + previous_size + 1 == header_unpack_size(previous_list_elem));
+             }
         } else {
-            //printf("not add block %zu\n", unpack_size(current));
             bitmap_set_bit(free_list->bitmap, current);
         }
         size_t current_size_h = size + 1;
         current += current_size_h;
+
+        //assert(total <= heap_size);
+
     }
 
     //free_list_print(free_list);
@@ -166,15 +188,21 @@ void* scalanative_alloc_raw(size_t size) {
         scalanative_collect();
         block = free_list_get_block(free_list, size_with_header);
         if(block == NULL) {
+            free_list_print(free_list);
+            printf("size: %zu\n", size);
             printf("No more memory available\n");
             fflush(stdout);
             exit(1);
         }
+        memset(block+1, 0, size);
         return block + 1;
     }
     //free_list_print(free_list);
     //bitmap_print(bitmap, 1000);
     //printf("*** END ALLOC ***\n");
+
+    assert(block + header_unpack_size(block) < heap_end);
+    memset(block+1, 0, size);
 
     return block + 1;
 }
@@ -194,27 +222,50 @@ void* alloc(size_t size) {
 }
 
 void scalanative_collect() {
+    memory_check();
     count = 0;
-    printf("\n\n### START GC ###\n");
-    free_list_print_stats(free_list);
-    free_list_print(free_list);
+    count2 = 0;
+    //printf("\n\n### START GC ###\n");
+    //free_list_print_stats(free_list);
+    //free_list_print(free_list);
     //print_memory(free_list);
-    fflush(stdout);
-    /*size_t size = CHUNK * sizeof(word_t);
-    unsigned long nb_words = (size + BITS_PER_WORD - 1) / BITS_PER_WORD;
-    memcpy(bitmap_copy, bitmap, nb_words * sizeof(word_t));*/
+    //fflush(stdout);
 
     mark_roots();
     //free_list_print(free_list);
     //bitmap_print(bitmap, 1000);
     //print_mem();
     sweep();
-    free_list_print(free_list);
-    free_list_print_stats(free_list);
-    printf("count: %ld\n", count);
-    printf("### END GC ###\n");
-    fflush(stdout);
+    //free_list_print(free_list);
+    //free_list_print_stats(free_list);
+    //printf("count: %ld\n", count);
+    //printf("inner ptrs: %ld\n", count2);
+
+    //printf("### END GC ###\n");
+    //fflush(stdout);
+    //memory_check();
+
 
     //free_list_print(free_list);
     //print_mem();
+}
+
+void memory_check() {
+    Bitmap* bitmap = free_list->bitmap;
+    word_t* current = bitmap->offset;
+    word_t* previous = NULL;
+    size_t previous_size = 0;
+
+    for(int i=0; i < bitmap->size / sizeof(word_t); i++) {
+        if(bitmap_get_bit(bitmap, current)) {
+            if(previous != NULL) {
+                assert(previous + previous_size + 1 == current);
+            } else {
+                assert(current == bitmap->offset);
+            }
+            previous_size = header_unpack_size(current);
+            previous = current;
+        }
+        current += 1;
+    }
 }
