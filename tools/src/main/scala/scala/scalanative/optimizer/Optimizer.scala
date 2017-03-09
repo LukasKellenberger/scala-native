@@ -19,7 +19,7 @@ object Optimizer {
   }
 
   private def partition(defns: Seq[Defn]) = {
-    val batches = java.lang.Runtime.getRuntime.availableProcessors * 4
+    val batches = 1 //java.lang.Runtime.getRuntime.availableProcessors * 4
     defns.groupBy { defn =>
       Math.abs(System.identityHashCode(defn)) % batches
     }
@@ -48,25 +48,6 @@ object Optimizer {
         }
       }
 
-      val modules = buf.filter {
-        case _: Defn.Module => true
-        case _ => false
-      }
-
-      val moduleArrayName = Global.Top("__MODULES__")
-      val moduleArraySizeName = Global.Top("__MODULES_SIZE__")
-      val moduleArray = Val.Array(Type.Ptr, modules.map {
-        case Defn.Module(_, clsName, _, _) =>
-        Val.Global(clsName member "value", Type.Ptr)
-      })
-      val moduleArrayVar =
-        Defn.Var(Attrs.None, moduleArrayName, Type.Array(Type.Ptr, modules.size), moduleArray)
-
-      val moduleArraySizeVar =
-        Defn.Var(Attrs.None, moduleArraySizeName, Type.Int, Val.Int(modules.size))
-
-      buf += moduleArrayVar
-      buf += moduleArraySizeVar
       buf
     }
 

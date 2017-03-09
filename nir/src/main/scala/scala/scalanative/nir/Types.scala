@@ -17,6 +17,13 @@ sealed abstract class Type {
   }
 
   final def show: String = nir.Show(this)
+
+  def isPtr: Boolean = this match {
+    case Type.Nothing | Type.Ptr | _: Type.Trait | _: Type.Module |
+        _: Type.Class =>
+      true
+    case _ => false
+  }
 }
 
 object Type {

@@ -17,7 +17,7 @@
 
 FreeList* free_list = NULL;
 
-#define CHUNK 256*1024*1024
+#define CHUNK 512*1024*1024
 
 #define DEBUG
 
@@ -33,12 +33,13 @@ long count3 = 0;
 
 extern word_t** __MODULES__;
 extern int __MODULES_SIZE__;
+extern int __OBJECT_ARRAY_ID__;
 
 inline static int in_heap(word_t* block) {
     return block >= heap_start && block < heap_end;
 }
 
-void memory_check();
+void memory_check(int print);
 void mark(word_t* block);
 
 void mark_inner(word_t* inner_ptr) {
@@ -61,45 +62,48 @@ void _mark(word_t* block) {
 
 
     Rtti rtti = *((Rtti*) *(block+1));
-    //printf("%p\n", block);
-    //printf("#### id: %d\n", rtti.id);
-    /*printf("##### rtti size %lld\n", rtti.size);
+    /*printf("%p\n", block);
+    printf("#### id: %d\n", rtti.id);
+    printf("##### rtti size %lld\n", rtti.size);
     printf("### offset: %p\n", rtti.ptr_map);
     fflush(stdout);*/
 
-    size_t size = header_unpack_size(block);
-    assert(size < heap_end - heap_start);
+    if(rtti.id == __OBJECT_ARRAY_ID__) {
+        size_t size = header_unpack_size(block);
+        assert(size < heap_end - heap_start);
 
-    /*int64_t* ptr_map = rtti.ptr_map;
-    int i=0;
-    while(ptr_map[i] != -1) {
-        assert(ptr_map[i] % 8 == 0);
-        word_t field = block[ptr_map[i]/sizeof(word_t) + 1];
-        word_t* field_addr = (word_t*)field - 1;
-        if(in_heap(field_addr)) {
-            if (bitmap_get_bit(free_list->bitmap, field_addr)) {
-                mark(field_addr);
-            } else {
-                count2++;
+        for (int i = 0; i < size - 1; i++) {
+            word_t field = block[i + 2];
+            word_t* field_addr = (word_t*)field-1;
+            if(in_heap(field_addr)) {
+                if (bitmap_get_bit(free_list->bitmap, field_addr)) {
+                    mark(field_addr);
+                } else if(!bitmap_get_bit(bitmap_copy, block)) {
+                    count2++;
+                    mark_inner(field_addr);
+                } else {
+                    count3++;
+                }
             }
         }
-        ++i;
-    }*/
-
-
-
-    for (int i = 0; i < size - 1; i++) {
-        word_t field = block[i + 2];
-        word_t* field_addr = (word_t*)field-1;
-        if(in_heap(field_addr)) {
-            if (bitmap_get_bit(free_list->bitmap, field_addr)) {
-                mark(field_addr);
-            } else if(!bitmap_get_bit(bitmap_copy, block)) {
-                count2++;
-                mark_inner(field_addr);
-            } else {
-                count3++;
+    } else {
+        int64_t* ptr_map = rtti.ptr_map;
+        int i=0;
+        while(ptr_map[i] != -1) {
+            assert(ptr_map[i] % 8 == 0);
+            word_t field = block[ptr_map[i]/sizeof(word_t) + 1];
+            word_t* field_addr = (word_t*)field - 1;
+            if(in_heap(field_addr)) {
+                if (bitmap_get_bit(free_list->bitmap, field_addr)) {
+                    mark(field_addr);
+                } else if(!bitmap_get_bit(bitmap_copy, block))  {
+                    count2++;
+                    mark_inner(field_addr);
+                } else {
+                    count3++;
+                }
             }
+            ++i;
         }
     }
 }
@@ -114,7 +118,7 @@ void mark(word_t* block) {
         count++;
         _mark(block);
     } else if(!bitmap_get_bit(bitmap_copy, block)) {
-        printf("inner ptr\n");
+        //printf("inner ptr\n");
         count2++;
         mark_inner(block);
     } else {
@@ -161,12 +165,12 @@ void mark_roots_stack(unw_cursor_t* cursor) {
         /*printf("rsp: %p\n", rsp);
         printf("rbp: %p\n", rbp);
         printf("top: %p\n", top);
-        printf("bottom: %p\n", bottom);*/
+        printf("bottom: %p\n", bottom);
+        fflush(stdout);*/
 
         char sym[256];
         //unw_get_proc_name(cursor, sym, sizeof(sym), &offset);
         //printf(" (%s+0x%lx)\n", sym, offset);
-        //fflush(stdout);
 
         if(top == 0 || rsp < top) {
             top = rsp;
@@ -217,51 +221,49 @@ void mark_roots() {
     mark_roots_modules();
 }
 
+inline int current_merge(word_t* current, word_t* previous, size_t previous_size_with_header) {
+    return previous + previous_size_with_header == current && bitmap_get_bit(free_list->bitmap, current);
+}
+
 void sweep() {
-    word_t* current = free_list->list->start;
-    word_t* previous_list_elem = NULL;
+    word_t* current = free_list->list[0]->start;
+    size_t current_size_with_header = 0;//header_unpack_size(current);
+    word_t* growing = NULL;
+    size_t growing_size_with_header = 0;
 
-    assert(current + header_unpack_size(current) <= free_list->list->start + free_list->list->size/sizeof(word_t));
-
-
-    free_list->list->first = NULL;
-
-    word_t* end = free_list->list->start + (free_list->list->size / sizeof(word_t));
-
-    size_t total = 0;
-    size_t heap_size = free_list->list->size / sizeof(word_t);
+    free_list_clear_lists(free_list);
+    word_t* end = free_list->list[0]->start + (free_list->size / sizeof(word_t));
 
     while(current < end) {
-        size_t previous_size = previous_list_elem == NULL ? 0 : header_unpack_size(previous_list_elem);
-        size_t size = header_unpack_size(current);
-        //Bit set means that it was not mark and thus not reachable, add it to free_list
-        if(bitmap_get_bit(free_list->bitmap, current)) {
-            #if defined(DEBUG)
-                memset(current+1, 0, size * sizeof(word_t));
-            #endif
-            previous_list_elem = free_list_add_block(free_list, current, previous_list_elem);
-             if(previous_list_elem != NULL) {
-                total += header_unpack_size(previous_list_elem) + 1;
-                assert(size == header_unpack_size(previous_list_elem) || size + previous_size + 1 == header_unpack_size(previous_list_elem));
-             }
-        } else {
+        current_size_with_header = header_unpack_size(current) + 1;
+        if(!bitmap_get_bit(free_list->bitmap, current)) {
             bitmap_set_bit(free_list->bitmap, current);
+            if(growing != NULL) {
+                free_list_add_block(free_list, growing, growing_size_with_header - 1);
+                growing = NULL;
+            }
+        } else {
+            if(growing == NULL) {
+                growing = current;
+                growing_size_with_header = current_size_with_header;
+            } else {
+                growing_size_with_header += current_size_with_header;
+                bitmap_clear_bit(free_list->bitmap, current);
+            }
+
         }
-        size_t current_size_h = size + 1;
-        current += current_size_h;
-
-        //assert(total <= heap_size);
-
+        current += current_size_with_header;
     }
-
-    //free_list_print(free_list);
+    if(growing != NULL) {
+        free_list_add_block(free_list, growing, growing_size_with_header - 1);
+    }
 }
 
 void scalanative_init() {
     free_list = free_list_create(CHUNK);
-    LinkedList* linkedList = free_list->list;
+    LinkedList* linkedList = free_list->list[0];
     heap_start = linkedList->start;
-    heap_end = heap_start + (linkedList->size / sizeof(word_t));
+    heap_end = heap_start + (free_list->size / sizeof(word_t));
 
     Bitmap* bitmap = free_list->bitmap;
     bitmap_copy = bitmap_alloc(bitmap->size, bitmap->offset);
@@ -269,19 +271,22 @@ void scalanative_init() {
 
 
 void* scalanative_alloc_raw(size_t size) {
-    size = (size + 16 - 1 ) / 16 * 16;
+    size = (size + 8 - 1 ) / 8 * 8;
     if(free_list == NULL) {
         scalanative_init();
     }
 
-    size_t size_with_header = size + sizeof(word_t);
+    //printf("*** ALLOC size: %zu ***\n", size / sizeof(word_t));
+    //memory_check(0);
 
-    //printf("*** ALLOC size: %zu ***\n", size_with_header);
+    //free_list_print(free_list);
+    word_t* block = free_list_get_block(free_list, size);
+    //free_list_print(free_list);
+    //memory_check(0);
 
-    word_t* block = free_list_get_block(free_list, size_with_header);
     if(block == NULL) {
         scalanative_collect();
-        block = free_list_get_block(free_list, size_with_header);
+        block = free_list_get_block(free_list, size);
         if(block == NULL) {
             free_list_print(free_list);
             printf("size: %zu\n", size);
@@ -289,7 +294,7 @@ void* scalanative_alloc_raw(size_t size) {
             fflush(stdout);
             exit(1);
         }
-        memset(block+1, 0, size);
+        memset(block + 1, 0, size);
         return block + 1;
     }
     //free_list_print(free_list);
@@ -317,11 +322,11 @@ void* alloc(size_t size) {
 }
 
 void scalanative_collect() {
-    memory_check();
+    //memory_check(0);
     bitmap_clone(free_list->bitmap, bitmap_copy);
-    count = 0;
+    /*count = 0;
     count2 = 0;
-    count3 = 0;
+    count3 = 0;*/
     printf("\n\n### START GC ###\n");
 
 
@@ -329,28 +334,29 @@ void scalanative_collect() {
     //free_list_print(free_list);
     //print_memory(free_list);
     fflush(stdout);
+    //bitmap_print(free_list->bitmap);
 
     mark_roots();
     //free_list_print(free_list);
-    //bitmap_print(bitmap, 1000);
     //print_mem();
     sweep();
     //free_list_print(free_list);
+    //bitmap_print(free_list->bitmap);
     //free_list_print_stats(free_list);
-    printf("count: %ld\n", count);
+    /*printf("count: %ld\n", count);
     printf("inner ptrs: %ld\n", count2);
-    printf("else ptrs: %ld\n", count3);
+    printf("else ptrs: %ld\n", count3);*/
 
     printf("### END GC ###\n");
     fflush(stdout);
-    //memory_check();
+    //memory_check(0);
 
 
     //free_list_print(free_list);
     //print_mem();
 }
 
-void memory_check() {
+void memory_check(int print) {
     Bitmap* bitmap = free_list->bitmap;
     word_t* current = bitmap->offset;
     word_t* previous = NULL;
@@ -358,12 +364,19 @@ void memory_check() {
 
     for(int i=0; i < bitmap->size / sizeof(word_t); i++) {
         if(bitmap_get_bit(bitmap, current)) {
+            size_t size = header_unpack_size(current);
+            if(header_unpack_tag(current) == tag_allocated && print) {
+                printf("|A %p %zu", current, size);
+            } else if(header_unpack_tag(current) == tag_free && print) {
+                printf("|F %p %zu", current, size);
+            }
+            fflush(stdout);
             if(previous != NULL) {
                 assert(previous + previous_size + 1 == current);
             } else {
                 assert(current == bitmap->offset);
             }
-            previous_size = header_unpack_size(current);
+            previous_size = size;
             previous = current;
         }
         current += 1;

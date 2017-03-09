@@ -1,10 +1,23 @@
 package scala.scalanative.optimizer.analysis
 
-import scala.scalanative.nir.Type
+import scala.scalanative.nir.{Type, Val}
 import scala.scalanative.optimizer.analysis.MemoryLayout.PositionedType
 import scala.scalanative.util.unsupported
 
-final case class MemoryLayout(size: Long, tys: List[PositionedType])
+final case class MemoryLayout(size: Long, tys: List[PositionedType]) {
+  lazy val offsetArray: Seq[Val] = {
+    val ptrOffsets =
+      tys.collect {
+        case MemoryLayout.Tpe(_, offset, tpe) if tpe.isPtr => Val.Long(offset)
+      }.tail
+
+    /*val offsetVals = (ptrOffsets, 0L :: ptrOffsets).zipped.map {
+      case (previous, current) => Val.Long(previous - current)
+    } :+ Val.Long(-1)*/
+
+    ptrOffsets :+ Val.Long(-1)
+  }
+}
 
 object MemoryLayout {
 
