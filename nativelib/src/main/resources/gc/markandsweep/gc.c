@@ -226,13 +226,13 @@ inline int current_merge(word_t* current, word_t* previous, size_t previous_size
 }
 
 void sweep() {
-    word_t* current = free_list->list[0]->start;
-    size_t current_size_with_header = 0;//header_unpack_size(current);
+    word_t* current = free_list->start;
+    size_t current_size_with_header = 0;
     word_t* growing = NULL;
     size_t growing_size_with_header = 0;
 
     free_list_clear_lists(free_list);
-    word_t* end = free_list->list[0]->start + (free_list->size / sizeof(word_t));
+    word_t* end = free_list->start + (free_list->size / sizeof(word_t));
 
     while(current < end) {
         current_size_with_header = header_unpack_size(current) + 1;
@@ -262,7 +262,7 @@ void sweep() {
 void scalanative_init() {
     free_list = free_list_create(CHUNK);
     LinkedList* linkedList = free_list->list[0];
-    heap_start = linkedList->start;
+    heap_start = free_list->start;
     heap_end = heap_start + (free_list->size / sizeof(word_t));
 
     Bitmap* bitmap = free_list->bitmap;

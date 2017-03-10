@@ -18,14 +18,6 @@ inline static int size_to_linked_list(size_t size) {
     }
 }
 
-int check_list(FreeList* free_list, LinkedList* list) {
-    word_t* start = free_list->list[0]->start;
-    word_t* end = start + free_list->size / sizeof(word_t);
-    int first = list->first == NULL || (list->first >= start && list->first < end);
-    int last = list->last == NULL || (list->last >= start && list->last < end);
-    return first && last;
-}
-
 FreeList* free_list_create(size_t size) {
     FreeList* free_list = malloc(sizeof(FreeList));
 
@@ -34,10 +26,11 @@ FreeList* free_list_create(size_t size) {
 
     free_list->bitmap = bitmap_alloc(size, words);
     free_list->size = size;
+    free_list->start = words;
 
 
     for(int i=0; i < LINKED_LIST_NUMBER; i++) {
-        free_list->list[i] = linked_list_create(size, words);
+        free_list->list[i] = linked_list_create(size);
     }
 
     linked_list_add_block(free_list->list[size_to_linked_list(nb_words)], words, nb_words - 1);
@@ -50,7 +43,6 @@ void free_list_add_block(FreeList* list, word_t* block, size_t block_size) {
     // block-size is without header, size_to_linked_list with header
     const int list_index = size_to_linked_list(block_size + 1);
     linked_list_add_block(list->list[list_index], block, block_size);
-    //check_list(list, list->list[list_index]);
 }
 
 /*
@@ -148,7 +140,7 @@ word_t* free_list_get_block(FreeList* list, size_t size) {
             return block;
         }
     } else {
-        while(list_index < LINKED_LIST_NUMBER - 1 && (block = list->list[list_index]->first) == NULL) {
+        while(list_index < LINKED_LIST_NUMBER - 1 && (block = (word_t*)(list->list[list_index]->first)) == NULL) {
             ++list_index;
         }
 

@@ -9,18 +9,18 @@
 #ifndef LINKED_LIST_H
 #define LINKED_LIST_H
 
+
 typedef struct {
-    word_t* start;
-    word_t* first;
-    word_t* last;
+    Block* first;
+    Block* last;
 } LinkedList;
 
-#define LIST_END 0LLU
+#define LIST_END NULL
 
 
 typedef struct {
-    word_t* block;
-    word_t* previous;
+    Block* block;
+    Block* previous;
 } BestMatch;
 
 /**
@@ -30,29 +30,24 @@ typedef struct {
  * @param size of the first block
  * @return pointer to the Linkedlist
  */
-LinkedList* linked_list_create(size_t size, word_t* start);
+LinkedList* linked_list_create(size_t size);
 
 /**
  * Adds a block to the end of the list, does not merge blocks.
  */
-void linked_list_add_block(LinkedList* list, word_t* block, size_t block_size);
+void linked_list_add_block(LinkedList* list, Block* block, size_t block_size);
 
 /**
  * Removes the block `block` from the linked list
  */
-void linked_list_remove_block(LinkedList* list, word_t* block, size_t size, word_t* previous);
-
-/**
- * Returns the next block after `block` in the linked list
- */
-word_t* linked_list_next(LinkedList* list, word_t* block);
+void linked_list_remove_block(LinkedList* list, Block* block, size_t size, Block* previous);
 
 /**
  * Prints the linked list
  */
 void linked_list_print(LinkedList* list);
 
-void linked_list_split_block(LinkedList* list, word_t* block, size_t size);
+void linked_list_split_block(LinkedList* list, Block* block, size_t size);
 
 
 BestMatch linked_list_find_block(LinkedList* list, size_t size);

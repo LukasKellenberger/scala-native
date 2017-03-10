@@ -8,76 +8,51 @@
 #include "linked_list.h"
 
 
-inline static word_t addr_p_to_v(LinkedList* list, word_t* p_addr) {
-    word_t diff = p_addr - list->start;
-    return diff;
+LinkedList* linked_list_create(size_t size) {
+    return malloc(sizeof(LinkedList));
 }
 
-inline static word_t* addr_v_to_p(LinkedList* list, word_t addr) {
-    return list->start + addr;
-}
+void linked_list_add_block(LinkedList* list, Block* block, size_t block_size) {
+    block->header.size = block_size;
+    block->header.tag = tag_free;
 
-LinkedList* linked_list_create(size_t size, word_t* start) {
-    assert(size % sizeof(word_t) == 0);
-    unsigned long nb_words = size / sizeof(word_t);
-    assert(nb_words > 1);
-
-    LinkedList* linked_list = malloc(sizeof(LinkedList));
-    linked_list->start = start;
-
-    header_pack(start, nb_words - 1, tag_free);
-
-    return linked_list;
-}
-
-void linked_list_add_block(LinkedList* list, word_t* block, size_t block_size) {
-    header_pack(block, block_size, tag_free);
     assert(block_size >= 1);
 
     if(list->first == NULL) {
         list->first = block;
     } else {
-        list->last[1] = addr_p_to_v(list, block);
+        list->last->next = block;
     }
-    block[1] = LIST_END;
+    node->next = LIST_END;
     list->last = block;
 }
-void linked_list_remove_block(LinkedList* list, word_t* block, size_t block_size, word_t* previous) {
+void linked_list_remove_block(LinkedList* list, Block* block, size_t block_size, Block* previous) {
     assert(block != NULL);
-    word_t next = block[1];
+
+    Block* next = block->next;
+
     if (list->first == block) {
         // If the block is the first element of the list
-        list->first = next == LIST_END ? NULL : addr_v_to_p(list, next);
+        list->first = next == LIST_END ? LIST_END : next;
     } else {
-        previous[1] = next;
+        previous->next = next;
     }
 
     if(list->last == block) {
-        list->last = next == LIST_END ? previous : addr_v_to_p(list, next);
+        list->last = next == LIST_END ? previous : next;
     }
 
-    header_pack(block, block_size, tag_allocated);
-}
-word_t* linked_list_next(LinkedList* list, word_t* block) {
-    assert(block != NULL);
-
-    if(block == NULL) {
-        return NULL;
-    }
-    word_t next = block[1];
-    if(next == LIST_END) {
-        return NULL;
-    }
-    return addr_v_to_p(list, next);
+    node->header.size = block_size;
+    node->header.tag = tag_allocated;
 }
 
 void linked_list_print(LinkedList* list) {
-    word_t* current = list->first;
+    Node* current = list->first;
     printf("list: ");
     while(current != NULL) {
-        size_t size = header_unpack_size(current) + 1;
+        size_t size = current->header.size + 1;
         printf("[%p (%zu)] -> ", current, size);
-        current = linked_list_next(list, current);
+        current = current->next;
     }
     printf("\n");
 }
@@ -87,22 +62,28 @@ void linked_list_split_block(LinkedList* list, word_t* block, size_t size) {
     size_t size_with_header = size / sizeof(word_t) + 1;
     // minimal block size is 2
     assert(size_with_header > 1);
-    size_t block_size_with_header = header_unpack_size(block) + 1;
+
+    Node* node = (Node*) block;
+    size_t block_size_with_header = node->header.size + 1;
 
 
     assert(size_with_header + 2 <= block_size_with_header);
     //remaining block size must be at least 2
     size_t remaining_size_with_header = block_size_with_header - size_with_header;
     assert(remaining_size_with_header > 1);
-    word_t next = block[1];
+    Node* next = node->next;
 
-    word_t* remaining_free_block = block + size_with_header;
+    Node* remaining_free_block = (Node*) (block + size_with_header);
 
-    header_pack(block, size_with_header - 1, tag_free);
-    block[1] = addr_p_to_v(list, remaining_free_block);
+    node->header.size = size_with_header - 1;
+    node->header.tag = tag_free;
 
-    header_pack(remaining_free_block, remaining_size_with_header - 1, tag_free);
-    remaining_free_block[1] = next;
+    node->next = remaining_free_block;
+
+    remaining_free_block->header.size = remaining_size_with_header - 1;
+    remaining_free_block->header.tag = tag_free;
+
+    remaining_free_block->next = next;
 }
 
 /*
@@ -112,13 +93,13 @@ BestMatch linked_list_find_block(LinkedList* list, size_t size) {
     assert(size % sizeof(word_t) == 0);
     size_t nb_words_with_header = size / sizeof(word_t) + 1;
 
-    word_t* previous_best = NULL;
-    word_t* best = NULL;
+    Node* previous_best = NULL;
+    Node* best = NULL;
     size_t best_size = SIZE_MAX;
-    word_t* previous = NULL;
-    word_t* current = list->first;
+    Node* previous = NULL;
+    Node* current = list->first;
     while(current != NULL) {
-        size_t current_size_with_header = header_unpack_size(current) + 1;
+        size_t current_size_with_header = current->header.size + 1;
         if(current_size_with_header == nb_words_with_header) {
             best = current;
             previous_best = previous;
@@ -129,18 +110,18 @@ BestMatch linked_list_find_block(LinkedList* list, size_t size) {
             previous_best = previous;
         }
         previous = current;
-        current = linked_list_next(list, current);
+        current = current->next;
     }
 
 
     BestMatch bestMatch;
-    bestMatch.previous = previous_best;
-    bestMatch.block = best;
+    bestMatch.previous = (word_t*) previous_best;
+    bestMatch.block = (word_t*) best;
 
     return bestMatch;
 }
 
-BestMatch linked_list_find_first_block(LinkedList* list, size_t size) {
+/*BestMatch linked_list_find_first_block(LinkedList* list, size_t size) {
     assert(size % sizeof(word_t) == 0);
     size_t nb_words_with_header = size / sizeof(word_t) + 1;
 
@@ -166,4 +147,4 @@ BestMatch linked_list_find_first_block(LinkedList* list, size_t size) {
     bestMatch.block = best;
 
     return bestMatch;
-}
+}*/

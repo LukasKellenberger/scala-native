@@ -16,6 +16,7 @@
 typedef struct {
     LinkedList* list[LINKED_LIST_NUMBER];
     Bitmap* bitmap;
+    word_t* start;
     size_t size;
 } FreeList;
 
