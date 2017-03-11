@@ -10,6 +10,8 @@
 #define MARKANDSWEEP_FREE_LIST_H
 
 #define SMALLEST_BLOCK_SIZE 2
+#define MAX_CONST_SIZE_LIST 16
+#define POWER_MAX_CONST_SIZE 4
 #define LINKED_LIST_NUMBER 32
 
 
@@ -19,12 +21,6 @@ typedef struct {
     word_t* start;
     size_t size;
 } FreeList;
-
-typedef struct {
-    size_t available_words;
-    size_t largest_word;
-    long nb_words;
-} MemoryStats;
 
 /**
  *

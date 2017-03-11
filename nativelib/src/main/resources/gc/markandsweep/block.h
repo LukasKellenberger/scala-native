@@ -28,6 +28,8 @@ struct Block {
     Block* next;
 };
 
+Block* block_add_offset(Block* block, size_t offset);
+
 size_t header_unpack_size(word_t* block);
 
 tag_t header_unpack_tag(word_t* block);

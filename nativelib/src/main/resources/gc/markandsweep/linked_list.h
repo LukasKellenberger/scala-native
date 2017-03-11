@@ -52,6 +52,7 @@ void linked_list_split_block(LinkedList* list, Block* block, size_t size);
 
 BestMatch linked_list_find_block(LinkedList* list, size_t size);
 BestMatch linked_list_find_first_block(LinkedList* list, size_t size);
+BestMatch linked_list_find_good_block(LinkedList* list, size_t size);
 
 
 

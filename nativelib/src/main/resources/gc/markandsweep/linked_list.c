@@ -9,7 +9,10 @@
 
 
 LinkedList* linked_list_create(size_t size) {
-    return malloc(sizeof(LinkedList));
+    LinkedList* list = malloc(sizeof(LinkedList));
+    list->first = NULL;
+    list->last = NULL;
+    return list;
 }
 
 void linked_list_add_block(LinkedList* list, Block* block, size_t block_size) {
@@ -23,7 +26,7 @@ void linked_list_add_block(LinkedList* list, Block* block, size_t block_size) {
     } else {
         list->last->next = block;
     }
-    node->next = LIST_END;
+    block->next = LIST_END;
     list->last = block;
 }
 void linked_list_remove_block(LinkedList* list, Block* block, size_t block_size, Block* previous) {
@@ -42,12 +45,12 @@ void linked_list_remove_block(LinkedList* list, Block* block, size_t block_size,
         list->last = next == LIST_END ? previous : next;
     }
 
-    node->header.size = block_size;
-    node->header.tag = tag_allocated;
+    block->header.size = block_size;
+    block->header.tag = tag_allocated;
 }
 
 void linked_list_print(LinkedList* list) {
-    Node* current = list->first;
+    Block* current = list->first;
     printf("list: ");
     while(current != NULL) {
         size_t size = current->header.size + 1;
@@ -57,28 +60,27 @@ void linked_list_print(LinkedList* list) {
     printf("\n");
 }
 
-void linked_list_split_block(LinkedList* list, word_t* block, size_t size) {
+void linked_list_split_block(LinkedList* list, Block* block, size_t size) {
     assert(size % sizeof(word_t) == 0);
     size_t size_with_header = size / sizeof(word_t) + 1;
     // minimal block size is 2
     assert(size_with_header > 1);
 
-    Node* node = (Node*) block;
-    size_t block_size_with_header = node->header.size + 1;
+    size_t block_size_with_header = block->header.size + 1;
 
 
     assert(size_with_header + 2 <= block_size_with_header);
     //remaining block size must be at least 2
     size_t remaining_size_with_header = block_size_with_header - size_with_header;
     assert(remaining_size_with_header > 1);
-    Node* next = node->next;
+    Block* next = block->next;
 
-    Node* remaining_free_block = (Node*) (block + size_with_header);
+    Block* remaining_free_block = block_add_offset(block, size_with_header);
 
-    node->header.size = size_with_header - 1;
-    node->header.tag = tag_free;
+    block->header.size = size_with_header - 1;
+    block->header.tag = tag_free;
 
-    node->next = remaining_free_block;
+    block->next = remaining_free_block;
 
     remaining_free_block->header.size = remaining_size_with_header - 1;
     remaining_free_block->header.tag = tag_free;
@@ -93,11 +95,11 @@ BestMatch linked_list_find_block(LinkedList* list, size_t size) {
     assert(size % sizeof(word_t) == 0);
     size_t nb_words_with_header = size / sizeof(word_t) + 1;
 
-    Node* previous_best = NULL;
-    Node* best = NULL;
+    Block* previous_best = NULL;
+    Block* best = NULL;
     size_t best_size = SIZE_MAX;
-    Node* previous = NULL;
-    Node* current = list->first;
+    Block* previous = NULL;
+    Block* current = list->first;
     while(current != NULL) {
         size_t current_size_with_header = current->header.size + 1;
         if(current_size_with_header == nb_words_with_header) {
@@ -115,30 +117,30 @@ BestMatch linked_list_find_block(LinkedList* list, size_t size) {
 
 
     BestMatch bestMatch;
-    bestMatch.previous = (word_t*) previous_best;
-    bestMatch.block = (word_t*) best;
+    bestMatch.previous = previous_best;
+    bestMatch.block = best;
 
     return bestMatch;
 }
 
-/*BestMatch linked_list_find_first_block(LinkedList* list, size_t size) {
+BestMatch linked_list_find_first_block(LinkedList* list, size_t size) {
     assert(size % sizeof(word_t) == 0);
     size_t nb_words_with_header = size / sizeof(word_t) + 1;
 
-    word_t* previous_best = NULL;
-    word_t* best = NULL;
+    Block* previous_best = NULL;
+    Block* best = NULL;
     size_t best_size = SIZE_MAX;
-    word_t* previous = NULL;
-    word_t* current = list->first;
+    Block* previous = NULL;
+    Block* current = list->first;
     while(current != NULL) {
-        size_t current_size_with_header = header_unpack_size(current) + 1;
+        size_t current_size_with_header = current->header.size + 1;
         if(current_size_with_header >= nb_words_with_header) {
             best = current;
             previous_best = previous;
             break;
         }
         previous = current;
-        current = linked_list_next(list, current);
+        current = current->next;
     }
 
 
@@ -147,4 +149,4 @@ BestMatch linked_list_find_block(LinkedList* list, size_t size) {
     bestMatch.block = best;
 
     return bestMatch;
-}*/
+}

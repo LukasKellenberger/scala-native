@@ -4,6 +4,9 @@
 
 #include "block.h"
 
+Block* block_add_offset(Block* block, size_t offset) {
+    return (Block*) ((word_t*)block + offset);
+}
 
 size_t header_unpack_size(word_t* block) {
 
