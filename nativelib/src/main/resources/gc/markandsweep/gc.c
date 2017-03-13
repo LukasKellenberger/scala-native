@@ -8,9 +8,9 @@
 #include <stdlib.h>
 #include "bitmap.h"
 #include "linked_list.h"
-#include <assert.h>
 #include "mark.h"
 #include "free_list_stats.h"
+#include <time.h>
 
 #define UNW_LOCAL_ONLY
 
@@ -117,14 +117,18 @@ void* alloc(size_t size) {
 }
 
 void scalanative_collect() {
-    /*printf("\n\n### START GC ###\n");
-    fflush(stdout);*/
+    printf("\n\n### START GC ###\n");
+    fflush(stdout);
+    clock_t start = clock(), diff;
 
     mark_roots();
     sweep();
 
-    /*printf("### END GC ###\n");
-    fflush(stdout);*/
+    diff = clock() - start;
+    int msec = diff * 1000 / CLOCKS_PER_SEC;
+    printf("Time taken %d seconds %d milliseconds\n", msec/1000, msec%1000);
+    printf("### END GC ###\n");
+    fflush(stdout);
 }
 
 void memory_check(int print) {
