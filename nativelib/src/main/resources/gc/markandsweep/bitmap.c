@@ -4,7 +4,6 @@
 
 #include <stdlib.h>
 #include <printf.h>
-#include <assert.h>
 #include "bitmap.h"
 
 
