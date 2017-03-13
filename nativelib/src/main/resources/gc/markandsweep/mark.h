@@ -8,10 +8,10 @@
 #include "block.h"
 #include "types.h"
 #include "bitmap.h"
-#include <assert.h>
 #include "free_list.h"
 #include <stdio.h>
 #include <limits.h>
+#include "stack.h"
 
 #define UNW_LOCAL_ONLY
 

@@ -4,6 +4,10 @@
 
 #include <stdint.h>
 
+#define NDEBUG
+
+#include <assert.h>
+
 #ifndef UNTITLED_TYPES_H
 #define UNTITLED_TYPES_H
 

@@ -3,7 +3,6 @@
 //
 
 #include <printf.h>
-#include <assert.h>
 #include "free_list.h"
 #include "linked_list.h"
 

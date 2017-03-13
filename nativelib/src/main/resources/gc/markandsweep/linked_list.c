@@ -2,7 +2,6 @@
 // Created by Lukas Kellenberger on 01.03.17.
 //
 
-#include <assert.h>
 #include <stdlib.h>
 #include <printf.h>
 #include "linked_list.h"
