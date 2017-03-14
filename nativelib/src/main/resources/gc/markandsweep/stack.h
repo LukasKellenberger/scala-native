@@ -17,10 +17,12 @@ typedef struct {
 
 Stack* stack_alloc(size_t size);
 
-void stack_push(Stack* stack, Stack_Type word);
+int stack_push(Stack* stack, Stack_Type word);
 
 Stack_Type stack_pop(Stack* stack);
 
 int stack_is_empty(Stack* stack);
+
+void stack_double_size(Stack* stack);
 
 #endif //STACK_H

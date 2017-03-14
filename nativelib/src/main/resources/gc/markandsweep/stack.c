@@ -9,9 +9,14 @@ Stack* stack_alloc(size_t size) {
     return stack;
 }
 
-void stack_push(Stack* stack, Stack_Type word) {
+int stack_push(Stack* stack, Stack_Type word) {
     assert(stack->current < stack->nb_words);
-    stack->bottom[stack->current++] = word;
+    if(stack->current < stack->nb_words) {
+        stack->bottom[stack->current++] = word;
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 Stack_Type stack_pop(Stack* stack) {
@@ -21,4 +26,13 @@ Stack_Type stack_pop(Stack* stack) {
 
 int stack_is_empty(Stack* stack) {
     return stack->current == 0;
+}
+
+
+void stack_double_size(Stack* stack) {
+    assert(stack->current == 0);
+    int nb_words = stack->nb_words * 2;;
+    stack->nb_words = nb_words;
+    free(stack->bottom);
+    stack->bottom = malloc(nb_words * sizeof(Stack_Type));
 }

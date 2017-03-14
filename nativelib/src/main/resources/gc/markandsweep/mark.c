@@ -12,6 +12,9 @@ word_t* heap_end = NULL;
 Stack* stack = NULL;
 
 
+inline static int cannot_be_const(word_t* block) {
+    return block > heap_start;
+}
 
 inline static int in_heap(word_t* block) {
     return block >= heap_start && block < heap_end;
@@ -44,9 +47,9 @@ void _mark() {
             assert(size < heap_end - heap_start);
 
             for (int i = 0; i < size - 1; i++) {
-                word_t field = block[i + 2];
-                word_t* field_addr = (word_t*)field-1;
-                if(in_heap(field_addr)) {
+                word_t* field = (word_t*)(block[i + 2]);
+                if(field != NULL && cannot_be_const(field)) {
+                    word_t* field_addr = field - 1;
                     if (bitmap_get_bit(bitmap, field_addr)) {
                         bitmap_clear_bit(bitmap, field_addr);
                         stack_push(stack, field_addr);
@@ -64,9 +67,9 @@ void _mark() {
             int i=0;
             while(ptr_map[i] != -1) {
                 assert(ptr_map[i] % 8 == 0);
-                word_t field = block[ptr_map[i]/sizeof(word_t) + 1];
-                word_t* field_addr = (word_t*)field - 1;
-                if(in_heap(field_addr)) {
+                word_t* field = (word_t*)(block[ptr_map[i]/sizeof(word_t) + 1]);
+                if(field != NULL && cannot_be_const(field)) {
+                    word_t* field_addr = (word_t*)field - 1;
                     if (bitmap_get_bit(bitmap, field_addr)) {
                         bitmap_clear_bit(bitmap, field_addr);
                         stack_push(stack, field_addr);
