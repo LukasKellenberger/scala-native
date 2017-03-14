@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 
-//#define NDEBUG
+#define NDEBUG
 
 #include <assert.h>
 

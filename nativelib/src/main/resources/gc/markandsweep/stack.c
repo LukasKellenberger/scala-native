@@ -10,12 +10,12 @@ Stack* stack_alloc(size_t size) {
 }
 
 int stack_push(Stack* stack, Stack_Type word) {
-    assert(stack->current < stack->nb_words);
     if(stack->current < stack->nb_words) {
         stack->bottom[stack->current++] = word;
-        return 1;
-    } else {
         return 0;
+    } else {
+        printf("Overflow !!!\n");
+        return 1;
     }
 }
 

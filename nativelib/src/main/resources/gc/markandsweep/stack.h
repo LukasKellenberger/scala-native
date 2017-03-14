@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include "types.h"
+#include <stdio.h>
 
 typedef word_t* Stack_Type;
 
