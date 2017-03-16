@@ -18,58 +18,47 @@
 #include <setjmp.h>
 
 FreeList* free_list = NULL;
+Heap* heap_ = NULL;
 
-#define CHUNK 512*1024*1024
+#define CHUNK 1024*1024*1024
 
-#define DEBUG
 
 void mark(word_t* block);
 
 
-unsigned long long alloc_count;
-unsigned long long alloc_size;
-int gced = 0;
-
 void memory_check(int print);
 
 void sweep() {
-    word_t* current = free_list->start;
-    size_t current_size_with_header = 0;
-    word_t* growing = NULL;
-    size_t growing_size_with_header = 0;
+    word_t* current = heap_->heap_start;
+    size_t current_size = 0;
 
     free_list_clear_lists(free_list);
-    word_t* end = free_list->start + (free_list->size / sizeof(word_t));
 
-    while(current < end) {
-        current_size_with_header = header_unpack_size(current) + 1;
-        if(!bitmap_get_bit(free_list->bitmap, current)) {
-            bitmap_set_bit(free_list->bitmap, current);
-            if(growing != NULL) {
-                free_list_add_block(free_list, growing, growing_size_with_header - 1);
-                growing = NULL;
-            }
+    while(current != NULL) {
+        current_size = header_unpack_size(current);
+        // Current block is alive, set bit to 1 and go to next block
+        if(!bitmap_get_bit(heap_->bitmap, current)) {
+            bitmap_set_bit(heap_->bitmap, current);
+            current = heap_next_block(heap_, current);
+
         } else {
-            if(growing == NULL) {
-                growing = current;
-                growing_size_with_header = current_size_with_header;
-            } else {
-                growing_size_with_header += current_size_with_header;
-                bitmap_clear_bit(free_list->bitmap, current);
+            // Block is not alive, merge with next while possible
+            word_t* next = heap_next_block(heap_, current);
+            while(next != NULL && bitmap_get_bit(heap_->bitmap, next)) {
+                current_size = current_size + header_unpack_size(next) + 1;
+                bitmap_clear_bit(heap_->bitmap, next);
+                next = heap_next_block(heap_, next);
             }
+            free_list_add_block(free_list, current, current_size);
+            current = next;
 
         }
-        current += current_size_with_header;
-    }
-    if(growing != NULL) {
-        free_list_add_block(free_list, growing, growing_size_with_header - 1);
     }
 }
 
 void scalanative_init() {
-    free_list = free_list_create(CHUNK);
-    LinkedList* linkedList = free_list->list[0];
-    mark_init(free_list);
+    heap_ = heap_alloc(CHUNK);
+    free_list = heap_->free_list;
 }
 
 
@@ -79,11 +68,14 @@ void* scalanative_alloc_raw(size_t size) {
         scalanative_init();
     }
     word_t* block = free_list_get_block(free_list, size);
-    assert(block == NULL || header_unpack_size(block) >= size/sizeof(word_t));
 
+    assert(block == NULL || header_unpack_size(block) >= size/sizeof(word_t) && header_unpack_size(block) <= size/sizeof(word_t) + 1);
+    assert(block == NULL || header_unpack_tag(block) == tag_allocated);
     if(block == NULL) {
         scalanative_collect();
         block = free_list_get_block(free_list, size);
+            assert(block == NULL || header_unpack_size(block) >= size/sizeof(word_t) && header_unpack_size(block) <= size/sizeof(word_t) + 1);
+            assert(block == NULL || header_unpack_tag(block) == tag_allocated);
         if(block == NULL) {
             free_list_print_stats(free_list);
 
@@ -119,14 +111,21 @@ void* alloc(size_t size) {
 void scalanative_collect() {
     printf("\n\n### START GC ###\n");
     fflush(stdout);
+
+
     clock_t start = clock(), diff;
-
-    mark_roots();
-    sweep();
-
+    mark_roots(heap_);
     diff = clock() - start;
     int msec = diff * 1000 / CLOCKS_PER_SEC;
     printf("Time taken %d seconds %d milliseconds\n", msec/1000, msec%1000);
+
+
+    start = clock();
+    sweep();
+    diff = clock() - start;
+    msec = diff * 1000 / CLOCKS_PER_SEC;
+    printf("Time taken %d seconds %d milliseconds\n", msec/1000, msec%1000);
+
     printf("### END GC ###\n");
     fflush(stdout);
 }
