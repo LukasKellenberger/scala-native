@@ -39,13 +39,14 @@ inline static int size_to_linked_list(size_t size, int add) {
     }
 }
 
-FreeList* free_list_create(size_t size) {
+FreeList* free_list_create(size_t size, word_t* heap_start, Bitmap* bitmap) {
     FreeList* free_list = malloc(sizeof(FreeList));
 
-    unsigned long nb_words = size / sizeof(word_t);
-    word_t* words = calloc(nb_words, sizeof(word_t));
+    size_t nb_words = size / sizeof(word_t);
 
-    free_list->bitmap = bitmap_alloc(size, words);
+    word_t* words = heap_start;
+
+    free_list->bitmap = bitmap;
     free_list->size = size;
     free_list->start = words;
 
@@ -127,11 +128,11 @@ word_t* free_list_get_block(FreeList* list, size_t size) {
                 return NULL;
             } else {
                 bitmap_set_bit(list->bitmap, (word_t*) block);
+                assert(block == NULL || header_unpack_size((word_t*)block) >= size/sizeof(word_t));
                 return (word_t*)block;
             }
         } else {
             size_t block_size = block->header.size;
-
 
             if(block_size >= nb_words + SMALLEST_BLOCK_SIZE) {
                 Block* remaining_block = block_add_offset(block, nb_words + 1);
@@ -144,6 +145,7 @@ word_t* free_list_get_block(FreeList* list, size_t size) {
             }
 
             bitmap_set_bit(list->bitmap, (word_t*) block);
+            assert(block == NULL || header_unpack_size((word_t*)block) >= size/sizeof(word_t));
             return (word_t*)block;
         }
     }
@@ -152,9 +154,13 @@ word_t* free_list_get_block(FreeList* list, size_t size) {
 
 void free_list_print(FreeList* list) {
     for(int i=0; i < LINKED_LIST_NUMBER; i++) {
-        printf("%d: ", i + SMALLEST_BLOCK_SIZE);
-        linked_list_print(list->list[i]);
+        if(list->list[i]->first != NULL) {
+            printf("%d: ", i + SMALLEST_BLOCK_SIZE);
+            linked_list_print(list->list[i]);
+            linked_list_check(list->list[i], i < 14 ? i + 2 : -1, list->bitmap);
+        }
     }
+    printf("\n");
 }
 
 void free_list_clear_lists(FreeList* list) {
