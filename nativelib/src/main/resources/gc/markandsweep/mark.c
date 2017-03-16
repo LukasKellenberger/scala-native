@@ -48,8 +48,8 @@ void scan_heap_after_overflow(Stack* stack) {
 
                 for (int i = 0; i < size - 1; i++) {
                     word_t* field = (word_t*)(block[i + 2]);
-                    if(field != NULL && cannot_be_const(field)) {
                         word_t* field_addr = field - 1;
+                    if(in_heap(field_addr)) {
                         if (bitmap_get_bit(bitmap, field_addr)) {
                             stack_push(stack, block);
                             found = 1;
@@ -70,8 +70,8 @@ void scan_heap_after_overflow(Stack* stack) {
                 while(ptr_map[i] != -1) {
                     assert(ptr_map[i] % 8 == 0);
                     word_t* field = (word_t*)(block[ptr_map[i]/sizeof(word_t) + 1]);
-                    if(field != NULL && cannot_be_const(field)) {
                         word_t* field_addr = (word_t*)field - 1;
+                    if(in_heap(field_addr)) {
                         if (bitmap_get_bit(bitmap, field_addr)) {
                             stack_push(stack, block);
                             found = 1;
@@ -109,8 +109,8 @@ void _mark() {
 
             for (int i = 0; i < size - 1; i++) {
                 word_t* field = (word_t*)(block[i + 2]);
-                if(field != NULL && cannot_be_const(field)) {
-                    word_t* field_addr = field - 1;
+                word_t* field_addr = field - 1;
+                if(in_heap(field_addr)) {
                     if (bitmap_get_bit(bitmap, field_addr)) {
                         bitmap_clear_bit(bitmap, field_addr);
                         if(!overflow) {
@@ -133,8 +133,8 @@ void _mark() {
             while(ptr_map[i] != -1) {
                 assert(ptr_map[i] % 8 == 0);
                 word_t* field = (word_t*)(block[ptr_map[i]/sizeof(word_t) + 1]);
-                if(field != NULL && cannot_be_const(field)) {
-                    word_t* field_addr = (word_t*)field - 1;
+                word_t* field_addr = (word_t*)field - 1;
+                if(in_heap(field_addr)) {
                     if (bitmap_get_bit(bitmap, field_addr)) {
                         bitmap_clear_bit(bitmap, field_addr);
                         if(!overflow) {
