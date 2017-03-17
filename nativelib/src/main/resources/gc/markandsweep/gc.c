@@ -19,7 +19,7 @@
 
 FreeList* free_list = NULL;
 
-#define CHUNK 512*1024*1024
+#define CHUNK 768*1024*1024
 
 #define DEBUG
 
@@ -122,10 +122,13 @@ void scalanative_collect() {
     clock_t start = clock(), diff;
 
     mark_roots();
-    sweep();
-
     diff = clock() - start;
     int msec = diff * 1000 / CLOCKS_PER_SEC;
+    printf("Time taken %d seconds %d milliseconds\n", msec/1000, msec%1000);
+    start = clock();
+    sweep();
+    diff = clock() - start;
+    msec = diff * 1000 / CLOCKS_PER_SEC;
     printf("Time taken %d seconds %d milliseconds\n", msec/1000, msec%1000);
     printf("### END GC ###\n");
     fflush(stdout);
