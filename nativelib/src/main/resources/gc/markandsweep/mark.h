@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <limits.h>
 #include "stack.h"
+#include "heap.h"
 
 #define UNW_LOCAL_ONLY
 

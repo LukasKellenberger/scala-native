@@ -26,7 +26,7 @@ typedef struct {
  *
  * Allocates a block of size `size` bytes and creates the free_list
  */
-FreeList* free_list_create(size_t size);
+FreeList* free_list_create(size_t size, word_t* heap_start, Bitmap* bitmap);
 
 /**
  * Adds a block to one of the linked_lists, depending on the size of the block.

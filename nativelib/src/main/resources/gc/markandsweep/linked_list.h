@@ -5,6 +5,8 @@
 #include <stddef.h>
 #include "block.h"
 #include "types.h"
+#include "bitmap.h"
+
 
 #ifndef LINKED_LIST_H
 #define LINKED_LIST_H
@@ -46,6 +48,8 @@ void linked_list_remove_block(LinkedList* list, Block* block, size_t size, Block
  * Prints the linked list
  */
 void linked_list_print(LinkedList* list);
+
+void linked_list_check(LinkedList* list, int expectedSize, Bitmap* bitmap);
 
 void linked_list_split_block(LinkedList* list, Block* block, size_t size);
 
