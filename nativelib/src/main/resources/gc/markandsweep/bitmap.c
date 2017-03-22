@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <printf.h>
 #include "bitmap.h"
+#include "mark.h"
 
 
 Bitmap* bitmap_alloc(size_t size, word_t* offset) {
@@ -28,6 +29,7 @@ void bitmap_clear_bit(Bitmap* bitmap, word_t* addr) {
     assert(addr >= bitmap->offset && addr < bitmap->offset + bitmap->size);
 
     size_t inner_addr = addr - bitmap->offset;
+
     bitmap->words[WORD_OFFSET(inner_addr)] &= ~(1LLU << BIT_OFFSET(inner_addr));
 }
 
@@ -47,6 +49,21 @@ void bitmap_print(Bitmap* bitmap) {
     for(unsigned long i=0; i < nb_words; i++) {
         if(bitmap_get_bit(bitmap, current)) {
             printf("%lu ", i);
+        }
+        current = current + 1;
+    }
+    printf("\n");
+}
+
+void bitmap_print_with_rtti(Bitmap* bitmap) {
+
+    size_t nb_words = bitmap->size / sizeof(word_t);
+    word_t* current = bitmap->offset;
+    printf("bitmap: ");
+    for(unsigned long i=0; i < nb_words; i++) {
+        if(bitmap_get_bit(bitmap, current) && header_unpack_tag(current) == tag_allocated) {
+            Rtti* rtti = (Rtti*)(*(current + 1));
+            printf("%lu:%d ", i, rtti == NULL ? -1 : rtti->id);
         }
         current = current + 1;
     }

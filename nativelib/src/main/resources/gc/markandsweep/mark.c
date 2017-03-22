@@ -155,6 +155,7 @@ void _mark() {
         }
     }
     if(overflow) {
+        overflow_current_addr = heap->heap_start;
         overflow = 0;
         stack_double_size(stack);
         printf("double size\n");
