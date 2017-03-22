@@ -22,7 +22,6 @@ Heap* heap_ = NULL;
 
 #define CHUNK 1024*1024*1024
 
-#define DEBUG
 
 void mark(word_t* block);
 

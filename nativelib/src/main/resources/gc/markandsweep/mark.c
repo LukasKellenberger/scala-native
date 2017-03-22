@@ -1,7 +1,7 @@
 
 #include "mark.h"
 
-#define INITIAL_STACK_SIZE 1024*1024
+#define INITIAL_STACK_SIZE 256*1024
 
 void mark(word_t* block);
 
@@ -41,14 +41,14 @@ void scan_heap_after_overflow(Stack* stack) {
                     if(heap_in_heap(heap, field_addr)) {
                         if (bitmap_get_bit(heap->bitmap, field_addr)) {
                             assert(heap_in_heap(heap, field_addr));
-                            stack_push(stack, field_addr);
+                            stack_push(stack, block);
                             found = 1;
                             break;
                         } else if(!bitmap_get_bit(heap->bitmap_copy, field_addr)) {
                             word_t* inner_header = inner_get_header(field_addr);
                             if(inner_header != NULL) {
                                 assert(heap_in_heap(heap, field_addr));
-                                stack_push(stack, field_addr);
+                                stack_push(stack, block);
                                 found = 1;
                                 break;
                             }
@@ -65,14 +65,14 @@ void scan_heap_after_overflow(Stack* stack) {
                     if(heap_in_heap(heap, field_addr)) {
                         if (bitmap_get_bit(heap->bitmap, field_addr)) {
                             assert(heap_in_heap(heap, field_addr));
-                            stack_push(stack, field_addr);
+                            stack_push(stack, block);
                             found = 1;
                             break;
                         } else if(!bitmap_get_bit(heap->bitmap_copy, field_addr))  {
                             word_t* inner_header = inner_get_header(field_addr);
                             if(inner_header != NULL) {
                                 assert(heap_in_heap(heap, inner_header));
-                                stack_push(stack, inner_header);
+                                stack_push(stack, block);
                                 found = 1;
                                 break;
                             }
@@ -210,7 +210,7 @@ void mark_roots_registers(unw_cursor_t* cursor) {
                   UNW_X86_64_R14,
                   UNW_X86_64_R15};
 
-    for(int i=0; i < 17; i++) {
+    for(int i=0; i < 16; i++) {
         unw_get_reg(cursor, regs[i], &reg);
         word_t* pp = (word_t*)reg - 1;
         if(heap_in_heap(heap, pp)) {
