@@ -1,7 +1,8 @@
 
 #include "mark.h"
+#include <setjmp.h>
 
-#define INITIAL_STACK_SIZE 256*1024
+#define INITIAL_STACK_SIZE 512*1024
 
 void mark(word_t* block);
 
@@ -191,41 +192,16 @@ void mark(word_t* block) {
     }
 }
 
-void mark_roots_registers(unw_cursor_t* cursor) {
-    unw_word_t reg;
-
-    int regs[] = {UNW_X86_64_RAX,
-                  UNW_X86_64_RDX,
-                  UNW_X86_64_RCX,
-                  UNW_X86_64_RBX,
-                  UNW_X86_64_RSI,
-                  UNW_X86_64_RDI,
-                  UNW_X86_64_RBP,
-                  UNW_X86_64_RSP,
-                  UNW_X86_64_R8,
-                  UNW_X86_64_R9,
-                  UNW_X86_64_R10,
-                  UNW_X86_64_R11,
-                  UNW_X86_64_R12,
-                  UNW_X86_64_R13,
-                  UNW_X86_64_R14,
-                  UNW_X86_64_R15};
-
-    for(int i=0; i < 16; i++) {
-        unw_get_reg(cursor, regs[i], &reg);
-        word_t* pp = (word_t*)reg - 1;
-        if(heap_in_heap(heap, pp)) {
-            mark(pp);
-        }
-    }
-}
-
-void mark_roots_stack(unw_cursor_t* cursor) {
+void mark_roots_stack() {
+    unw_cursor_t cursor;
+    unw_context_t context;
+    unw_getcontext(&context);
+    unw_init_local(&cursor, &context);
     unw_word_t top = LONG_MAX, bottom = 0;
     unw_word_t rsp;
-    while (unw_step(cursor) > 0) {
 
-        unw_get_reg(cursor, UNW_X86_64_RSP, &rsp);
+    while (unw_step(&cursor) > 0) {
+        unw_get_reg(&cursor, UNW_X86_64_RSP, &rsp);
 
         if(rsp < top) {
             top = rsp;
@@ -266,18 +242,14 @@ void mark_roots(Heap* _heap) {
 
     heap = _heap;
 
-    unw_cursor_t cursor;
-    unw_context_t context;
-
     bitmap_clone(heap->bitmap, heap->bitmap_copy);
+    // Dumps registers into 'regs' which is on stack
+    jmp_buf regs;
+    setjmp(regs);
 
-
-    unw_getcontext(&context);
-    unw_init_local(&cursor, &context);
 
     overflow_current_addr = heap->heap_start;
-    mark_roots_registers(&cursor);
-    mark_roots_stack(&cursor);
+    mark_roots_stack();
     mark_roots_modules();
     _mark();
 }
