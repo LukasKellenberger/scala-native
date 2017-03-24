@@ -17,7 +17,7 @@ word_t* inner_get_header(word_t* inner_ptr) {
         current -= 1;
     }
     size_t size = header_unpack_size(current);
-    if(current + size <= inner_ptr && header_unpack_tag(current) == tag_allocated) {
+    if(current + size >= inner_ptr && header_unpack_tag(current) == tag_allocated && bitmap_get_bit(heap->bitmap, current)) {
         return current;
     }
 
@@ -235,6 +235,14 @@ void mark_roots_modules() {
     }
 }
 
+void print_stack() {
+    for(int i=0; i < stack->current; i++) {
+        word_t* block = stack->bottom[i];
+        Rtti* rtti = *(Rtti**)(block + 1);
+        printf("%d %lu %p\n",rtti->id, block - heap->heap_start, block);
+    }
+}
+
 void mark_roots(Heap* _heap) {
     if(stack == NULL) {
         stack = stack_alloc(INITIAL_STACK_SIZE);
@@ -250,6 +258,7 @@ void mark_roots(Heap* _heap) {
 
     overflow_current_addr = heap->heap_start;
     mark_roots_stack();
+    //print_stack();
     mark_roots_modules();
     _mark();
 }
