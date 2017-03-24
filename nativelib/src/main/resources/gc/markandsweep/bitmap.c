@@ -61,9 +61,9 @@ void bitmap_print_with_rtti(Bitmap* bitmap) {
     word_t* current = bitmap->offset;
     printf("bitmap: ");
     for(unsigned long i=0; i < nb_words; i++) {
-        if(bitmap_get_bit(bitmap, current) && header_unpack_tag(current) == tag_allocated) {
+        if(bitmap_get_bit(bitmap, current)) {
             Rtti* rtti = (Rtti*)(*(current + 1));
-            printf("%lu:%d ", i, rtti == NULL ? -1 : rtti->id);
+            printf("%lu:%d:%zu:%d ", i, rtti == NULL ? -1 : rtti->id, header_unpack_size(current), header_unpack_tag(current));
         }
         current = current + 1;
     }
