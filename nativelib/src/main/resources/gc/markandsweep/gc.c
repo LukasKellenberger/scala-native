@@ -112,6 +112,8 @@ void scalanative_collect() {
     printf("\n\n### START GC ###\n");
     fflush(stdout);
 
+    bitmap_print_with_rtti(free_list->bitmap);
+
 
     clock_t start = clock(), diff;
     mark_roots(heap_);
@@ -119,12 +121,15 @@ void scalanative_collect() {
     int msec = diff * 1000 / CLOCKS_PER_SEC;
     printf("Time taken %d seconds %d milliseconds\n", msec/1000, msec%1000);
 
+    bitmap_print_with_rtti(free_list->bitmap);
 
     start = clock();
     sweep();
     diff = clock() - start;
     msec = diff * 1000 / CLOCKS_PER_SEC;
     printf("Time taken %d seconds %d milliseconds\n", msec/1000, msec%1000);
+
+    bitmap_print_with_rtti(free_list->bitmap);
 
     printf("### END GC ###\n");
     fflush(stdout);
