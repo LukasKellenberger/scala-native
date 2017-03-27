@@ -21,13 +21,13 @@ inline static int log2(size_t v) {
 }
 
 
-inline static int size_to_linked_list(size_t size, int add) {
-    if(size <= SMALLEST_BLOCK_SIZE) {
+inline static int size_to_linked_list(size_t nb_words, int add) {
+    if(nb_words <= SMALLEST_BLOCK_SIZE) {
         return 0;
-    } else if(size <= MAX_CONST_SIZE_LIST) {
-        return size - SMALLEST_BLOCK_SIZE;
+    } else if(nb_words <= MAX_CONST_SIZE_LIST) {
+        return nb_words - SMALLEST_BLOCK_SIZE;
     } else {
-        int size_log2 = log2(size);
+        int size_log2 = log2(nb_words);
         if(size_log2 < LINKED_LIST_NUMBER - MAX_CONST_SIZE_LIST + SMALLEST_BLOCK_SIZE - 1 + POWER_MAX_CONST_SIZE) {
             int index = MAX_CONST_SIZE_LIST - SMALLEST_BLOCK_SIZE + size_log2 - POWER_MAX_CONST_SIZE;
             return add ? index : index + 1;
@@ -37,15 +37,13 @@ inline static int size_to_linked_list(size_t size, int add) {
     }
 }
 
-FreeList* free_list_create(size_t size, word_t* heap_start, Bitmap* bitmap) {
+FreeList* free_list_create(size_t nb_words, word_t* heap_start, Bitmap* bitmap) {
     FreeList* free_list = malloc(sizeof(FreeList));
-
-    size_t nb_words = size;
 
     word_t* words = heap_start;
 
     free_list->bitmap = bitmap;
-    free_list->size = size * sizeof(word_t);
+    free_list->size = nb_words * sizeof(word_t);
     free_list->start = words;
 
 
@@ -59,20 +57,20 @@ FreeList* free_list_create(size_t size, word_t* heap_start, Bitmap* bitmap) {
     return free_list;
 }
 
-void free_list_add_block(FreeList* list, word_t* block, size_t block_size) {
+void free_list_add_block(FreeList* list, word_t* block, size_t block_size_with_header) {
     // block-size is without header, size_to_linked_list with header
-    const int list_index = size_to_linked_list(block_size + 1, 1);
-    linked_list_add_block(list->list[list_index], (Block*) block, block_size);
+    const int list_index = size_to_linked_list(block_size_with_header, 1);
+    linked_list_add_block(list->list[list_index], (Block*) block, block_size_with_header - 1);
 }
 
 /*
  * size without header in bytes
  */
 
-Block* get_block_last_list(FreeList* list, size_t size) {
-    int nb_words = size / sizeof(word_t);
+Block* get_block_last_list(FreeList* list, size_t nb_words_with_header) {
+    int nb_words = nb_words_with_header - 1;
 
-    BestMatch best_match = linked_list_find_block(list->list[LINKED_LIST_NUMBER - 1], size);
+    BestMatch best_match = linked_list_find_block(list->list[LINKED_LIST_NUMBER - 1], nb_words_with_header);
     if(best_match.block == NULL) {
         return NULL;
     }
@@ -81,12 +79,12 @@ Block* get_block_last_list(FreeList* list, size_t size) {
     size_t block_size_with_header = block->header.size + 1;
 
     //Block matches size (if size +1 cannot split)
-    if(block_size_with_header > nb_words + SMALLEST_BLOCK_SIZE) {
+    if(block_size_with_header - SMALLEST_BLOCK_SIZE >= nb_words_with_header) {
 
-        Block* remaining_block = block_add_offset(block, nb_words + 1);
+        Block* remaining_block = block_add_offset(block, nb_words_with_header);
         bitmap_set_bit(list->bitmap, (word_t*)remaining_block);
         linked_list_remove_block(list->list[LINKED_LIST_NUMBER - 1], block, nb_words, previous);
-        size_t remaining_block_size_with_header = block_size_with_header - (nb_words + 1);
+        size_t remaining_block_size_with_header = block_size_with_header - nb_words_with_header;
         linked_list_add_block(list->list[size_to_linked_list(remaining_block_size_with_header, 1)], remaining_block, remaining_block_size_with_header - 1);
 
     } else {
@@ -96,13 +94,12 @@ Block* get_block_last_list(FreeList* list, size_t size) {
     return block;
 }
 
-word_t* free_list_get_block(FreeList* list, size_t nb_w) {
-    size_t nb_words = nb_w - 1;
+word_t* free_list_get_block(FreeList* list, size_t nb_words) {
     int size = nb_words * sizeof(word_t);
-    int list_index = size_to_linked_list(nb_words + 1, 0);
+    int list_index = size_to_linked_list(nb_words, 0);
     Block* block = NULL;
     if(list_index == LINKED_LIST_NUMBER - 1) {
-        block = get_block_last_list(list, size);
+        block = get_block_last_list(list, nb_words);
         if(block == NULL) {
             return NULL;
         } else {
@@ -114,29 +111,29 @@ word_t* free_list_get_block(FreeList* list, size_t nb_w) {
             ++list_index;
         }
         if(list_index == LINKED_LIST_NUMBER - 1) {
-            block = get_block_last_list(list, size);
+            block = get_block_last_list(list, nb_words);
             if(block == NULL) {
                 return NULL;
             } else {
                 bitmap_set_bit(list->bitmap, (word_t*) block);
-                assert(block == NULL || header_unpack_size((word_t*)block) >= size/sizeof(word_t));
+                assert(block == NULL || header_unpack_size((word_t*)block) >= size/sizeof(word_t) - 1);
                 return (word_t*)block;
             }
         } else {
             size_t block_size = block->header.size;
 
-            if(block_size >= nb_words + SMALLEST_BLOCK_SIZE) {
-                Block* remaining_block = block_add_offset(block, nb_words + 1);
+            if(block_size > nb_words + SMALLEST_BLOCK_SIZE) {
+                Block* remaining_block = block_add_offset(block, nb_words);
                 bitmap_set_bit(list->bitmap, (word_t*)remaining_block);
-                linked_list_remove_block(list->list[list_index], block, nb_words, NULL);
-                size_t remaining_block_size_with_header = (block_size + 1) - (nb_words + 1);
+                linked_list_remove_block(list->list[list_index], block, nb_words - 1, NULL);
+                size_t remaining_block_size_with_header = (block_size + 1) - nb_words;
                 linked_list_add_block(list->list[size_to_linked_list(remaining_block_size_with_header, 1)], remaining_block, remaining_block_size_with_header - 1);
             } else {
                 linked_list_remove_block(list->list[list_index], block, block_size, NULL);
             }
 
             bitmap_set_bit(list->bitmap, (word_t*) block);
-            assert(block == NULL || header_unpack_size((word_t*)block) >= size/sizeof(word_t));
+            assert(block == NULL || header_unpack_size((word_t*)block) >= size/sizeof(word_t) - 1);
             return (word_t*)block;
         }
     }
