@@ -48,6 +48,8 @@ word_t* free_list_get_block(FreeList* list, size_t size);
  */
 void free_list_clear_lists(FreeList* list);
 
+int log2_ceil(size_t v);
+
 
 
 

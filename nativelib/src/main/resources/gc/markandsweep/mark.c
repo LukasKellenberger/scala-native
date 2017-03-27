@@ -1,7 +1,7 @@
 
 #include "mark.h"
 
-#define INITIAL_STACK_SIZE 512*1024
+#define INITIAL_STACK_SIZE 16*1024*1024
 
 void mark(word_t* block);
 
@@ -9,12 +9,14 @@ Heap* heap = NULL;
 Stack* stack = NULL;
 word_t* overflow_current_addr = NULL;
 int overflow = 0;
+int inner = 0;
 
 /*
  * Used to find the header of an inner pointer. Returns the block header if
  * the inner pointer was inside a live block that is not marked yet.
  */
 word_t* inner_get_header(word_t* inner_ptr) {
+    inner++;
     // Starting at word above the inner pointer
     uintptr_t ptr = (uintptr_t)inner_ptr;
     uintptr_t aligned_ptr = ptr - (ptr % sizeof(word_t));
@@ -215,7 +217,6 @@ void mark_roots(Heap* _heap) {
     if(stack == NULL) {
         stack = stack_alloc(INITIAL_STACK_SIZE);
     }
-
     heap = _heap;
 
     bitmap_clone(heap->bitmap, heap->bitmap_copy);
@@ -224,7 +225,9 @@ void mark_roots(Heap* _heap) {
     setjmp(regs);
 
     overflow_current_addr = heap->heap_start;
+    inner = 0;
     mark_roots_stack();
     mark_roots_modules();
     _mark();
+    printf("inner: %d\n", inner);
 }

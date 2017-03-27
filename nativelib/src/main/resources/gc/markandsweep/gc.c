@@ -21,7 +21,7 @@
 FreeList* free_list = NULL;
 Heap* heap_ = NULL;
 
-#define CHUNK 1024
+#define CHUNK 1024*1024
 Timer* in_gc = NULL;
 Timer* outside_gc = NULL;
 
@@ -77,30 +77,35 @@ void* scalanative_alloc_raw(size_t size) {
     }
     word_t* block = free_list_get_block(free_list, nb_words + 1);
     //free_list_print(free_list);
-    assert(block == NULL || header_unpack_size(block) == nb_words + 1 || header_unpack_size(block) == nb_words + 2);
+
+    assert(block == NULL || header_unpack_size(block) >= nb_words + 1 && header_unpack_size(block) <= 2*(nb_words + 1));
     assert(block == NULL || header_unpack_tag(block) == tag_allocated);
     if(block == NULL) {
         scalanative_collect();
         block = free_list_get_block(free_list, nb_words + 1);
 
-        assert(block == NULL || header_unpack_size(block) == nb_words + 1 || header_unpack_size(block) == nb_words + 2);
+        assert(block == NULL || header_unpack_size(block) >= nb_words + 1 && header_unpack_size(block) <= 2*(nb_words + 1));
         assert(block == NULL || header_unpack_tag(block) == tag_allocated);
 
         if(block == NULL) {
             //free_list_print_stats(free_list);
             grow_heap(nb_words);
             block = free_list_get_block(free_list, nb_words + 1);
-            assert(block == NULL || header_unpack_size(block) == nb_words + 1 || header_unpack_size(block) == nb_words + 2);
+            assert(block == NULL || header_unpack_size(block) >= nb_words + 1 && header_unpack_size(block) <= 2*(nb_words + 1));
             assert(block == NULL || header_unpack_tag(block) == tag_allocated);
             memset(block + 1, 0, size);
             return block + 1;
         }
-        memset(block + 1, 0, size);
+        assert(bitmap_get_bit(heap_->bitmap, block));
+        size_t block_size = (1L << log2_ceil(nb_words + 1)) - 1;
+
+        memset(block + 1, 0, block_size * sizeof(word_t));
         return block + 1;
     }
-
+    assert(bitmap_get_bit(heap_->bitmap, block));
     assert(block + header_unpack_size(block) - 1 < free_list->start + free_list->size / sizeof(word_t));
-    memset(block+1, 0, size);
+    size_t block_size = (1L << log2_ceil(nb_words + 1)) - 1;
+    memset(block+1, 0, block_size * sizeof(word_t));
 
     return block + 1;
 }
