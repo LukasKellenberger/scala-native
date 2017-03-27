@@ -57,19 +57,22 @@ void scalanative_init() {
 
 
 void* scalanative_alloc_raw(size_t size) {
-    size = (size + 8 - 1 ) / 8 * 8;
+    size = (size + sizeof(word_t) - 1 ) / sizeof(word_t) * sizeof(word_t);
+    size_t nb_words = size / sizeof(word_t);
     if(free_list == NULL) {
         scalanative_init();
     }
-    word_t* block = free_list_get_block(free_list, size);
-
+    word_t* block = free_list_get_block(free_list, nb_words + 1);
+    //free_list_print(free_list);
     assert(block == NULL || header_unpack_size(block) >= size/sizeof(word_t) && header_unpack_size(block) <= size/sizeof(word_t) + 1);
     assert(block == NULL || header_unpack_tag(block) == tag_allocated);
     if(block == NULL) {
         scalanative_collect();
-        block = free_list_get_block(free_list, size);
-            assert(block == NULL || header_unpack_size(block) >= size/sizeof(word_t) && header_unpack_size(block) <= size/sizeof(word_t) + 1);
-            assert(block == NULL || header_unpack_tag(block) == tag_allocated);
+        block = free_list_get_block(free_list, nb_words + 1);
+
+        assert(block == NULL || header_unpack_size(block) >= size/sizeof(word_t) && header_unpack_size(block) <= size/sizeof(word_t) + 1);
+        assert(block == NULL || header_unpack_tag(block) == tag_allocated);
+
         if(block == NULL) {
             free_list_print_stats(free_list);
 

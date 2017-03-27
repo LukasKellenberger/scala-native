@@ -10,13 +10,22 @@ Stack* stack = NULL;
 word_t* overflow_current_addr = NULL;
 int overflow = 0;
 
+/*
+ * Used to find the header of an inner pointer. Returns the block header if
+ * the inner pointer was inside a live block that is not marked yet.
+ */
 word_t* inner_get_header(word_t* inner_ptr) {
+    // Starting at word above the inner pointer
     word_t* current = inner_ptr - 1;
+
+    //Go up while the block is not a header. It uses the bitmap_copy, because bitmap clears bits for marked blocks.
+    // No need to check for heap bounds because heap_start is a header.
     while(!bitmap_get_bit(heap->bitmap_copy, current)) {
         current -= 1;
     }
-    size_t size = header_unpack_size(current);
-    if(current + size >= inner_ptr && header_unpack_tag(current) == tag_allocated && bitmap_get_bit(heap->bitmap, current)) {
+
+    // Need to check if the block is allocated and if it is not marked
+    if(header_unpack_tag(current) == tag_allocated && bitmap_get_bit(heap->bitmap, current)) {
         return current;
     }
 

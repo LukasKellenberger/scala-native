@@ -1,18 +1,18 @@
 //
 // Created by Lukas Kellenberger on 01.03.17.
 //
+#ifndef TYPES_H
+#define TYPES_H
+
+#define NDEBUG
 
 #include <stdint.h>
+#include <assert.h>
 
-//#define NDEBUG
 
 #define TIMING_PRINT
 //#define STACK_OVERFLOW_PRINT
 
-#include <assert.h>
-
-#ifndef UNTITLED_TYPES_H
-#define UNTITLED_TYPES_H
 
 typedef uint64_t word_t;
 
@@ -27,4 +27,4 @@ typedef struct {
     int64_t* ptr_map;
 } Rtti;
 
-#endif //UNTITLED_TYPES_H
+#endif //TYPES_H

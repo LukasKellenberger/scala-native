@@ -40,17 +40,17 @@ inline static int size_to_linked_list(size_t size, int add) {
 FreeList* free_list_create(size_t size, word_t* heap_start, Bitmap* bitmap) {
     FreeList* free_list = malloc(sizeof(FreeList));
 
-    size_t nb_words = size / sizeof(word_t);
+    size_t nb_words = size;
 
     word_t* words = heap_start;
 
     free_list->bitmap = bitmap;
-    free_list->size = size;
+    free_list->size = size * sizeof(word_t);
     free_list->start = words;
 
 
     for(int i=0; i < LINKED_LIST_NUMBER; i++) {
-        free_list->list[i] = linked_list_create(size);
+        free_list->list[i] = linked_list_alloc();
     }
 
     linked_list_add_block(free_list->list[size_to_linked_list(nb_words, 1)], (Block*) words, nb_words - 1);
@@ -82,20 +82,12 @@ Block* get_block_last_list(FreeList* list, size_t size) {
 
     //Block matches size (if size +1 cannot split)
     if(block_size_with_header > nb_words + SMALLEST_BLOCK_SIZE) {
-        //Split the block
-        linked_list_split_block(list->list[LINKED_LIST_NUMBER - 1], block, size);
+
         Block* remaining_block = block_add_offset(block, nb_words + 1);
         bitmap_set_bit(list->bitmap, (word_t*)remaining_block);
-
-        size_t remaining_block_size_with_header = block_size_with_header - (nb_words + 1);
-        int list_index = size_to_linked_list(remaining_block_size_with_header, 0);
         linked_list_remove_block(list->list[LINKED_LIST_NUMBER - 1], block, nb_words, previous);
-
-        if(list_index < LINKED_LIST_NUMBER - 1) {
-
-            linked_list_remove_block(list->list[LINKED_LIST_NUMBER - 1], remaining_block, remaining_block_size_with_header - 1, previous);
-            linked_list_add_block(list->list[list_index], remaining_block, remaining_block_size_with_header - 1);
-        }
+        size_t remaining_block_size_with_header = block_size_with_header - (nb_words + 1);
+        linked_list_add_block(list->list[size_to_linked_list(remaining_block_size_with_header, 1)], remaining_block, remaining_block_size_with_header - 1);
 
     } else {
         linked_list_remove_block(list->list[LINKED_LIST_NUMBER - 1], block, block_size_with_header - 1, previous);
@@ -104,8 +96,9 @@ Block* get_block_last_list(FreeList* list, size_t size) {
     return block;
 }
 
-word_t* free_list_get_block(FreeList* list, size_t size) {
-    int nb_words = size / sizeof(word_t);
+word_t* free_list_get_block(FreeList* list, size_t nb_w) {
+    size_t nb_words = nb_w - 1;
+    int size = nb_words * sizeof(word_t);
     int list_index = size_to_linked_list(nb_words + 1, 0);
     Block* block = NULL;
     if(list_index == LINKED_LIST_NUMBER - 1) {
