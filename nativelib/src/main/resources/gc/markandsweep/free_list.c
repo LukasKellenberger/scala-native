@@ -2,9 +2,7 @@
 // Created by Lukas Kellenberger on 01.03.17.
 //
 
-#include <printf.h>
 #include "free_list.h"
-#include "linked_list.h"
 
 inline static int log2(size_t v) {
     static const int MultiplyDeBruijnBitPosition[32] =
@@ -149,18 +147,6 @@ word_t* free_list_get_block(FreeList* list, size_t size) {
             return (word_t*)block;
         }
     }
-}
-
-
-void free_list_print(FreeList* list) {
-    for(int i=0; i < LINKED_LIST_NUMBER; i++) {
-        if(list->list[i]->first != NULL) {
-            printf("%d: ", i + SMALLEST_BLOCK_SIZE);
-            linked_list_print(list->list[i]);
-            linked_list_check(list->list[i], i < 14 ? i + 2 : -1, list->bitmap);
-        }
-    }
-    printf("\n");
 }
 
 void free_list_clear_lists(FreeList* list) {

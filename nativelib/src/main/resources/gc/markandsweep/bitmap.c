@@ -2,10 +2,7 @@
 // Created by Lukas Kellenberger on 01.03.17.
 //
 
-#include <stdlib.h>
-#include <printf.h>
 #include "bitmap.h"
-#include "mark.h"
 
 
 Bitmap* bitmap_alloc(size_t size, word_t* offset) {
@@ -39,35 +36,6 @@ int bitmap_get_bit(Bitmap* bitmap, word_t* addr) {
     size_t inner_addr = addr - bitmap->offset;
     word_t bit = bitmap->words[WORD_OFFSET(inner_addr)] & (1LLU << BIT_OFFSET(inner_addr));
     return bit != 0;
-}
-
-void bitmap_print(Bitmap* bitmap) {
-
-    size_t nb_words = bitmap->size / sizeof(word_t);
-    word_t* current = bitmap->offset;
-    printf("bitmap: ");
-    for(unsigned long i=0; i < nb_words; i++) {
-        if(bitmap_get_bit(bitmap, current)) {
-            printf("%lu ", i);
-        }
-        current = current + 1;
-    }
-    printf("\n");
-}
-
-void bitmap_print_with_rtti(Bitmap* bitmap) {
-
-    size_t nb_words = bitmap->size / sizeof(word_t);
-    word_t* current = bitmap->offset;
-    printf("bitmap: ");
-    for(unsigned long i=0; i < nb_words; i++) {
-        if(bitmap_get_bit(bitmap, current)) {
-            Rtti* rtti = (Rtti*)(*(current + 1));
-            printf("%lu:%d:%zu:%d ", i, rtti == NULL ? -1 : rtti->id, header_unpack_size(current), header_unpack_tag(current));
-        }
-        current = current + 1;
-    }
-    printf("\n");
 }
 
 void bitmap_clone(Bitmap* bitmap, Bitmap* clone) {

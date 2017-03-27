@@ -43,15 +43,8 @@ void free_list_add_block(FreeList* list, word_t* block, size_t block_size);
 word_t* free_list_get_block(FreeList* list, size_t size);
 
 
-void free_list_print(FreeList* list);
-
 void free_list_clear_lists(FreeList* list);
 
-/*MemoryStats free_list_get_stats(FreeList* list);
-
-void free_list_print_stats(FreeList* list);
-
-void print_memory(FreeList* free_list);*/
 
 
 

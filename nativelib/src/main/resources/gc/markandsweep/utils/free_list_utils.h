@@ -1,8 +1,9 @@
-#ifndef FREE_LIST_STATS_H
-#define FREE_LIST_STATS_H
+#ifndef FREE_LIST_UTILS_H
+#define FREE_LIST_UTILS_H
 
-#include "free_list.h"
 #include <stdio.h>
+#include "../free_list.h"
+#include "linked_list_utils.h"
 
 typedef struct {
     size_t list_counts[LINKED_LIST_NUMBER];
@@ -11,5 +12,6 @@ typedef struct {
 } MemoryStats;
 
 void free_list_print_stats(FreeList* list);
+void free_list_print(FreeList* free_list);
 
-#endif //FREE_LIST_STATS_H
+#endif //FREE_LIST_UTILS_H

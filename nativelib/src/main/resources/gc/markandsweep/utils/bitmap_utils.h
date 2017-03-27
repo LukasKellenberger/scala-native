@@ -1,0 +1,11 @@
+#ifndef BITMAP_UTILS_H
+#define BITMAP_UTILS_H
+
+#include <stdio.h>
+#include "../bitmap.h"
+#include "../mark.h" // For rtti
+
+void bitmap_print(Bitmap* bitmap);
+void bitmap_print_with_rtti(Bitmap* bitmap);
+
+#endif //BITMAP_UTILS_H
