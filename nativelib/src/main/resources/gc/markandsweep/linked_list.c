@@ -88,10 +88,7 @@ void linked_list_split_block(LinkedList* list, Block* block, size_t size) {
 /*
  * size without header in bytes
  */
-BestMatch linked_list_find_block(LinkedList* list, size_t size) {
-    assert(size % sizeof(word_t) == 0);
-    size_t nb_words_with_header = size / sizeof(word_t) + 1;
-
+BestMatch linked_list_find_block(LinkedList* list, size_t nb_words_with_header) {
     Block* previous_best = NULL;
     Block* best = NULL;
     size_t best_size = SIZE_MAX;
