@@ -32,7 +32,7 @@ typedef struct {
  * @param size of the first block
  * @return pointer to the Linkedlist
  */
-LinkedList* linked_list_create(size_t size);
+LinkedList* linked_list_create();
 
 /**
  * Adds a block to the end of the list, does not merge blocks.

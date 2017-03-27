@@ -11,6 +11,7 @@
 #include "mark.h"
 #include "free_list_stats.h"
 #include <time.h>
+#include "heap_sanity.h"
 
 #define UNW_LOCAL_ONLY
 
@@ -28,6 +29,13 @@ void mark(word_t* block);
 
 void memory_check(int print);
 
+void print_rtti(word_t* block) {
+    Rtti* rtti = *((Rtti**)(block + 1));
+    if(rtti != NULL) {
+        printf("rtti: %d\n", rtti->id);
+    }
+}
+
 void sweep() {
     word_t* current = heap_->heap_start;
     size_t current_size = 0;
@@ -42,16 +50,17 @@ void sweep() {
             current = heap_next_block(heap_, current);
 
         } else {
+            //print_rtti(current);
             // Block is not alive, merge with next while possible
             word_t* next = heap_next_block(heap_, current);
             while(next != NULL && bitmap_get_bit(heap_->bitmap, next)) {
-                current_size = current_size + header_unpack_size(next) + 1;
+                //print_rtti(next);
+                current_size = current_size + header_unpack_size(next);
                 bitmap_clear_bit(heap_->bitmap, next);
                 next = heap_next_block(heap_, next);
             }
             free_list_add_block(free_list, current, current_size);
             current = next;
-
         }
     }
 }
@@ -63,18 +72,27 @@ void scalanative_init() {
 
 
 void* scalanative_alloc_raw(size_t size) {
-    size = (size + 8 - 1 ) / 8 * 8;
+    size = ((size + 8 - 1 ) / 8 * 8);
+    size_t nb_words_with_header = (size / sizeof(word_t)) + 1;
     if(free_list == NULL) {
         scalanative_init();
     }
-    word_t* block = free_list_get_block(free_list, size);
+    //printf("alloc: %zu\n", nb_words_with_header);
+    fflush(stdout);
+    //free_list_print(free_list);
+    //free_list_check(free_list);
+    word_t* block = free_list_get_block(free_list, nb_words_with_header);
+    //heap_sanity_full_check(heap_);
 
-    assert(block == NULL || header_unpack_size(block) >= size/sizeof(word_t) && header_unpack_size(block) <= size/sizeof(word_t) + 1);
+    //free_list_check(free_list);
+    //free_list_print(free_list);
+    fflush(stdout);
+    assert(block == NULL || header_unpack_size(block) >= nb_words_with_header && header_unpack_size(block) <= nb_words_with_header + 1);
     assert(block == NULL || header_unpack_tag(block) == tag_allocated);
     if(block == NULL) {
         scalanative_collect();
-        block = free_list_get_block(free_list, size);
-            assert(block == NULL || header_unpack_size(block) >= size/sizeof(word_t) && header_unpack_size(block) <= size/sizeof(word_t) + 1);
+        block = free_list_get_block(free_list, nb_words_with_header);
+            assert(block == NULL || header_unpack_size(block) >= nb_words_with_header && header_unpack_size(block) <= nb_words_with_header + 1);
             assert(block == NULL || header_unpack_tag(block) == tag_allocated);
         if(block == NULL) {
             free_list_print_stats(free_list);
@@ -84,12 +102,12 @@ void* scalanative_alloc_raw(size_t size) {
             fflush(stdout);
             exit(1);
         }
-        memset(block + 1, 0, size);
+        memset(block + 1, 0, size - sizeof(word_t));
         return block + 1;
     }
 
-    assert(block + header_unpack_size(block) < free_list->start + free_list->size / sizeof(word_t));
-    memset(block+1, 0, size);
+    assert(block + header_unpack_size(block) <= free_list->start + free_list->size / sizeof(word_t));
+    memset(block+1, 0, size - sizeof(word_t));
 
     return block + 1;
 }
@@ -112,7 +130,7 @@ void scalanative_collect() {
     printf("\n\n### START GC ###\n");
     fflush(stdout);
 
-    bitmap_print_with_rtti(free_list->bitmap);
+    //bitmap_print_with_rtti(free_list->bitmap);
 
 
     clock_t start = clock(), diff;
@@ -121,15 +139,20 @@ void scalanative_collect() {
     int msec = diff * 1000 / CLOCKS_PER_SEC;
     printf("Time taken %d seconds %d milliseconds\n", msec/1000, msec%1000);
 
-    bitmap_print_with_rtti(free_list->bitmap);
+    //bitmap_print_with_rtti(free_list->bitmap);
 
     start = clock();
     sweep();
     diff = clock() - start;
     msec = diff * 1000 / CLOCKS_PER_SEC;
     printf("Time taken %d seconds %d milliseconds\n", msec/1000, msec%1000);
+    memory_check(0);
+    free_list_check(free_list);
+    //free_list_print_stats(free_list);
+    //free_list_print(free_list);
+    //heap_sanity_full_check(heap_);
 
-    bitmap_print_with_rtti(free_list->bitmap);
+    //bitmap_print_with_rtti(free_list->bitmap);
 
     printf("### END GC ###\n");
     fflush(stdout);
@@ -151,7 +174,7 @@ void memory_check(int print) {
             }
             fflush(stdout);
             if(previous != NULL) {
-                assert(previous + previous_size + 1 == current);
+                assert(previous + previous_size == current);
             } else {
                 assert(current == bitmap->offset);
             }

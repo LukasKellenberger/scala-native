@@ -44,6 +44,7 @@ word_t* free_list_get_block(FreeList* list, size_t size);
 
 
 void free_list_print(FreeList* list);
+void free_list_check(FreeList* list);
 
 void free_list_clear_lists(FreeList* list);
 

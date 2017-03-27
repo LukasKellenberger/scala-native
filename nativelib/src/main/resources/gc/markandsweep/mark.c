@@ -2,6 +2,7 @@
 #include "mark.h"
 #include <setjmp.h>
 
+// Size of the stack in BYTES
 #define INITIAL_STACK_SIZE 512*1024
 
 void mark(word_t* block);
@@ -36,7 +37,8 @@ void scan_heap_after_overflow(Stack* stack) {
 
                 size_t size = header_unpack_size(block);
 
-                for (int i = 0; i < size - 1; i++) {
+                // size without header and without rtti
+                for (int i = 0; i < size - 2; i++) {
                     word_t* field = (word_t*)(block[i + 2]);
                     word_t* field_addr = field - 1;
                     if(heap_in_heap(heap, field_addr)) {
@@ -95,13 +97,14 @@ void _mark() {
         assert(header_unpack_tag(block) == tag_allocated);
         assert(heap_in_heap(heap, block));
 
-        Rtti rtti = *((Rtti*) *(block+1));
+        Rtti rtti = *((Rtti*) *(block + 1));
 
         if(rtti.id == __OBJECT_ARRAY_ID__) {
             size_t size = header_unpack_size(block);
             assert(size < heap->heap_end - heap->heap_start);
 
-            for (int i = 0; i < size - 1; i++) {
+            // size without header and without rtti
+            for (int i = 0; i < size - 2; i++) {
                 word_t* field = (word_t*)(block[i + 2]);
                 word_t* field_addr = field - 1;
                 if(heap_in_heap(heap, field_addr)) {

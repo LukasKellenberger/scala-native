@@ -1,6 +1,7 @@
 #include "heap.h"
 
 
+// Allocates a heap of size 'size' in bytes
 Heap* heap_alloc(size_t size) {
     Heap* heap = malloc(sizeof(Heap));
     size_t nb_words = size / sizeof(word_t);
@@ -32,7 +33,7 @@ int heap_cannot_be_const(Heap* heap, word_t* block) {
 word_t* heap_next_block(Heap* heap, word_t* block) {
     assert(heap_in_heap(heap, block));
     size_t block_size = header_unpack_size(block);
-    word_t* next = block + block_size + 1;
+    word_t* next = block + block_size;
 
     return next == heap->heap_end ? NULL : next;
 }
