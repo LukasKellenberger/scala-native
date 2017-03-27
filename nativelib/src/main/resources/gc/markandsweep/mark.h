@@ -20,17 +20,6 @@
 #define UNW_LOCAL_ONLY
 
 
-typedef struct {
-    int32_t id;
-    word_t* name;
-    int64_t size;
-    int32_t dyn_method_count;
-    word_t* dyn_method_salt;
-    word_t* dyn_method_keys;
-    word_t* dyn_methods;
-    int64_t* ptr_map;
-} Rtti;
-
 extern word_t** __MODULES__;
 extern int __MODULES_SIZE__;
 extern int __OBJECT_ARRAY_ID__;
