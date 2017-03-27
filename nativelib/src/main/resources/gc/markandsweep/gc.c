@@ -30,7 +30,7 @@ void sweep() {
     free_list_clear_lists(free_list);
 
     while(current != NULL) {
-        current_size = header_unpack_size(current);
+        current_size = header_unpack_size(current) + 1;
         // Current block is alive, set bit to 1 and go to next block
         if(!bitmap_get_bit(heap_->bitmap, current)) {
             bitmap_set_bit(heap_->bitmap, current);
