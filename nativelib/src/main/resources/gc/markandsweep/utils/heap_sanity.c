@@ -1,21 +1,6 @@
 #include "heap_sanity.h"
 
 
-/*int check_free_linked_list(LinkedList* list, word_t* block) {
-
-    Block* current = list->first;
-    int found = 0;
-    while(current != NULL) {
-        word_t* current_as_word_t = (word_t*) current;
-        size_t size = header_unpack_size(current_as_word_t);
-        if(current_as_word_t == block) found = 1;
-        assert(!(block > current_as_word_t && block < current_as_word_t + size));
-
-        current = current->next;
-    }
-    return found;
-}*/
-
 int check_is_header_in_linked_list(LinkedList* list, word_t* block) {
     Block* current = list->first;
     int found = 0;
@@ -88,5 +73,32 @@ void heap_sanity_full_check(Heap* heap) {
     while(current != NULL) {
         check_header(heap, current);
         current = heap_next_block(heap, current);
+    }
+}
+
+void memory_check(FreeList* free_list, int print) {
+    Bitmap* bitmap = free_list->bitmap;
+    word_t* current = bitmap->offset;
+    word_t* previous = NULL;
+    size_t previous_size = 0;
+
+    for(int i=0; i < bitmap->size / sizeof(word_t); i++) {
+        if(bitmap_get_bit(bitmap, current)) {
+            size_t size = header_unpack_size(current);
+            if(header_unpack_tag(current) == tag_allocated && print) {
+                printf("|A %p %zu", current, size);
+            } else if(header_unpack_tag(current) == tag_free && print) {
+                printf("|F %p %zu", current, size);
+            }
+            fflush(stdout);
+            if(previous != NULL) {
+                assert(previous + previous_size + 1 == current);
+            } else {
+                assert(current == bitmap->offset);
+            }
+            previous_size = size;
+            previous = current;
+        }
+        current += 1;
     }
 }

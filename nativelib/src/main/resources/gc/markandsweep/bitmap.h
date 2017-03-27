@@ -2,10 +2,9 @@
 // Created by Lukas Kellenberger on 01.03.17.
 //
 
-#include <stdlib.h>
-#include <stdbool.h>
 #include <limits.h>
 #include <memory.h>
+#include <stdlib.h>
 #include "types.h"
 
 #ifndef MARKANDSWEEP_BITMAP_H

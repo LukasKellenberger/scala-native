@@ -47,29 +47,6 @@ void linked_list_remove_block(LinkedList* list, Block* block, size_t block_size,
     block->header.tag = tag_allocated;
 }
 
-void linked_list_print(LinkedList* list) {
-    Block* current = list->first;
-    printf("list: ");
-    while(current != NULL) {
-        size_t size = current->header.size + 1;
-        printf("[%p (%zu)] -> ", current, size);
-        current = current->next;
-    }
-    printf("\n");
-}
-
-void linked_list_check(LinkedList* list, int expectedSize, Bitmap* bitmap) {
-    Block* current = list->first;
-    while(current != NULL) {
-        size_t size = current->header.size + 1;
-        assert(expectedSize == -1 || expectedSize == size);
-        for(word_t* c= (word_t*)current + 1; c < (word_t*)current + size; c +=1) {
-            assert(!bitmap_get_bit(bitmap, c));
-        }
-        current = current->next;
-    }
-}
-
 void linked_list_split_block(LinkedList* list, Block* block, size_t size) {
     assert(size % sizeof(word_t) == 0);
     size_t size_with_header = size / sizeof(word_t) + 1;
