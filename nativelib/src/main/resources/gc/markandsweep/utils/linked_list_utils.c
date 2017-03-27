@@ -4,7 +4,7 @@ void linked_list_print(LinkedList* list) {
     Block* current = list->first;
     printf("list: ");
     while(current != NULL) {
-        size_t size = current->header.size + 1;
+        size_t size = current->header.size;
         printf("[%p (%zu)] -> ", current, size);
         current = current->next;
     }
@@ -14,7 +14,7 @@ void linked_list_print(LinkedList* list) {
 void linked_list_check(LinkedList* list, int expectedSize, Bitmap* bitmap) {
     Block* current = list->first;
     while(current != NULL) {
-        size_t size = current->header.size + 1;
+        size_t size = current->header.size;
         assert(expectedSize == -1 || expectedSize == size);
         for(word_t* c= (word_t*)current + 1; c < (word_t*)current + size; c +=1) {
             assert(!bitmap_get_bit(bitmap, c));

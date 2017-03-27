@@ -16,7 +16,7 @@ LinkedList* linked_list_alloc() {
 
 void linked_list_add_block(LinkedList* list, Block* block, size_t block_size_with_header) {
     // Set the header fields
-    block->header.size = block_size_with_header - 1;
+    block->header.size = block_size_with_header;
     block->header.tag = tag_free;
 
     assert(block_size_with_header >= 2);
@@ -53,7 +53,7 @@ void linked_list_remove_block(LinkedList* list, Block* block, size_t block_size_
         list->last = previous;
     }
 
-    block->header.size = block_size_with_header - 1;
+    block->header.size = block_size_with_header;
     block->header.tag = tag_allocated;
 }
 
@@ -67,7 +67,7 @@ BestMatch linked_list_find_block(LinkedList* list, size_t nb_words_with_header) 
     Block* previous = NULL;
     Block* current = list->first;
     while(current != NULL) {
-        size_t current_size_with_header = current->header.size + 1;
+        size_t current_size_with_header = current->header.size;
         if(current_size_with_header == nb_words_with_header) {
             best = current;
             previous_best = previous;

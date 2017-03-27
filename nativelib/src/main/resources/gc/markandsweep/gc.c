@@ -30,7 +30,7 @@ void sweep() {
     free_list_clear_lists(free_list);
 
     while(current != NULL) {
-        current_size = header_unpack_size(current) + 1;
+        current_size = header_unpack_size(current);
         // Current block is alive, set bit to 1 and go to next block
         if(!bitmap_get_bit(heap_->bitmap, current)) {
             bitmap_set_bit(heap_->bitmap, current);
@@ -40,7 +40,7 @@ void sweep() {
             // Block is not alive, merge with next while possible
             word_t* next = heap_next_block(heap_, current);
             while(next != NULL && bitmap_get_bit(heap_->bitmap, next)) {
-                current_size = current_size + header_unpack_size(next) + 1;
+                current_size = current_size + header_unpack_size(next);
                 bitmap_clear_bit(heap_->bitmap, next);
                 next = heap_next_block(heap_, next);
             }
@@ -64,13 +64,13 @@ void* scalanative_alloc_raw(size_t size) {
     }
     word_t* block = free_list_get_block(free_list, nb_words + 1);
     //free_list_print(free_list);
-    assert(block == NULL || header_unpack_size(block) >= size/sizeof(word_t) && header_unpack_size(block) <= size/sizeof(word_t) + 1);
+    assert(block == NULL || header_unpack_size(block) >= size/sizeof(word_t) + 1 && header_unpack_size(block) <= size/sizeof(word_t) + 2);
     assert(block == NULL || header_unpack_tag(block) == tag_allocated);
     if(block == NULL) {
         scalanative_collect();
         block = free_list_get_block(free_list, nb_words + 1);
 
-        assert(block == NULL || header_unpack_size(block) >= size/sizeof(word_t) && header_unpack_size(block) <= size/sizeof(word_t) + 1);
+        assert(block == NULL || header_unpack_size(block) > size/sizeof(word_t) + 1 && header_unpack_size(block) <= size/sizeof(word_t) + 2);
         assert(block == NULL || header_unpack_tag(block) == tag_allocated);
 
         if(block == NULL) {
@@ -85,7 +85,7 @@ void* scalanative_alloc_raw(size_t size) {
         return block + 1;
     }
 
-    assert(block + header_unpack_size(block) < free_list->start + free_list->size / sizeof(word_t));
+    assert(block + header_unpack_size(block) - 1 < free_list->start + free_list->size / sizeof(word_t));
     memset(block+1, 0, size);
 
     return block + 1;
