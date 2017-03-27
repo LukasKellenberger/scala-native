@@ -158,7 +158,11 @@ void _mark() {
         overflow_current_addr = heap->heap_start;
         overflow = 0;
         stack_double_size(stack);
-        printf("double size\n");
+
+        #ifdef STACK_OVERFLOW_PRINT
+            printf("Stack grew to %zu bytes\n", stack->nb_words * sizeof(Stack_Type));
+        #endif
+
         while(overflow_current_addr != NULL) {
             scan_heap_after_overflow(stack);
             _mark();
@@ -234,14 +238,6 @@ void mark_roots_modules() {
     }
 }
 
-void print_stack() {
-    for(int i=0; i < stack->current; i++) {
-        word_t* block = stack->bottom[i];
-        Rtti* rtti = *(Rtti**)(block + 1);
-        printf("%d %lu %p\n",rtti->id, block - heap->heap_start, block);
-    }
-}
-
 void mark_roots(Heap* _heap) {
     if(stack == NULL) {
         stack = stack_alloc(INITIAL_STACK_SIZE);
@@ -257,7 +253,6 @@ void mark_roots(Heap* _heap) {
 
     overflow_current_addr = heap->heap_start;
     mark_roots_stack();
-    //print_stack();
     mark_roots_modules();
     _mark();
 }

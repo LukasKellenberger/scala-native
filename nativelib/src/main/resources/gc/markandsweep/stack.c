@@ -14,7 +14,10 @@ int stack_push(Stack* stack, Stack_Type word) {
         stack->bottom[stack->current++] = word;
         return 0;
     } else {
-        printf("Overflow !!!\n");
+        #ifdef STACK_OVERFLOW_PRINT
+            printf("Overflow !\n");
+        #endif
+
         return 1;
     }
 }

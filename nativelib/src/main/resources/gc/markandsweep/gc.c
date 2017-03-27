@@ -46,7 +46,6 @@ void sweep() {
             }
             free_list_add_block(free_list, current, current_size);
             current = next;
-
         }
     }
 }
@@ -104,23 +103,32 @@ void* alloc(size_t size) {
 }
 
 void scalanative_collect() {
-    printf("\n\n### START GC ###\n");
-    fflush(stdout);
 
+    #ifdef TIMING_PRINT
+        printf("\n\n### START GC ###\n");
+        fflush(stdout);
 
-    clock_t start = clock(), diff;
+        clock_t start = clock(), diff;
+    #endif
+
     mark_roots(heap_);
-    diff = clock() - start;
-    int msec = diff * 1000 / CLOCKS_PER_SEC;
-    printf("Time taken %d seconds %d milliseconds\n", msec/1000, msec%1000);
 
+    #ifdef TIMING_PRINT
+        diff = clock() - start;
+        int msec = diff * 1000 / CLOCKS_PER_SEC;
+        printf("Time taken %d seconds %d milliseconds\n", msec/1000, msec%1000);
 
-    start = clock();
+        start = clock();
+    #endif
+
     sweep();
-    diff = clock() - start;
-    msec = diff * 1000 / CLOCKS_PER_SEC;
-    printf("Time taken %d seconds %d milliseconds\n", msec/1000, msec%1000);
 
-    printf("### END GC ###\n");
-    fflush(stdout);
+    #ifdef TIMING_PRINT
+        diff = clock() - start;
+        msec = diff * 1000 / CLOCKS_PER_SEC;
+        printf("Time taken %d seconds %d milliseconds\n", msec/1000, msec%1000);
+
+        printf("### END GC ###\n");
+        fflush(stdout);
+    #endif
 }
