@@ -10,7 +10,7 @@ MemoryStats free_list_get_stats(FreeList* free_list) {
         long count = 0;
         while(current != NULL) {
             count++;
-            size_t size = current->header.size + 1;
+            size_t size = current->header.size;
             if(size > largest_word) {
                 largest_word = size;
             }
