@@ -76,7 +76,7 @@ Block* get_block_last_list(FreeList* list, size_t nb_words_with_header) {
     }
     Block* block = best_match.block;
     Block* previous = best_match.previous;
-    size_t block_size_with_header = block->header.size + 1;
+    size_t block_size_with_header = block->header.size;
 
     //Block matches size (if size +1 cannot split)
     if(block_size_with_header - SMALLEST_BLOCK_SIZE >= nb_words_with_header) {
@@ -116,11 +116,11 @@ word_t* free_list_get_block(FreeList* list, size_t nb_words_with_header) {
                 return NULL;
             } else {
                 bitmap_set_bit(list->bitmap, (word_t*) block);
-                assert(block == NULL || header_unpack_size((word_t*)block) >= nb_words_with_header - 1);
+                assert(block == NULL || header_unpack_size((word_t*)block) >= nb_words_with_header);
                 return (word_t*)block;
             }
         } else {
-            size_t block_size_with_header = block->header.size + 1;
+            size_t block_size_with_header = block->header.size;
 
             if(block_size_with_header - SMALLEST_BLOCK_SIZE >= nb_words_with_header) {
                 Block* remaining_block = block_add_offset(block, nb_words_with_header);
@@ -133,7 +133,7 @@ word_t* free_list_get_block(FreeList* list, size_t nb_words_with_header) {
             }
 
             bitmap_set_bit(list->bitmap, (word_t*) block);
-            assert(block == NULL || header_unpack_size((word_t*)block) >= nb_words_with_header - 1);
+            assert(block == NULL || header_unpack_size((word_t*)block) >= nb_words_with_header);
             return (word_t*)block;
         }
     }

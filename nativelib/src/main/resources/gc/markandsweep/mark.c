@@ -42,7 +42,7 @@ void scan_heap_after_overflow(Stack* stack) {
             Rtti rtti = *((Rtti*) *(block+1));
             if(rtti.id == __OBJECT_ARRAY_ID__) {
 
-                size_t size = header_unpack_size(block);
+                size_t size = header_unpack_size(block) - 1;
 
                 for (int i = 0; i < size - 1; i++) {
                     word_t* field = (word_t*)(block[i + 2]);
@@ -106,7 +106,7 @@ void _mark() {
         Rtti rtti = *((Rtti*) *(block+1));
 
         if(rtti.id == __OBJECT_ARRAY_ID__) {
-            size_t size = header_unpack_size(block);
+            size_t size = header_unpack_size(block) - 1;
             assert(size < heap->heap_end - heap->heap_start);
 
             for (int i = 0; i < size - 1; i++) {
