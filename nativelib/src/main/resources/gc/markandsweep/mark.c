@@ -1,6 +1,5 @@
 
 #include "mark.h"
-#include <setjmp.h>
 
 #define INITIAL_STACK_SIZE 512*1024
 

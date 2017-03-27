@@ -9,7 +9,7 @@
 #include "bitmap.h"
 #include "linked_list.h"
 #include "mark.h"
-#include "free_list_stats.h"
+#include "utils/free_list_utils.h"
 #include <time.h>
 
 #define UNW_LOCAL_ONLY
@@ -20,13 +20,8 @@
 FreeList* free_list = NULL;
 Heap* heap_ = NULL;
 
-#define CHUNK 512*1024*1024
+#define CHUNK 1024*1024*1024
 
-
-void mark(word_t* block);
-
-
-void memory_check(int print);
 
 void sweep() {
     word_t* current = heap_->heap_start;
@@ -112,8 +107,6 @@ void scalanative_collect() {
     printf("\n\n### START GC ###\n");
     fflush(stdout);
 
-    bitmap_print_with_rtti(free_list->bitmap);
-
 
     clock_t start = clock(), diff;
     mark_roots(heap_);
@@ -121,7 +114,6 @@ void scalanative_collect() {
     int msec = diff * 1000 / CLOCKS_PER_SEC;
     printf("Time taken %d seconds %d milliseconds\n", msec/1000, msec%1000);
 
-    bitmap_print_with_rtti(free_list->bitmap);
 
     start = clock();
     sweep();
@@ -129,35 +121,6 @@ void scalanative_collect() {
     msec = diff * 1000 / CLOCKS_PER_SEC;
     printf("Time taken %d seconds %d milliseconds\n", msec/1000, msec%1000);
 
-    bitmap_print_with_rtti(free_list->bitmap);
-
     printf("### END GC ###\n");
     fflush(stdout);
-}
-
-void memory_check(int print) {
-    Bitmap* bitmap = free_list->bitmap;
-    word_t* current = bitmap->offset;
-    word_t* previous = NULL;
-    size_t previous_size = 0;
-
-    for(int i=0; i < bitmap->size / sizeof(word_t); i++) {
-        if(bitmap_get_bit(bitmap, current)) {
-            size_t size = header_unpack_size(current);
-            if(header_unpack_tag(current) == tag_allocated && print) {
-                printf("|A %p %zu", current, size);
-            } else if(header_unpack_tag(current) == tag_free && print) {
-                printf("|F %p %zu", current, size);
-            }
-            fflush(stdout);
-            if(previous != NULL) {
-                assert(previous + previous_size + 1 == current);
-            } else {
-                assert(current == bitmap->offset);
-            }
-            previous_size = size;
-            previous = current;
-        }
-        current += 1;
-    }
 }

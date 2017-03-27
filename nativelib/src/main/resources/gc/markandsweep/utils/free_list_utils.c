@@ -1,4 +1,4 @@
-#include "free_list_stats.h"
+#include "free_list_utils.h"
 
 MemoryStats free_list_get_stats(FreeList* free_list) {
     MemoryStats stats;
@@ -41,3 +41,16 @@ void free_list_print_stats(FreeList* list) {
     printf("max: %zu\n", stats.largest_word);
     printf("#############\n");
 }
+
+
+void free_list_print(FreeList* list) {
+    for(int i=0; i < LINKED_LIST_NUMBER; i++) {
+        if(list->list[i]->first != NULL) {
+            printf("%d: ", i + SMALLEST_BLOCK_SIZE);
+            linked_list_print(list->list[i]);
+            linked_list_check(list->list[i], i < 14 ? i + 2 : -1, list->bitmap);
+        }
+    }
+    printf("\n");
+}
+
