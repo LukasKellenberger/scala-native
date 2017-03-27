@@ -14,12 +14,12 @@ LinkedList* linked_list_alloc() {
 }
 
 
-void linked_list_add_block(LinkedList* list, Block* block, size_t block_size) {
+void linked_list_add_block(LinkedList* list, Block* block, size_t block_size_with_header) {
     // Set the header fields
-    block->header.size = block_size;
+    block->header.size = block_size_with_header - 1;
     block->header.tag = tag_free;
 
-    assert(block_size >= 1);
+    assert(block_size_with_header >= 2);
 
     // If the list is empty, set the block as first block
     if(list->first == NULL) {
@@ -33,7 +33,7 @@ void linked_list_add_block(LinkedList* list, Block* block, size_t block_size) {
     list->last = block;
 }
 
-void linked_list_remove_block(LinkedList* list, Block* block, size_t block_size, Block* previous) {
+void linked_list_remove_block(LinkedList* list, Block* block, size_t block_size_with_header, Block* previous) {
     assert(block != NULL);
     assert(list->first == block || previous != NULL);
     assert(previous == NULL || previous->next == block);
@@ -53,36 +53,8 @@ void linked_list_remove_block(LinkedList* list, Block* block, size_t block_size,
         list->last = previous;
     }
 
-    block->header.size = block_size;
+    block->header.size = block_size_with_header - 1;
     block->header.tag = tag_allocated;
-}
-
-void linked_list_split_block(LinkedList* list, Block* block, size_t size) {
-    assert(size % sizeof(word_t) == 0);
-    size_t size_with_header = size / sizeof(word_t) + 1;
-    // minimal block size is 2
-    assert(size_with_header > 1);
-
-    size_t block_size_with_header = block->header.size + 1;
-
-
-    assert(size_with_header + 2 <= block_size_with_header);
-    //remaining block size must be at least 2
-    size_t remaining_size_with_header = block_size_with_header - size_with_header;
-    assert(remaining_size_with_header > 1);
-    Block* next = block->next;
-
-    Block* remaining_free_block = block_add_offset(block, size_with_header);
-
-    block->header.size = size_with_header - 1;
-    block->header.tag = tag_free;
-
-    block->next = remaining_free_block;
-
-    remaining_free_block->header.size = remaining_size_with_header - 1;
-    remaining_free_block->header.tag = tag_free;
-
-    remaining_free_block->next = next;
 }
 
 /*
@@ -117,7 +89,7 @@ BestMatch linked_list_find_block(LinkedList* list, size_t nb_words_with_header) 
     return bestMatch;
 }
 
-BestMatch linked_list_find_first_block(LinkedList* list, size_t size) {
+/*BestMatch linked_list_find_first_block(LinkedList* list, size_t size) {
     assert(size % sizeof(word_t) == 0);
     size_t nb_words_with_header = size / sizeof(word_t) + 1;
 
@@ -143,4 +115,4 @@ BestMatch linked_list_find_first_block(LinkedList* list, size_t size) {
     bestMatch.block = best;
 
     return bestMatch;
-}
+}*/
