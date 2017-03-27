@@ -16,7 +16,7 @@ Heap* heap_alloc(size_t size) {
     heap->bitmap = bitmap;
     heap->bitmap_copy = bitmap_copy;
 
-    heap->free_list = free_list_create(size, heap_start, bitmap);
+    heap->free_list = free_list_create(nb_words, heap_start, bitmap);
 
     return heap;
 }

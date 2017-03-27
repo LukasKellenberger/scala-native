@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include "../bitmap.h"
-#include "../mark.h" // For rtti
+#include "../block.h"
 
 void bitmap_print(Bitmap* bitmap);
 void bitmap_print_with_rtti(Bitmap* bitmap);
