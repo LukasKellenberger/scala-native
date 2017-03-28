@@ -33,4 +33,6 @@ void bitmap_print_with_rtti(Bitmap* bitmap);
 
 void bitmap_clone(Bitmap* bitmap, Bitmap* clone);
 
+void bitmap_grow(Bitmap* bitmap, size_t nb_words);
+
 #endif //MARKANDSWEEP_BITMAP_H

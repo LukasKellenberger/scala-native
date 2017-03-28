@@ -42,3 +42,10 @@ void bitmap_clone(Bitmap* bitmap, Bitmap* clone) {
     unsigned long nb_words = (bitmap->size / sizeof(word_t) + BITS_PER_WORD - 1) / BITS_PER_WORD;
     memcpy(clone->words, bitmap->words, nb_words * sizeof(word_t));
 }
+
+void bitmap_grow(Bitmap* bitmap, size_t nb_words) {
+    size_t current_nb_words = (bitmap->size / sizeof(word_t) + BITS_PER_WORD - 1) / BITS_PER_WORD;
+    size_t new_nb_words = current_nb_words + BITS_PER_WORD * nb_words;
+    bitmap->words = realloc(bitmap->words, new_nb_words * sizeof(word_t));
+    bitmap->size = new_nb_words * sizeof(word_t);
+}

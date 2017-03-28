@@ -1,11 +1,20 @@
 #include "heap.h"
+#include <sys/mman.h>
 
+#define MAX_SIZE 64*1024*1024*1024L
+// Allow read and write
+#define HEAP_MEM_PROT (PROT_READ | PROT_WRITE)
+// Map private anonymous memory, and prevent from reserving swap
+#define HEAP_MEM_FLAGS (MAP_NORESERVE | MAP_PRIVATE | MAP_ANONYMOUS)
+// Map anonymous memory (not a file)
+#define HEAP_MEM_FD -1
+#define HEAP_MEM_FD_OFFSET 0
 
 Heap* heap_alloc(size_t size) {
     Heap* heap = malloc(sizeof(Heap));
     size_t nb_words = size / sizeof(word_t);
 
-    word_t* heap_start = calloc(nb_words, sizeof(word_t));
+    word_t* heap_start = mmap(NULL, MAX_SIZE, HEAP_MEM_PROT, HEAP_MEM_FLAGS, HEAP_MEM_FD, HEAP_MEM_FD_OFFSET);
 
     heap->nb_words = nb_words;
     heap->heap_start = heap_start;
@@ -35,4 +44,17 @@ word_t* heap_next_block(Heap* heap, word_t* block) {
     word_t* next = block + block_size_with_header;
 
     return next == heap->heap_end ? NULL : next;
+}
+
+void heap_grow(Heap* heap, size_t nb_words) {
+    bitmap_grow(heap->bitmap, nb_words);
+    bitmap_grow(heap->bitmap_copy, nb_words);
+    word_t* new_block = heap->heap_end;
+
+    heap->heap_end += nb_words;
+    heap->nb_words += nb_words;
+
+    heap->free_list->size += nb_words * sizeof(word_t);
+
+    free_list_add_block(heap->free_list, new_block, nb_words);
 }
