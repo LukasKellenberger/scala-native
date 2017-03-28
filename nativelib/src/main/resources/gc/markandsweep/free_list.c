@@ -58,7 +58,7 @@ FreeList* free_list_create(size_t nb_words, word_t* heap_start, Bitmap* bitmap) 
 }
 
 void free_list_add_block(FreeList* list, word_t* block, size_t block_size_with_header) {
-
+    memset(block, 0, block_size_with_header * sizeof(word_t));
     const int list_index = size_to_linked_list(block_size_with_header, 1);
     linked_list_add_block(list->list[list_index], (Block*) block, block_size_with_header);
 }
