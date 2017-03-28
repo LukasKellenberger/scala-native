@@ -64,19 +64,20 @@ void* scalanative_alloc_raw(size_t size) {
     }
     word_t* block = free_list_get_block(free_list, nb_words + 1);
     //free_list_print(free_list);
-    assert(block == NULL || header_unpack_size(block) >= size/sizeof(word_t) + 1 && header_unpack_size(block) <= size/sizeof(word_t) + 2);
+    assert(block == NULL || header_unpack_size(block) == nb_words + 1 || header_unpack_size(block) == nb_words + 2);
     assert(block == NULL || header_unpack_tag(block) == tag_allocated);
     if(block == NULL) {
         scalanative_collect();
         block = free_list_get_block(free_list, nb_words + 1);
 
-        assert(block == NULL || header_unpack_size(block) > size/sizeof(word_t) + 1 && header_unpack_size(block) <= size/sizeof(word_t) + 2);
+        assert(block == NULL || header_unpack_size(block) == nb_words + 1 || header_unpack_size(block) == nb_words + 2);
         assert(block == NULL || header_unpack_tag(block) == tag_allocated);
 
         if(block == NULL) {
             free_list_print_stats(free_list);
 
             printf("size: %zu\n", size);
+
             printf("No more memory available\n");
             fflush(stdout);
             exit(1);
@@ -130,7 +131,7 @@ void scalanative_collect() {
         diff = clock() - start;
         msec = diff * 1000 / CLOCKS_PER_SEC;
         printf("Time taken %d seconds %d milliseconds\n", msec/1000, msec%1000);
-
+        printf("Heap size: %ld\n", heap_->nb_words * sizeof(word_t));
         printf("### END GC ###\n");
         fflush(stdout);
     #endif
