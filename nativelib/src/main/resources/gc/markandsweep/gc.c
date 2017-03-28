@@ -56,9 +56,9 @@ void sweep() {
 void scalanative_init() {
     heap_ = heap_alloc(CHUNK);
     free_list = heap_->free_list;
-    in_gc = timer_create();
-    outside_gc = timer_create();
-    timer_start(outside_gc);
+    in_gc = gc_timer_create();
+    outside_gc = gc_timer_create();
+    gc_timer_start(outside_gc);
 }
 
 void grow_heap(size_t nb_words) {
@@ -120,8 +120,8 @@ void* alloc(size_t size) {
 }
 
 void scalanative_collect() {
-    timer_stop(outside_gc);
-    timer_start(in_gc);
+    gc_timer_stop(outside_gc);
+    gc_timer_start(in_gc);
     #ifdef TIMING_PRINT
         printf("\n\n### START GC ###\n");
         fflush(stdout);
@@ -151,15 +151,15 @@ void scalanative_collect() {
         fflush(stdout);
     #endif
 
-    timer_stop(in_gc);
+    gc_timer_stop(in_gc);
     int free_percent = free_list->free * 100 * sizeof(word_t) / free_list->size;
     printf("free: %d\n", free_percent);
     printf("ingc: %ld outgc: %ld\n", in_gc->time, outside_gc->time);
     fflush(stdout);
     if(free_percent < 25 || 2 * in_gc->time > outside_gc->time) {
         grow_heap(0);
-        timer_reset(in_gc);
-        timer_reset(outside_gc);
+        gc_timer_reset(in_gc);
+        gc_timer_reset(outside_gc);
     }
-    timer_start(outside_gc);
+    gc_timer_start(outside_gc);
 }
