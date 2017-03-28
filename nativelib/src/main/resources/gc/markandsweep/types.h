@@ -4,14 +4,14 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#define NDEBUG
+//#define NDEBUG
 
 #include <stdint.h>
 #include <assert.h>
 
 
 #define TIMING_PRINT
-//#define STACK_OVERFLOW_PRINT
+#define STACK_OVERFLOW_PRINT
 
 
 typedef uint64_t word_t;
