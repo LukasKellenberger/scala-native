@@ -1,7 +1,7 @@
 #include "timer.h"
 
 
-Timer* timer_create() {
+Timer* gc_timer_create() {
     Timer* timer = malloc(sizeof(Timer));
     timer->time = 0;
     timer->current_start = 0;
@@ -12,11 +12,11 @@ Timer* timer_create() {
     return timer;
 }
 
-void timer_start(Timer* timer) {
+void gc_timer_start(Timer* timer) {
     timer->current_start = clock();
 }
 
-void timer_stop(Timer* timer) {
+void gc_timer_stop(Timer* timer) {
     clock_t diff = clock() - timer->current_start;
     long interval_time = diff * 1000 / CLOCKS_PER_SEC;
     timer->time += interval_time - timer->intervals[timer->interval_index];
@@ -24,7 +24,7 @@ void timer_stop(Timer* timer) {
     timer->interval_index = (timer->interval_index + 1) % NB_INTERVALS;
 }
 
-void timer_reset(Timer* timer) {
+void gc_timer_reset(Timer* timer) {
     timer->time = 0;
     timer->current_start = 0;
     timer->interval_index = 0;
