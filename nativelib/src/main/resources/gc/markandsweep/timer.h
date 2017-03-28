@@ -11,6 +11,7 @@ typedef struct {
     clock_t current_start;
     long intervals[NB_INTERVALS];
     int interval_index;
+    int nb_intervals;
 } Timer;
 
 Timer* gc_timer_create();
