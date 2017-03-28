@@ -6,6 +6,7 @@ Timer* gc_timer_create() {
     timer->time = 0;
     timer->current_start = 0;
     timer->interval_index = 0;
+    timer->nb_intervals = 0;
     for(int i = 0; i < NB_INTERVALS; i++) {
         timer->intervals[i] = 0;
     }
@@ -22,6 +23,7 @@ void gc_timer_stop(Timer* timer) {
     timer->time += interval_time - timer->intervals[timer->interval_index];
     timer->intervals[timer->interval_index] = interval_time;
     timer->interval_index = (timer->interval_index + 1) % NB_INTERVALS;
+    timer->nb_intervals++;
 }
 
 void gc_timer_reset(Timer* timer) {
@@ -31,4 +33,5 @@ void gc_timer_reset(Timer* timer) {
     for(int i = 0; i < NB_INTERVALS; i++) {
         timer->intervals[i] = 0;
     }
+    timer->nb_intervals = 0;
 }

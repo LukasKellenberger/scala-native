@@ -156,7 +156,7 @@ void scalanative_collect() {
     printf("free: %d\n", free_percent);
     printf("ingc: %ld outgc: %ld\n", in_gc->time, outside_gc->time);
     fflush(stdout);
-    if(free_percent < 25 || 2 * in_gc->time > outside_gc->time) {
+    if(free_percent < 25 || (2 * in_gc->time > outside_gc->time && in_gc->nb_intervals > 2)) {
         grow_heap(0);
         gc_timer_reset(in_gc);
         gc_timer_reset(outside_gc);

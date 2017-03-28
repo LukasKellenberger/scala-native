@@ -4,7 +4,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-//#define NDEBUG
+#define NDEBUG
 
 #include <stdint.h>
 #include <assert.h>
