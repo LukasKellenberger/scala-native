@@ -20,6 +20,7 @@ typedef struct {
     Bitmap* bitmap;
     word_t* start;
     size_t size;
+    size_t free;
 } FreeList;
 
 /**
