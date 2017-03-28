@@ -53,6 +53,7 @@ FreeList* free_list_create(size_t nb_words, word_t* heap_start, Bitmap* bitmap) 
 
     linked_list_add_block(free_list->list[size_to_linked_list(nb_words, 1)], (Block*) words, nb_words);
     bitmap_set_bit(free_list->bitmap, words);
+    free_list->free = nb_words;
 
     return free_list;
 }
@@ -61,6 +62,7 @@ void free_list_add_block(FreeList* list, word_t* block, size_t block_size_with_h
     memset(block, 0, block_size_with_header * sizeof(word_t));
     const int list_index = size_to_linked_list(block_size_with_header, 1);
     linked_list_add_block(list->list[list_index], (Block*) block, block_size_with_header);
+    list->free += block_size_with_header;
 }
 
 /*
@@ -104,6 +106,7 @@ word_t* free_list_get_block(FreeList* list, size_t nb_words_with_header) {
             return NULL;
         } else {
             bitmap_set_bit(list->bitmap, (word_t*) block);
+            list->free -= nb_words_with_header;
             return (word_t*)block;
         }
     } else {
@@ -117,6 +120,7 @@ word_t* free_list_get_block(FreeList* list, size_t nb_words_with_header) {
             } else {
                 bitmap_set_bit(list->bitmap, (word_t*) block);
                 assert(block == NULL || header_unpack_size((word_t*)block) >= nb_words_with_header);
+                list->free -= nb_words_with_header;
                 return (word_t*)block;
             }
         } else {
@@ -134,12 +138,14 @@ word_t* free_list_get_block(FreeList* list, size_t nb_words_with_header) {
 
             bitmap_set_bit(list->bitmap, (word_t*) block);
             assert(block == NULL || header_unpack_size((word_t*)block) >= nb_words_with_header);
+            list->free -= nb_words_with_header;
             return (word_t*)block;
         }
     }
 }
 
 void free_list_clear_lists(FreeList* list) {
+    list->free = 0;
     for(int i = 0; i < LINKED_LIST_NUMBER; i++) {
         list->list[i]->first = NULL;
     }
