@@ -29,3 +29,19 @@ void bitmap_print_with_rtti(Bitmap* bitmap) {
     }
     printf("\n");
 }
+
+void bitmap_check(Bitmap* bitmap) {
+    size_t nb_words = bitmap->size / sizeof(word_t);
+    word_t* current = bitmap->offset;
+    for(unsigned long i=0; i < nb_words; i++) {
+        if(bitmap_get_bit(bitmap, current)) {
+            Rtti* rtti = (Rtti*)(*(current + 1));
+            assert(
+                (header_unpack_tag(current) == tag_allocated && rtti != NULL) ||
+                (header_unpack_tag(current) == tag_free)
+            );
+            assert(header_unpack_size(current) > 1);
+        }
+        current = current + 1;
+    }
+}
