@@ -7,5 +7,6 @@
 
 void bitmap_print(Bitmap* bitmap);
 void bitmap_print_with_rtti(Bitmap* bitmap);
+void bitmap_check(Bitmap* bitmap);
 
 #endif //BITMAP_UTILS_H
