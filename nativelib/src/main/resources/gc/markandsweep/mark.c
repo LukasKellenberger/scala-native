@@ -9,7 +9,6 @@ Heap* heap = NULL;
 Stack* stack = NULL;
 word_t* overflow_current_addr = NULL;
 int overflow = 0;
-int innner_count = 0;
 
 /*
  * Used to find the header of an inner pointer. Returns the block header if
@@ -29,7 +28,6 @@ word_t* inner_get_header(word_t* inner_ptr) {
 
     // Need to check if the block is allocated and if it is not marked
     if(header_unpack_tag(current) == tag_allocated && bitmap_get_bit(heap->bitmap, current)) {
-        innner_count++;
         return current;
     }
 
@@ -149,7 +147,7 @@ void _mark() {
 void mark(word_t* block) {
     // Check if pointer is on block header
     tag_t tag = header_unpack_tag(block);
-    if (bitmap_get_bit(heap->bitmap, block) && tag == tag_allocated) {
+    if (((uintptr_t)block & (uintptr_t)0x7) == 0 && bitmap_get_bit(heap->bitmap, block) && tag == tag_allocated) {
         bitmap_clear_bit(heap->bitmap, block);
         assert(heap_in_heap(heap, block));
         assert(header_unpack_size(block) > 1);
@@ -225,10 +223,8 @@ void mark_roots(Heap* _heap) {
     jmp_buf regs;
     setjmp(regs);
 
-    innner_count = 0;
     overflow_current_addr = heap->heap_start;
     mark_roots_stack();
     mark_roots_modules();
-    printf("inner: %d\n", innner_count);
     _mark();
 }
