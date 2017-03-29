@@ -47,7 +47,7 @@ void check_not_in_free_list(FreeList* list, word_t* block) {
 
 void check_header(Heap* heap, word_t* block) {
     FreeList* freeList = heap->free_list;
-    size_t size = header_unpack_size(block) - 1;
+    size_t size = header_unpack_size(block);
     assert(size > 1);
 
     tag_t tag = header_unpack_tag(block);
