@@ -39,16 +39,11 @@ void linked_list_add_block(LinkedList* list, Block* block, size_t block_size);
 
 /**
  * Removes the block `block` from the linked list.
- * Sets the size of the block to size and the tag to `tag_allocated`.
+ * Sets the size of the block to object_size and the tag to `tag_allocated`.
  * Expects previous to be NULL, or previous.next to be block.
  * If previous is NULL, block is expected to be the first block of the linked_list.
  */
-void linked_list_remove_block(LinkedList* list, Block* block, size_t size, Block* previous);
-
-
-BestMatch linked_list_find_block(LinkedList* list, size_t size);
-//BestMatch linked_list_find_first_block(LinkedList* list, size_t size);
-//BestMatch linked_list_find_good_block(LinkedList* list, size_t size);
+void linked_list_remove_block(LinkedList* list, Block* block, size_t object_size, Block* previous);
 
 
 

@@ -4,13 +4,40 @@
 
 #include "block.h"
 
+int log2_floor(size_t v) {
+    static const int MultiplyDeBruijnBitPosition[32] =
+            {
+                    0, 9, 1, 10, 13, 21, 2, 29, 11, 14, 16, 18, 22, 25, 3, 30,
+                    8, 12, 20, 28, 15, 17, 24, 7, 19, 27, 23, 6, 26, 5, 4, 31
+            };
+
+    v |= v >> 1; // first round down to one less than a power of 2
+    v |= v >> 2;
+    v |= v >> 4;
+    v |= v >> 8;
+    v |= v >> 16;
+
+    return MultiplyDeBruijnBitPosition[(uint32_t)(v * 0x07C4ACDDU) >> 27];
+}
+
+int log2_ceil(size_t v) {
+    return log2_floor(2*v - 1);
+}
+
+size_t size_to_block_size(size_t size) {
+    return 1L << log2_ceil(size);
+}
+
 Block* block_add_offset(Block* block, size_t offset) {
     return (Block*) ((word_t*)block + offset);
 }
 
 size_t header_unpack_size(word_t* block) {
-
     return ((Header*)block)->size;
+}
+
+size_t header_unpack_block_size(word_t* block) {
+    return size_to_block_size(header_unpack_size(block));
 }
 
 tag_t header_unpack_tag(word_t* block) {

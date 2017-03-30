@@ -14,12 +14,12 @@ LinkedList* linked_list_alloc() {
 }
 
 
-void linked_list_add_block(LinkedList* list, Block* block, size_t block_size_with_header) {
+void linked_list_add_block(LinkedList* list, Block* block, size_t block_size) {
     // Set the header fields
-    block->header.size = block_size_with_header;
+    block->header.size = block_size;
     block->header.tag = tag_free;
 
-    assert(block_size_with_header >= 2);
+    assert(block_size >= 2);
 
     // If the list is empty, set the block as first block
     if(list->first == NULL) {
@@ -33,7 +33,7 @@ void linked_list_add_block(LinkedList* list, Block* block, size_t block_size_wit
     list->last = block;
 }
 
-void linked_list_remove_block(LinkedList* list, Block* block, size_t block_size_with_header, Block* previous) {
+void linked_list_remove_block(LinkedList* list, Block* block, size_t object_size, Block* previous) {
     assert(block != NULL);
     assert(list->first == block || previous != NULL);
     assert(previous == NULL || previous->next == block);
@@ -53,66 +53,6 @@ void linked_list_remove_block(LinkedList* list, Block* block, size_t block_size_
         list->last = previous;
     }
 
-    block->header.size = block_size_with_header;
+    block->header.size = object_size;
     block->header.tag = tag_allocated;
 }
-
-/*
- * size without header in bytes
- */
-BestMatch linked_list_find_block(LinkedList* list, size_t nb_words_with_header) {
-    Block* previous_best = NULL;
-    Block* best = NULL;
-    size_t best_size = SIZE_MAX;
-    Block* previous = NULL;
-    Block* current = list->first;
-    while(current != NULL) {
-        size_t current_size_with_header = current->header.size;
-        if(current_size_with_header == nb_words_with_header) {
-            best = current;
-            previous_best = previous;
-            break;
-        } else if(current_size_with_header > nb_words_with_header && current_size_with_header < best_size) {
-            best = current;
-            best_size = current_size_with_header;
-            previous_best = previous;
-        }
-        previous = current;
-        current = current->next;
-    }
-
-
-    BestMatch bestMatch;
-    bestMatch.previous = previous_best;
-    bestMatch.block = best;
-
-    return bestMatch;
-}
-
-/*BestMatch linked_list_find_first_block(LinkedList* list, size_t size) {
-    assert(size % sizeof(word_t) == 0);
-    size_t nb_words_with_header = size / sizeof(word_t) + 1;
-
-    Block* previous_best = NULL;
-    Block* best = NULL;
-    size_t best_size = SIZE_MAX;
-    Block* previous = NULL;
-    Block* current = list->first;
-    while(current != NULL) {
-        size_t current_size_with_header = current->header.size + 1;
-        if(current_size_with_header >= nb_words_with_header) {
-            best = current;
-            previous_best = previous;
-            break;
-        }
-        previous = current;
-        current = current->next;
-    }
-
-
-    BestMatch bestMatch;
-    bestMatch.previous = previous_best;
-    bestMatch.block = best;
-
-    return bestMatch;
-}*/

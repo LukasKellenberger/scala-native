@@ -40,7 +40,7 @@ int heap_cannot_be_const(Heap* heap, word_t* block) {
 
 word_t* heap_next_block(Heap* heap, word_t* block) {
     assert(heap_in_heap(heap, block));
-    size_t block_size_with_header = header_unpack_size(block);
+    size_t block_size_with_header = header_unpack_block_size(block);
     word_t* next = block + block_size_with_header;
 
     return next == heap->heap_end ? NULL : next;

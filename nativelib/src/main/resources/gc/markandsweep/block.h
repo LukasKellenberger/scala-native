@@ -28,9 +28,16 @@ struct Block {
     Block* next;
 };
 
+int log2_ceil(size_t size);
+int log2_floor(size_t size);
+
+size_t size_to_block_size(size_t size);
+
 Block* block_add_offset(Block* block, size_t offset);
 
 size_t header_unpack_size(word_t* block);
+
+size_t header_unpack_block_size(word_t* block);
 
 tag_t header_unpack_tag(word_t* block);
 

@@ -40,7 +40,7 @@ void bitmap_check(Bitmap* bitmap) {
                 (header_unpack_tag(current) == tag_allocated && rtti != NULL) ||
                 (header_unpack_tag(current) == tag_free)
             );
-            assert(header_unpack_size(current) > 1);
+            assert(header_unpack_block_size(current) > 1);
         }
         current = current + 1;
     }

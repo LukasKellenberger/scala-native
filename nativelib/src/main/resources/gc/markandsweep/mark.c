@@ -87,7 +87,7 @@ void _mark() {
         assert(bitmap_get_bit(heap->bitmap_copy, block));
         assert(header_unpack_tag(block) == tag_allocated);
         assert(heap_in_heap(heap, block));
-        assert(header_unpack_size(block) > 1);
+        assert(header_unpack_block_size(block) > 1);
 
         Rtti rtti = *((Rtti*) *(block+1));
 
@@ -101,7 +101,7 @@ void _mark() {
                 if(heap_in_heap(heap, field_addr) && bitmap_get_bit(heap->bitmap, field_addr) && header_unpack_tag(field_addr) == tag_allocated) {
                     bitmap_clear_bit(heap->bitmap, field_addr);
                     assert(header_unpack_tag(field_addr) == tag_allocated);
-                    assert(header_unpack_size(field_addr) > 1);
+                    assert(header_unpack_block_size(field_addr) > 1);
                     if(!overflow) {
                         overflow = stack_push(stack, field_addr);
                     }
@@ -118,7 +118,7 @@ void _mark() {
                     bitmap_clear_bit(heap->bitmap, field_addr);
                     assert(heap_in_heap(heap, field_addr));
                     assert(header_unpack_tag(field_addr) == tag_allocated);
-                    assert(header_unpack_size(field_addr) > 1);
+                    assert(header_unpack_block_size(field_addr) > 1);
                     if(!overflow) {
                         overflow = stack_push(stack, field_addr);
                     }
@@ -152,7 +152,7 @@ void mark(word_t* block) {
     if (((uintptr_t)block & (uintptr_t)0x7) == 0 && bitmap_get_bit(heap->bitmap, block) && tag == tag_allocated) {
         bitmap_clear_bit(heap->bitmap, block);
         assert(heap_in_heap(heap, block));
-        assert(header_unpack_size(block) > 1);
+        assert(header_unpack_block_size(block) > 1);
         if(!overflow) {
             overflow = stack_push(stack, block);
         }
@@ -162,7 +162,7 @@ void mark(word_t* block) {
             bitmap_clear_bit(heap->bitmap, block);
             assert(heap_in_heap(heap, block));
             assert(header_unpack_tag(block) == tag_allocated);
-            assert(header_unpack_size(block) > 1);
+            assert(header_unpack_block_size(block) > 1);
             if(!overflow) {
                 overflow = stack_push(stack, block);
             }
