@@ -34,6 +34,7 @@ void sweep() {
 
     while(current != NULL) {
         current_size = header_unpack_size(current);
+        __builtin_prefetch(current + current_size);
         // Current block is alive, set bit to 1 and go to next block
         if(!bitmap_get_bit(heap_->bitmap, current)) {
             bitmap_set_bit(heap_->bitmap, current);
@@ -43,7 +44,9 @@ void sweep() {
             // Block is not alive, merge with next while possible
             word_t* next = heap_next_block(heap_, current);
             while(next != NULL && bitmap_get_bit(heap_->bitmap, next)) {
-                current_size = current_size + header_unpack_size(next);
+                size_t size = header_unpack_size(next);
+                __builtin_prefetch(next + current_size);
+                current_size = current_size + size;
                 bitmap_clear_bit(heap_->bitmap, next);
                 next = heap_next_block(heap_, next);
             }
