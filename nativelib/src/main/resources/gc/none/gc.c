@@ -1,12 +1,15 @@
 #include <stdlib.h>
 #include <sys/mman.h>
+#include <stdio.h>
 
 // Dummy GC that maps 1tb of memory and allocates but never frees.
 
 void* current = 0;
 
+size_t total = 0;
+
 // Map 1TB
-#define CHUNK 1024*1024*1024*1024L
+#define CHUNK 512*1024*1024L
 // Allow read and write
 #define DUMMY_GC_PROT (PROT_READ | PROT_WRITE)
 // Map private anonymous memory, and prevent from reserving swap
@@ -16,8 +19,21 @@ void* current = 0;
 #define DUMMY_GC_FD_OFFSET 0
 
 
+void handle_sigsegv()
+{
+    printf("signal %p\n", current);
+    fflush(stdout);
+    void* last = current - ((uintptr_t)current % CHUNK);
+    printf("last %p\n", last);
+    void* m = mmap(last, CHUNK, DUMMY_GC_PROT, DUMMY_GC_FLAGS, DUMMY_GC_FD, DUMMY_GC_FD_OFFSET);
+    total += CHUNK;
+    printf("returned %p\n", m);
+
+}
+
 
 void scalanative_init() {
+    signal(SIGSEGV, handle_sigsegv);
     current = mmap(NULL, CHUNK, DUMMY_GC_PROT, DUMMY_GC_FLAGS, DUMMY_GC_FD, DUMMY_GC_FD_OFFSET);
 }
 

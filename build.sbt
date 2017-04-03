@@ -421,6 +421,7 @@ lazy val benchmarks =
     .settings(noPublishSettings)
     .settings(
       nativeMode := "release",
+      nativeGC := "none",
       sourceGenerators in Compile += Def.task {
         val dir    = sourceDirectory.value
         val prefix = dir.getAbsolutePath + "/main/scala/"

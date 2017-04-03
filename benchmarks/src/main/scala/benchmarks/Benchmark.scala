@@ -40,7 +40,8 @@ abstract class Benchmark[T] {
       val times: Array[Long] = new Array[Long](iterations)
 
       while (i < iterations) {
-        val start  = System.nanoTime()
+        val start = System.nanoTime()
+        println(this.getClass.getName + " " + i)
         val result = run()
         val end    = System.nanoTime()
 
