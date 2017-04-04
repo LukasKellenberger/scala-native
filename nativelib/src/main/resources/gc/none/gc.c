@@ -1,15 +1,19 @@
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <stdio.h>
+#include <signal.h>
+#include <stdint.h>
 
 // Dummy GC that maps 1tb of memory and allocates but never frees.
 
-void* current = 0;
+void* current = (void*)0x300000000000;
+
+void* start = (void*)0x300000000000;
 
 size_t total = 0;
 
 // Map 1TB
-#define CHUNK 512*1024*1024L
+#define CHUNK (512*1024*1024L)
 // Allow read and write
 #define DUMMY_GC_PROT (PROT_READ | PROT_WRITE)
 // Map private anonymous memory, and prevent from reserving swap
@@ -21,20 +25,28 @@ size_t total = 0;
 
 void handle_sigsegv()
 {
-    printf("signal %p\n", current);
+    printf("signal %p %p\n", current, start);
     fflush(stdout);
-    void* last = current - ((uintptr_t)current % CHUNK);
+    
+    size_t diff = (uintptr_t)current - (uintptr_t)start;
+    void* last = (void*)((uintptr_t)current - (diff % CHUNK));
     printf("last %p\n", last);
-    void* m = mmap(last, CHUNK, DUMMY_GC_PROT, DUMMY_GC_FLAGS, DUMMY_GC_FD, DUMMY_GC_FD_OFFSET);
+    fflush(stdout);
+    void* m = mmap(last, CHUNK, DUMMY_GC_PROT, DUMMY_GC_FLAGS | MAP_FIXED, DUMMY_GC_FD, DUMMY_GC_FD_OFFSET);
+    printf("mmap returned\n");
+    fflush(stdout);
     total += CHUNK;
     printf("returned %p\n", m);
-
+    if(total > 100*CHUNK) {
+        exit(1);
+    }
 }
 
 
 void scalanative_init() {
     signal(SIGSEGV, handle_sigsegv);
-    current = mmap(NULL, CHUNK, DUMMY_GC_PROT, DUMMY_GC_FLAGS, DUMMY_GC_FD, DUMMY_GC_FD_OFFSET);
+    current = mmap(start, CHUNK, DUMMY_GC_PROT, DUMMY_GC_FLAGS | MAP_FIXED, DUMMY_GC_FD, DUMMY_GC_FD_OFFSET);
+    start = current;
 }
 
 // Allocates without bound checks, fails once it runs out of memory
