@@ -75,13 +75,18 @@ object ClassHierarchy {
       Val.Struct(Global.None, vtable)
     def dynDispatchTableStruct =
       Type.Struct(Global.None, Seq(Type.Int, Type.Ptr, Type.Ptr, Type.Ptr))
-    def size: Long = MemoryLayout(Type.Ptr +: allfields.map(_.ty)).size
+    def ptrMapStruct = Type.Struct(Global.None, Seq(Type.Ptr))
+    def memoryLayout = MemoryLayout(Type.Ptr +: allfields.map(_.ty))
+
+    def ptrMap     = Val.Const(Val.Array(Type.Long, memoryLayout.offsetArray))
+    def size: Long = memoryLayout.size
     def typeStruct: Type.Struct =
       Type.Struct(Global.None,
                   Seq(Type.Int,
                       Type.Ptr,
                       Type.Long,
                       dynDispatchTableStruct,
+                      ptrMapStruct,
                       vtableStruct))
     def typeValue: Val.Struct =
       Val.Struct(Global.None,
@@ -89,6 +94,7 @@ object ClassHierarchy {
                      Val.String(name.id),
                      Val.Long(size),
                      dynDispatchTableValue,
+                     Val.Struct(Global.None, Seq(ptrMap)),
                      vtableValue))
     def typeConst: Val =
       Val.Global(name member "type", Type.Ptr)
