@@ -4,24 +4,31 @@
 
 #include "block.h"
 
+Block* block_add_offset(Block* block, size_t offset) {
+    return (Block*) ((word_t*)block + offset);
+}
 
 size_t header_unpack_size(word_t* block) {
-    return (*block) >> BITS_FOR_TAG;
+
+    return ((Header*)block)->size;
 }
 
 tag_t header_unpack_tag(word_t* block) {
-    return *block & TAG_MASK;
+    return ((Header*)block)->tag;
 }
 
 void header_pack_size(word_t* block, size_t size) {
-    *block = (*block & TAG_MASK) | (size << BITS_FOR_TAG);
+    Header* header = (Header*) block;
+    header->size = size;
 }
 
 void header_pack_tag(word_t* block, tag_t tag) {
-    size_t size = header_unpack_size(block);
-    header_pack(block, size, tag);
+    Header* header = (Header*) block;
+    header->tag = tag;
 }
 
 void header_pack(word_t* block, size_t size, tag_t tag) {
-    *block = (size << 8) | (tag & TAG_MASK) ;
+    Header* header = (Header*) block;
+    header->size = size;
+    header->tag = tag;
 }
