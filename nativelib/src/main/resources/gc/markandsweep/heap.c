@@ -40,13 +40,18 @@ int heap_cannot_be_const(Heap* heap, word_t* block) {
 
 word_t* heap_next_block(Heap* heap, word_t* block) {
     assert(heap_in_heap(heap, block));
-    size_t block_size_with_header = header_unpack_size(block);
+    size_t block_size_with_header = header_unpack_block_size(block);
     word_t* next = block + block_size_with_header;
 
     return next == heap->heap_end ? NULL : next;
 }
 
 void heap_grow(Heap* heap, size_t nb_words) {
+
+    nb_words = (nb_words + SMALLEST_CHUNK_SIZE - 1) / SMALLEST_CHUNK_SIZE * SMALLEST_CHUNK_SIZE;
+
+    assert(nb_words % SMALLEST_CHUNK_SIZE == 0);
+
     bitmap_grow(heap->bitmap, nb_words);
     bitmap_grow(heap->bitmap_copy, nb_words);
     word_t* new_block = heap->heap_end;
@@ -56,5 +61,5 @@ void heap_grow(Heap* heap, size_t nb_words) {
 
     heap->free_list->size += nb_words * sizeof(word_t);
 
-    free_list_add_block(heap->free_list, new_block, nb_words);
+    free_list_add_chunk(heap->free_list, new_block, nb_words);
 }

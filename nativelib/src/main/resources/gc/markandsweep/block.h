@@ -10,8 +10,8 @@
 #include "types.h"
 
 typedef enum {
-    tag_allocated = 0,
-    tag_free = 1
+    tag_allocated = 12,
+    tag_free = 13
 } tag_t;
 
 #define BITS_FOR_TAG 8
@@ -28,9 +28,14 @@ struct Block {
     Block* next;
 };
 
+int log2_floor(size_t value);
+
+int log2_ceil(size_t value);
+
 Block* block_add_offset(Block* block, size_t offset);
 
-size_t header_unpack_size(word_t* block);
+size_t header_unpack_object_size(word_t* block);
+size_t header_unpack_block_size(word_t* block);
 
 tag_t header_unpack_tag(word_t* block);
 

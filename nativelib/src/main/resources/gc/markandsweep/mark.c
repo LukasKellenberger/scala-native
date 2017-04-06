@@ -1,7 +1,7 @@
 
 #include "mark.h"
 
-#define INITIAL_STACK_SIZE 512*1024
+#define INITIAL_STACK_SIZE 512*1024*1024
 
 void mark(word_t* block);
 
@@ -44,7 +44,7 @@ void scan_heap_after_overflow(Stack* stack) {
             Rtti rtti = *((Rtti*) *(block+1));
             if(rtti.id == __OBJECT_ARRAY_ID__) {
 
-                size_t size = header_unpack_size(block) - 1;
+                size_t size = header_unpack_object_size(block) - 1;
 
                 for (int i = 0; i < size - 1; i++) {
                     word_t* field = (word_t*)(block[i + 2]);
@@ -85,12 +85,12 @@ void _mark() {
         assert(bitmap_get_bit(heap->bitmap_copy, block));
         assert(header_unpack_tag(block) == tag_allocated);
         assert(heap_in_heap(heap, block));
-        assert(header_unpack_size(block) > 1);
+        assert(header_unpack_block_size(block) > 1);
 
         Rtti rtti = *((Rtti*) *(block+1));
 
         if(rtti.id == __OBJECT_ARRAY_ID__) {
-            size_t size = header_unpack_size(block) - 1;
+            size_t size = header_unpack_object_size(block) - 1;
             assert(size < heap->heap_end - heap->heap_start);
 
             for (int i = 0; i < size - 1; i++) {
@@ -99,7 +99,7 @@ void _mark() {
                 if(heap_in_heap(heap, field_addr) && bitmap_get_bit(heap->bitmap, field_addr) && header_unpack_tag(field_addr) == tag_allocated) {
                     bitmap_clear_bit(heap->bitmap, field_addr);
                     assert(header_unpack_tag(field_addr) == tag_allocated);
-                    assert(header_unpack_size(field_addr) > 1);
+                    assert(header_unpack_block_size(field_addr) > 1);
                     if(!overflow) {
                         overflow = stack_push(stack, field_addr);
                     }
@@ -116,7 +116,7 @@ void _mark() {
                     bitmap_clear_bit(heap->bitmap, field_addr);
                     assert(heap_in_heap(heap, field_addr));
                     assert(header_unpack_tag(field_addr) == tag_allocated);
-                    assert(header_unpack_size(field_addr) > 1);
+                    assert(header_unpack_block_size(field_addr) > 1);
                     if(!overflow) {
                         overflow = stack_push(stack, field_addr);
                     }
@@ -150,7 +150,7 @@ void mark(word_t* block) {
     if (((uintptr_t)block & (uintptr_t)0x7) == 0 && bitmap_get_bit(heap->bitmap, block) && tag == tag_allocated) {
         bitmap_clear_bit(heap->bitmap, block);
         assert(heap_in_heap(heap, block));
-        assert(header_unpack_size(block) > 1);
+        assert(header_unpack_block_size(block) > 1);
         if(!overflow) {
             overflow = stack_push(stack, block);
         }
@@ -160,7 +160,7 @@ void mark(word_t* block) {
             bitmap_clear_bit(heap->bitmap, block);
             assert(heap_in_heap(heap, block));
             assert(header_unpack_tag(block) == tag_allocated);
-            assert(header_unpack_size(block) > 1);
+            assert(header_unpack_block_size(block) > 1);
             if(!overflow) {
                 overflow = stack_push(stack, block);
             }
@@ -221,6 +221,7 @@ void mark_roots(Heap* _heap) {
     bitmap_clone(heap->bitmap, heap->bitmap_copy);
     // Dumps registers into 'regs' which is on stack
     jmp_buf regs;
+    //memset(&regs, 0, sizeof(jmp_buf));
     setjmp(regs);
 
     overflow_current_addr = heap->heap_start;

@@ -20,11 +20,6 @@ typedef struct {
 #define LIST_END NULL
 
 
-typedef struct {
-    Block* block;
-    Block* previous;
-} BestMatch;
-
 /**
  *
  * Allocates a new linked_list struct and set all fields to NULL
@@ -45,10 +40,6 @@ void linked_list_add_block(LinkedList* list, Block* block, size_t block_size);
  */
 void linked_list_remove_block(LinkedList* list, Block* block, size_t size, Block* previous);
 
-
-BestMatch linked_list_find_block(LinkedList* list, size_t size);
-//BestMatch linked_list_find_first_block(LinkedList* list, size_t size);
-//BestMatch linked_list_find_good_block(LinkedList* list, size_t size);
 
 
 
