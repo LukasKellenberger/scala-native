@@ -31,4 +31,6 @@ int bitmap_get_bit(Bitmap* bitmap, word_t* addr);
 
 void bitmap_print(Bitmap* bitmap);
 
+void bitmap_clone(Bitmap* bitmap, Bitmap* clone);
+
 #endif //MARKANDSWEEP_BITMAP_H

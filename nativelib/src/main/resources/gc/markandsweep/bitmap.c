@@ -7,6 +7,7 @@
 #include <assert.h>
 #include "bitmap.h"
 
+
 Bitmap* bitmap_alloc(size_t size, word_t* offset) {
     assert(size % sizeof(word_t) == 0);
     unsigned long nb_words = (size / sizeof(word_t) + BITS_PER_WORD - 1) / BITS_PER_WORD;
@@ -51,4 +52,9 @@ void bitmap_print(Bitmap* bitmap) {
         current = current + 1;
     }
     printf("\n");
+}
+
+void bitmap_clone(Bitmap* bitmap, Bitmap* clone) {
+    unsigned long nb_words = (bitmap->size / sizeof(word_t) + BITS_PER_WORD - 1) / BITS_PER_WORD;
+    memcpy(clone->words, bitmap->words, nb_words * sizeof(word_t));
 }
