@@ -8,124 +8,84 @@
 #include "linked_list.h"
 
 
-word_t addr_p_to_v(LinkedList* list, word_t* p_addr) {
-    word_t diff = p_addr - list->start;
-    return diff;
+LinkedList* linked_list_create(size_t size) {
+    LinkedList* list = malloc(sizeof(LinkedList));
+    list->first = NULL;
+    list->last = NULL;
+    return list;
 }
 
-word_t* addr_v_to_p(LinkedList* list, word_t addr) {
-    return list->start + addr;
-}
+void linked_list_add_block(LinkedList* list, Block* block, size_t block_size) {
+    block->header.size = block_size;
+    block->header.tag = tag_free;
 
-/*
- * size in bytes
- */
-LinkedList* linked_list_alloc(size_t size) {
-    assert(size % sizeof(word_t) == 0);
-    unsigned long nb_words = size / sizeof(word_t);
-    assert(nb_words > 1);
-    word_t* words = calloc(nb_words, sizeof(word_t));
-    LinkedList* linked_list = malloc(sizeof(LinkedList));
-    linked_list->first = words;
-    linked_list->start = words;
-    linked_list->size = size;
-
-    header_pack(words, nb_words - 1, tag_free);
-
-    return linked_list;
-}
-
-word_t* linked_list_add_block(LinkedList* list, word_t* block, word_t* previous) {
-    size_t block_size = header_unpack_size(block);
-
-    header_pack(block, block_size, tag_free);
     assert(block_size >= 1);
-
 
     if(list->first == NULL) {
         list->first = block;
-        block[1] = LIST_END;
-
-    } else if(previous == NULL) {
-        word_t next = addr_p_to_v(list, list->first);
-        list->first = block;
-        block[1] = next;
     } else {
-        size_t previous_size = header_unpack_size(previous);
-
-        // If previous and current are contiguous, merge them
-        if(previous + previous_size + 1 == block) {
-            header_pack(previous, previous_size + block_size + 1, tag_free);
-            previous[1] = LIST_END;
-            block = previous;
-        } else {
-            previous[1] = addr_p_to_v(list, block);
-            block[1] = LIST_END;
-        }
+        list->last->next = block;
     }
-
-    return block;
+    block->next = LIST_END;
+    list->last = block;
 }
-void linked_list_remove_block(LinkedList* list, word_t* block, word_t* previous) {
+void linked_list_remove_block(LinkedList* list, Block* block, size_t block_size, Block* previous) {
     assert(block != NULL);
-    word_t next = block[1];
+
+    Block* next = block->next;
 
     if (list->first == block) {
         // If the block is the first element of the list
-        list->first = next == LIST_END ? NULL : addr_v_to_p(list, next);
+        list->first = next == LIST_END ? LIST_END : next;
     } else {
-        previous[1] = next;
+        previous->next = next;
     }
 
-    header_pack_tag(block, tag_allocated);
-}
-word_t* linked_list_next(LinkedList* list, word_t* block) {
-    assert(block != NULL);
+    if(list->last == block) {
+        list->last = next == LIST_END ? previous : next;
+    }
 
-    if(block == NULL) {
-        return NULL;
-    }
-    word_t next = block[1];
-    if(next == LIST_END) {
-        return NULL;
-    }
-    return addr_v_to_p(list, next);
+    block->header.size = block_size;
+    block->header.tag = tag_allocated;
 }
-/*
- * size without header in bytes
- */
-void linked_list_split_block(LinkedList* list, word_t* block, size_t size) {
+
+void linked_list_print(LinkedList* list) {
+    Block* current = list->first;
+    printf("list: ");
+    while(current != NULL) {
+        size_t size = current->header.size + 1;
+        printf("[%p (%zu)] -> ", current, size);
+        current = current->next;
+    }
+    printf("\n");
+}
+
+void linked_list_split_block(LinkedList* list, Block* block, size_t size) {
     assert(size % sizeof(word_t) == 0);
     size_t size_with_header = size / sizeof(word_t) + 1;
     // minimal block size is 2
     assert(size_with_header > 1);
-    size_t block_size_with_header = header_unpack_size(block) + 1;
+
+    size_t block_size_with_header = block->header.size + 1;
 
 
     assert(size_with_header + 2 <= block_size_with_header);
     //remaining block size must be at least 2
     size_t remaining_size_with_header = block_size_with_header - size_with_header;
     assert(remaining_size_with_header > 1);
-    word_t next = block[1];
+    Block* next = block->next;
 
-    word_t* remaining_free_block = block + size_with_header;
+    Block* remaining_free_block = block_add_offset(block, size_with_header);
 
-    header_pack(block, size_with_header - 1, tag_free);
-    block[1] = addr_p_to_v(list, remaining_free_block);
+    block->header.size = size_with_header - 1;
+    block->header.tag = tag_free;
 
-    header_pack(remaining_free_block, remaining_size_with_header - 1, tag_free);
-    remaining_free_block[1] = next;
-}
+    block->next = remaining_free_block;
 
-void linked_list_print(LinkedList* list) {
-    word_t* current = list->first;
-    printf("list: ");
-    while(current != NULL) {
-        size_t size = header_unpack_size(current) + 1;
-        printf("[%p (%zu)] -> ", current, size);
-        current = linked_list_next(list, current);
-    }
-    printf("\n");
+    remaining_free_block->header.size = remaining_size_with_header - 1;
+    remaining_free_block->header.tag = tag_free;
+
+    remaining_free_block->next = next;
 }
 
 /*
@@ -135,13 +95,13 @@ BestMatch linked_list_find_block(LinkedList* list, size_t size) {
     assert(size % sizeof(word_t) == 0);
     size_t nb_words_with_header = size / sizeof(word_t) + 1;
 
-    word_t* previous_best = NULL;
-    word_t* best = NULL;
+    Block* previous_best = NULL;
+    Block* best = NULL;
     size_t best_size = SIZE_MAX;
-    word_t* previous = NULL;
-    word_t* current = list->first;
+    Block* previous = NULL;
+    Block* current = list->first;
     while(current != NULL) {
-        size_t current_size_with_header = header_unpack_size(current) + 1;
+        size_t current_size_with_header = current->header.size + 1;
         if(current_size_with_header == nb_words_with_header) {
             best = current;
             previous_best = previous;
@@ -152,7 +112,35 @@ BestMatch linked_list_find_block(LinkedList* list, size_t size) {
             previous_best = previous;
         }
         previous = current;
-        current = linked_list_next(list, current);
+        current = current->next;
+    }
+
+
+    BestMatch bestMatch;
+    bestMatch.previous = previous_best;
+    bestMatch.block = best;
+
+    return bestMatch;
+}
+
+BestMatch linked_list_find_first_block(LinkedList* list, size_t size) {
+    assert(size % sizeof(word_t) == 0);
+    size_t nb_words_with_header = size / sizeof(word_t) + 1;
+
+    Block* previous_best = NULL;
+    Block* best = NULL;
+    size_t best_size = SIZE_MAX;
+    Block* previous = NULL;
+    Block* current = list->first;
+    while(current != NULL) {
+        size_t current_size_with_header = current->header.size + 1;
+        if(current_size_with_header >= nb_words_with_header) {
+            best = current;
+            previous_best = previous;
+            break;
+        }
+        previous = current;
+        current = current->next;
     }
 
 
