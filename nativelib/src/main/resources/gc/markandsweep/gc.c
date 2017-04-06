@@ -19,7 +19,7 @@
 
 FreeList* free_list = NULL;
 
-#define CHUNK 1024*1024*1024
+#define CHUNK 512*1024*1024
 
 #define DEBUG
 
