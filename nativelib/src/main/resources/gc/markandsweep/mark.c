@@ -10,8 +10,12 @@ Bitmap* bitmap_copy = NULL;
 word_t* heap_start = NULL;
 word_t* heap_end = NULL;
 Stack* stack = NULL;
+word_t* overflow_current_addr = NULL;
+int overflow = 0;
 
-
+inline static int cannot_be_const(word_t* block) {
+    return block > heap_start;
+}
 
 inline static int in_heap(word_t* block) {
     return block >= heap_start && block < heap_end;
@@ -30,8 +34,68 @@ word_t* inner_get_header(word_t* inner_ptr) {
     return NULL;
 }
 
-void _mark() {
+void scan_heap_after_overflow(Stack* stack) {
 
+    word_t* block = overflow_current_addr;
+    int found = 0;
+    while(block < heap_end && !found) {
+        assert(bitmap_get_bit(bitmap_copy, block));
+        if(!bitmap_get_bit(bitmap, block) && header_unpack_tag(block) == tag_allocated) {
+            Rtti rtti = *((Rtti*) *(block+1));
+            if(rtti.id == __OBJECT_ARRAY_ID__) {
+
+                size_t size = header_unpack_size(block);
+
+                for (int i = 0; i < size - 1; i++) {
+                    word_t* field = (word_t*)(block[i + 2]);
+                    if(field != NULL && cannot_be_const(field)) {
+                        word_t* field_addr = field - 1;
+                        if (bitmap_get_bit(bitmap, field_addr)) {
+                            stack_push(stack, block);
+                            found = 1;
+                            break;
+                        } else if(!bitmap_get_bit(bitmap_copy, field_addr)) {
+                            word_t* inner_header = inner_get_header(field_addr);
+                            if(inner_header != NULL) {
+                                stack_push(stack, block);
+                                found = 1;
+                                break;
+                            }
+                        }
+                    }
+                }
+            } else {
+                int64_t* ptr_map = rtti.ptr_map;
+                int i=0;
+                while(ptr_map[i] != -1) {
+                    assert(ptr_map[i] % 8 == 0);
+                    word_t* field = (word_t*)(block[ptr_map[i]/sizeof(word_t) + 1]);
+                    if(field != NULL && cannot_be_const(field)) {
+                        word_t* field_addr = (word_t*)field - 1;
+                        if (bitmap_get_bit(bitmap, field_addr)) {
+                            stack_push(stack, block);
+                            found = 1;
+                            break;
+                        } else if(!bitmap_get_bit(bitmap_copy, field_addr))  {
+                            word_t* inner_header = inner_get_header(field_addr);
+                            if(inner_header != NULL) {
+                                stack_push(stack, block);
+                                found = 1;
+                                break;
+                            }
+                        }
+                    }
+                    ++i;
+                }
+            }
+        }
+        block += header_unpack_size(block) + 1;
+    }
+    overflow_current_addr = block;
+
+}
+
+void _mark() {
     while(!stack_is_empty(stack)) {
         word_t* block = stack_pop(stack);
         assert(header_unpack_tag(block) == tag_allocated);
@@ -44,17 +108,21 @@ void _mark() {
             assert(size < heap_end - heap_start);
 
             for (int i = 0; i < size - 1; i++) {
-                word_t field = block[i + 2];
-                word_t* field_addr = (word_t*)field-1;
-                if(in_heap(field_addr)) {
+                word_t* field = (word_t*)(block[i + 2]);
+                if(field != NULL && cannot_be_const(field)) {
+                    word_t* field_addr = field - 1;
                     if (bitmap_get_bit(bitmap, field_addr)) {
                         bitmap_clear_bit(bitmap, field_addr);
-                        stack_push(stack, field_addr);
-                    } else if(!bitmap_get_bit(bitmap_copy, block)) {
+                        if(!overflow) {
+                            overflow = stack_push(stack, field_addr);
+                        }
+                    } else if(!bitmap_get_bit(bitmap_copy, field_addr)) {
                         word_t* inner_header = inner_get_header(field_addr);
                         if(inner_header != NULL) {
                             bitmap_clear_bit(bitmap, inner_header);
-                            stack_push(stack, inner_header);
+                            if(!overflow) {
+                                overflow = stack_push(stack, inner_header);
+                            }
                         }
                     }
                 }
@@ -64,22 +132,35 @@ void _mark() {
             int i=0;
             while(ptr_map[i] != -1) {
                 assert(ptr_map[i] % 8 == 0);
-                word_t field = block[ptr_map[i]/sizeof(word_t) + 1];
-                word_t* field_addr = (word_t*)field - 1;
-                if(in_heap(field_addr)) {
+                word_t* field = (word_t*)(block[ptr_map[i]/sizeof(word_t) + 1]);
+                if(field != NULL && cannot_be_const(field)) {
+                    word_t* field_addr = (word_t*)field - 1;
                     if (bitmap_get_bit(bitmap, field_addr)) {
                         bitmap_clear_bit(bitmap, field_addr);
-                        stack_push(stack, field_addr);
-                    } else if(!bitmap_get_bit(bitmap_copy, block))  {
+                        if(!overflow) {
+                            overflow = stack_push(stack, field_addr);
+                        }
+                    } else if(!bitmap_get_bit(bitmap_copy, field_addr))  {
                         word_t* inner_header = inner_get_header(field_addr);
                         if(inner_header != NULL) {
                             bitmap_clear_bit(bitmap, inner_header);
-                            stack_push(stack, inner_header);
+                            if(!overflow) {
+                                overflow = stack_push(stack, inner_header);
+                            }
                         }
                     }
                 }
                 ++i;
             }
+        }
+    }
+    if(overflow) {
+        overflow = 0;
+        stack_double_size(stack);
+        printf("double size\n");
+        while(overflow_current_addr < heap_end) {
+            scan_heap_after_overflow(stack);
+            _mark();
         }
     }
 }
@@ -91,12 +172,16 @@ void mark(word_t* block) {
     // Check if pointer is on block header
     tag_t tag = header_unpack_tag(block);
     if (bitmap_get_bit(bitmap, block) && tag == tag_allocated) {
-        stack_push(stack, block);
+        if(!overflow) {
+            overflow = stack_push(stack, block);
+        }
         bitmap_clear_bit(bitmap, block);
     } else if(!bitmap_get_bit(bitmap_copy, block)) {
         block = inner_get_header(block);
         if(block != NULL) {
-            stack_push(stack, block);
+            if(!overflow) {
+                overflow = stack_push(stack, block);
+            }
             bitmap_clear_bit(bitmap, block);
         }
     }
@@ -182,6 +267,7 @@ void mark_roots() {
     unw_getcontext(&context);
     unw_init_local(&cursor, &context);
 
+    overflow_current_addr = heap_start;
     mark_roots_registers(&cursor);
     mark_roots_stack(&cursor);
     mark_roots_modules();
@@ -191,7 +277,7 @@ void mark_roots() {
 void mark_init(FreeList* free_list) {
     bitmap = free_list->bitmap;
     bitmap_copy = bitmap_alloc(bitmap->size, bitmap->offset);
-    stack = stack_alloc(1024*1024*1024);
+    stack = stack_alloc(2*1024*1024);
     heap_start = free_list->start;
     heap_end = heap_start + free_list->size / sizeof(word_t);
 }
