@@ -49,8 +49,8 @@ void chunk_allocator_add_chunk(ChunkAllocator* chunk_allocator, Chunk* block, si
     }
 }
 
-Chunk* chunk_allocator_get_chunk(ChunkAllocator* chunk_allocator, size_t chunk_size) {
-    //requested_chunk_size is power of 2
+Chunk* chunk_allocator_get_chunk(ChunkAllocator* chunk_allocator, size_t requested_chunk_size) {
+    size_t chunk_size = 1L << log2_ceil(requested_chunk_size);
 
     int list_index = size_to_linked_list(chunk_size);
     Chunk* chunk = NULL;
@@ -64,10 +64,10 @@ Chunk* chunk_allocator_get_chunk(ChunkAllocator* chunk_allocator, size_t chunk_s
 
     size_t received_chunk_size = chunk->header.size;
 
-    if(received_chunk_size - SMALLEST_CHUNK_SIZE >= chunk_size) {
-        Block* remaining_chunk = block_add_offset(chunk, chunk_size);
-        linked_list_remove_block(chunk_allocator->chunk_lists[list_index], chunk, chunk_size, NULL);
-        size_t remaining_chunk_size = received_chunk_size - chunk_size;
+    if(received_chunk_size - SMALLEST_CHUNK_SIZE >= requested_chunk_size) {
+        Block* remaining_chunk = block_add_offset(chunk, requested_chunk_size);
+        linked_list_remove_block(chunk_allocator->chunk_lists[list_index], chunk, requested_chunk_size, NULL);
+        size_t remaining_chunk_size = received_chunk_size - requested_chunk_size;
         chunk_allocator_add_chunk(chunk_allocator, (Chunk*)remaining_chunk, remaining_chunk_size);
     } else {
         linked_list_remove_block(chunk_allocator->chunk_lists[list_index], chunk, chunk_size, NULL);

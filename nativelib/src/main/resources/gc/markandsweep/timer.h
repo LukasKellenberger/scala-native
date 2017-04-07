@@ -4,7 +4,7 @@
 #include <time.h>
 #include <stdlib.h>
 
-#define NB_INTERVALS 5
+#define NB_INTERVALS 20
 
 typedef struct {
     long time;

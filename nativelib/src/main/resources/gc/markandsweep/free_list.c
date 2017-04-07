@@ -29,8 +29,10 @@ size_t object_size_to_block_size(size_t object_size) {
         return SMALLEST_BLOCK_SIZE;
     } else if (object_size <= LARGEST_CONST) {
         return object_size;
+    } else if (object_size <= SMALLEST_CHUNK_SIZE/2) {
+        return 1L << log2_ceil(object_size);
     } else {
-        return 1L << log2_floor(2*object_size - 1);
+        return (object_size + SMALLEST_CHUNK_SIZE - 1) / SMALLEST_CHUNK_SIZE * SMALLEST_CHUNK_SIZE;
     }
 }
 
@@ -78,9 +80,9 @@ void free_list_add_block(FreeList* list, word_t* block, size_t block_size_with_h
     linked_list_add_block(list->list[list_index], (Block*) block, block_size_with_header);
     list->free += block_size_with_header;
     bitmap_set_bit(list->bitmap, block);
-    for(int i=1; i < block_size_with_header; i++) {
+    /*for(int i=1; i < block_size_with_header; i++) {
         assert(!bitmap_get_bit(list->bitmap, block + i));
-    }
+    }*/
 }
 
 

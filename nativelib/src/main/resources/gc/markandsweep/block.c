@@ -36,11 +36,7 @@ size_t header_unpack_object_size(word_t* block) {
 
 size_t header_unpack_block_size(word_t* block) {
     size_t object_size = ((Header*)block)->size;
-    if(object_size >= SMALLEST_CHUNK_SIZE) {
-        return 1L << log2_ceil(object_size);
-    } else {
-        return object_size_to_block_size(object_size);
-    }
+    return object_size_to_block_size(object_size);
 }
 
 tag_t header_unpack_tag(word_t* block) {

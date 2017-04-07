@@ -24,7 +24,7 @@
 FreeList* free_list = NULL;
 Heap* heap_ = NULL;
 
-#define CHUNK 24*1024*1024
+#define CHUNK 2*1024*1024
 Timer* in_gc = NULL;
 Timer* outside_gc = NULL;
 
@@ -115,8 +115,7 @@ void sweep() {
                 next += chunk_size;
             }
             free_list_add_chunk(free_list, current, current_size);
-            //printf("add chunk: %zu %ld\n", current_size/SMALLEST_CHUNK_SIZE, (current - heap_->heap_start)/ SMALLEST_CHUNK_SIZE);
-            //fflush(stdout);
+
             current = next + ((header_unpack_block_size(next) < SMALLEST_CHUNK_SIZE) ? SMALLEST_CHUNK_SIZE : header_unpack_block_size(next));
             assert((uintptr_t)current % 512 == 0);
         } else {
@@ -170,8 +169,12 @@ void scalanative_init() {
 
 void grow_heap(size_t nb_words) {
     size_t current_size = heap_->nb_words;
-    size_t increment = nb_words > current_size/2 ? 1L << log2_ceil(nb_words) : current_size/2;
-    printf("growing heap current: %zu, increment %zu\n", current_size, increment);
+    size_t increment = current_size/4;
+    size_t chunk_size = 1L << log2_ceil(nb_words);
+    if(nb_words > 0 && chunk_size > increment) {
+        increment = chunk_size;
+    }
+    printf("growing heap current: %zu, increment %zu\n", current_size*sizeof(word_t), increment*sizeof(word_t));
     fflush(stdout);
     heap_grow(heap_, increment);
 }
@@ -190,8 +193,8 @@ void* scalanative_alloc_raw(size_t size) {
         int block_id = inner_addr / 512;
         int word_id = inner_addr % 512;
         printf("allocated at: %d, %d\n", block_id, word_id);
-    }
-    head_printer_print(heap_);*/
+    }*/
+    //head_printer_print(heap_);
 
     //check_chunks(free_list);
     //heap_sanity_full_check(heap_);
@@ -218,8 +221,8 @@ void* scalanative_alloc_raw(size_t size) {
             int block_id = inner_addr / 512;
             int word_id = inner_addr % 512;
             printf("allocated at: %d, %d\n", block_id, word_id);
-        }
-        head_printer_print(heap_);*/
+        }*/
+        //head_printer_print(heap_);
 
         /*if(block != NULL) {
             assert(bitmap_get_bit(free_list->bitmap, block));
@@ -321,7 +324,7 @@ void scalanative_collect() {
     printf("free: %d\n", free_percent);
     printf("ingc: %ld outgc: %ld\n", in_gc->time, outside_gc->time);
     fflush(stdout);
-    if(/*free_percent < 25 ||*/ (in_gc->time > outside_gc->time && in_gc->nb_intervals > 2)) {
+    if(/*free_percent < 25 ||*/ (in_gc->time > outside_gc->time && in_gc->nb_intervals > 10)) {
         grow_heap(0);
         gc_timer_reset(in_gc);
         gc_timer_reset(outside_gc);
