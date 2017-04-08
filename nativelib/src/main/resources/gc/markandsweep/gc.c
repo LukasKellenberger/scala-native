@@ -85,11 +85,6 @@ int sweep_chunk(word_t* chunk) {
             current = next;
         }
     }
-    /*if(full_chunk) {
-        for(int i=1; i < SMALLEST_CHUNK_SIZE; i++) {
-            assert(!bitmap_get_bit(free_list->bitmap, chunk + i));
-        }
-    }*/
 
     return full_chunk ? SMALLEST_CHUNK_SIZE : 0;
 }
@@ -245,8 +240,8 @@ void* scalanative_alloc_raw(size_t size) {
             assert(block == NULL || header_unpack_block_size(block) != 2 || (uintptr_t)block % 16 == 0);
             assert(block == NULL || header_unpack_tag(block) == tag_allocated);
             assert(block == NULL || bitmap_get_bit(heap_->bitmap, block));
-            //memset(block + 1, 0, nb_words * sizeof(word_t));
-            block[1] = 0;
+            memset(block + 1, 0, nb_words * sizeof(word_t));
+            //block[1] = 0;
             return block + 1;
             /*printf("No more memory\n");
             exit(1);*/
@@ -255,8 +250,8 @@ void* scalanative_alloc_raw(size_t size) {
         for(int i=1; i < object_size_to_block_size(nb_words + 1); i++) {
             assert(!bitmap_get_bit(free_list->bitmap, block + i));
         }*/
-        //memset(block + 1, 0, nb_words * sizeof(word_t));
-        block[1] = 0;
+        memset(block + 1, 0, nb_words * sizeof(word_t));
+        //block[1] = 0;
         return block + 1;
     }
     /*assert(bitmap_get_bit(free_list->bitmap, block));
@@ -264,8 +259,8 @@ void* scalanative_alloc_raw(size_t size) {
         assert(!bitmap_get_bit(free_list->bitmap, block + i));
     }*/
     assert(block + header_unpack_block_size(block) - 1 < free_list->start + free_list->size / sizeof(word_t));
-    //memset(block+1, 0, nb_words * sizeof(word_t));
-    block[1] = 0;
+    memset(block+1, 0, nb_words * sizeof(word_t));
+    //block[1] = 0;
 
     return block + 1;
 }

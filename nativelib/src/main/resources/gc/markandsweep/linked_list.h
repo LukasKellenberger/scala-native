@@ -38,7 +38,7 @@ void linked_list_add_block(LinkedList* list, Block* block, size_t block_size);
  * Expects previous to be NULL, or previous.next to be block.
  * If previous is NULL, block is expected to be the first block of the linked_list.
  */
-void linked_list_remove_block(LinkedList* list, Block* block, size_t size, Block* previous);
+void linked_list_remove_block(LinkedList* list, Block* block, size_t size);
 
 
 

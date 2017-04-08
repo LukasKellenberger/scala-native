@@ -66,11 +66,11 @@ Chunk* chunk_allocator_get_chunk(ChunkAllocator* chunk_allocator, size_t request
 
     if(received_chunk_size - SMALLEST_CHUNK_SIZE >= requested_chunk_size) {
         Block* remaining_chunk = block_add_offset(chunk, requested_chunk_size);
-        linked_list_remove_block(chunk_allocator->chunk_lists[list_index], chunk, requested_chunk_size, NULL);
+        linked_list_remove_block(chunk_allocator->chunk_lists[list_index], chunk, requested_chunk_size);
         size_t remaining_chunk_size = received_chunk_size - requested_chunk_size;
         chunk_allocator_add_chunk(chunk_allocator, (Chunk*)remaining_chunk, remaining_chunk_size);
     } else {
-        linked_list_remove_block(chunk_allocator->chunk_lists[list_index], chunk, chunk_size, NULL);
+        linked_list_remove_block(chunk_allocator->chunk_lists[list_index], chunk, chunk_size);
     }
     assert((uintptr_t)chunk % (SMALLEST_CHUNK_SIZE * sizeof(word_t)) == 0);
     return chunk;

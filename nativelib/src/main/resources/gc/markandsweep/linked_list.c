@@ -33,24 +33,19 @@ void linked_list_add_block(LinkedList* list, Block* block, size_t block_size_wit
     list->last = block;
 }
 
-void linked_list_remove_block(LinkedList* list, Block* block, size_t block_size_with_header, Block* previous) {
+void linked_list_remove_block(LinkedList* list, Block* block, size_t block_size_with_header) {
     assert(block != NULL);
-    assert(list->first == block || previous != NULL);
-    assert(previous == NULL || previous->next == block);
 
     Block* next = block->next;
 
     // If the block is the first element of the list
-    if (previous == NULL) {
-        list->first = next;
-    } else {
-        previous->next = next;
-    }
+    list->first = next;
+
 
     // If the block to remove was the last block of the linked_list, update last.
     if(list->last == block) {
         assert(next == LIST_END);
-        list->last = previous;
+        list->last = NULL;
     }
 
     block->header.size = block_size_with_header;

@@ -1,7 +1,7 @@
 
 #include "mark.h"
 
-#define INITIAL_STACK_SIZE 512*1024*1024
+#define INITIAL_STACK_SIZE 512*1024
 
 void mark(word_t* block);
 
@@ -37,45 +37,55 @@ word_t* inner_get_header(word_t* inner_ptr) {
 void scan_heap_after_overflow(Stack* stack) {
 
     word_t* block = overflow_current_addr;
+
     int found = 0;
-    while(block != NULL && !found) {
-        assert(bitmap_get_bit(heap->bitmap_copy, block));
-        if(!bitmap_get_bit(heap->bitmap, block) && header_unpack_tag(block) == tag_allocated) {
-            Rtti rtti = *((Rtti*) *(block+1));
-            if(rtti.id == __OBJECT_ARRAY_ID__) {
+    while(block < heap->heap_end && !found) {
+        word_t* chunk = (word_t*)((uintptr_t)block - (uintptr_t)block % (SMALLEST_CHUNK_SIZE * sizeof(word_t)));
+        size_t block_size = header_unpack_block_size(chunk);
+        word_t* chunk_end = chunk + SMALLEST_CHUNK_SIZE - (block_size > SMALLEST_CHUNK_SIZE/2 ? 0 : block_size);
+        while(block <= chunk_end && !found) {
+            if(bitmap_get_bit(heap->bitmap_copy, block) && !bitmap_get_bit(heap->bitmap, block) && header_unpack_tag(block) == tag_allocated) {
+                Rtti rtti = *((Rtti*) *(block+1));
+                if(rtti.id == __OBJECT_ARRAY_ID__) {
 
-                size_t size = header_unpack_object_size(block) - 1;
+                    size_t size = header_unpack_object_size(block) - 1;
 
-                for (int i = 0; i < size - 1; i++) {
-                    word_t* field = (word_t*)(block[i + 2]);
-                    word_t* field_addr = field - 1;
-                    if(heap_in_heap(heap, field_addr) && bitmap_get_bit(heap->bitmap, field_addr) && header_unpack_tag(field_addr) == tag_allocated) {
-                        assert(heap_in_heap(heap, field_addr));
-                        stack_push(stack, block);
-                        found = 1;
-                        break;
+                    for (int i = 0; i < size - 1; i++) {
+                        word_t* field = (word_t*)(block[i + 2]);
+                        word_t* field_addr = field - 1;
+                        if(heap_in_heap(heap, field_addr) && bitmap_get_bit(heap->bitmap, field_addr)) {
+                            assert(header_unpack_tag(field_addr) == tag_allocated);
+                            assert(heap_in_heap(heap, field_addr));
+                            stack_push(stack, block);
+                            found = 1;
+                            break;
+                        }
                     }
-                }
-            } else {
-                int64_t* ptr_map = rtti.ptr_map;
-                int i=0;
-                while(ptr_map[i] != -1) {
-                    assert(ptr_map[i] % 8 == 0);
-                    word_t* field = (word_t*)(block[ptr_map[i]/sizeof(word_t) + 1]);
-                    word_t* field_addr = (word_t*)field - 1;
-                    if(heap_in_heap(heap, field_addr) && bitmap_get_bit(heap->bitmap, field_addr) && header_unpack_tag(field_addr) == tag_allocated) {
-                        assert(heap_in_heap(heap, field_addr));
-                        stack_push(stack, block);
-                        found = 1;
-                        break;
+                } else {
+                    int64_t* ptr_map = rtti.ptr_map;
+                    int i=0;
+                    while(ptr_map[i] != -1) {
+                        assert(ptr_map[i] % 8 == 0);
+                        word_t* field = (word_t*)(block[ptr_map[i]/sizeof(word_t) + 1]);
+                        word_t* field_addr = (word_t*)field - 1;
+                        if(heap_in_heap(heap, field_addr) && bitmap_get_bit(heap->bitmap, field_addr)) {
+                            assert(heap_in_heap(heap, field_addr));
+                            assert(header_unpack_tag(field_addr) == tag_allocated);
+                            stack_push(stack, block);
+                            found = 1;
+                            break;
+                        }
+                        ++i;
                     }
-                    ++i;
                 }
             }
+            block += block_size;
         }
-        block = heap_next_block(heap, block);
+        if(!found && block_size <= SMALLEST_CHUNK_SIZE/2) {
+            block = chunk + SMALLEST_CHUNK_SIZE;
+        }
     }
-    overflow_current_addr = block;
+    overflow_current_addr = found ? block : NULL;
 
 }
 
@@ -96,7 +106,7 @@ void _mark() {
             for (int i = 0; i < size - 1; i++) {
                 word_t* field = (word_t*)(block[i + 2]);
                 word_t* field_addr = field - 1;
-                if(heap_in_heap(heap, field_addr) && bitmap_get_bit(heap->bitmap, field_addr) && header_unpack_tag(field_addr) == tag_allocated) {
+                if(heap_in_heap(heap, field_addr) && bitmap_get_bit(heap->bitmap, field_addr)) {
                     bitmap_clear_bit(heap->bitmap, field_addr);
                     assert(header_unpack_tag(field_addr) == tag_allocated);
                     assert(header_unpack_block_size(field_addr) > 1);
@@ -112,7 +122,7 @@ void _mark() {
                 assert(ptr_map[i] % 8 == 0);
                 word_t* field = (word_t*)(block[ptr_map[i]/sizeof(word_t) + 1]);
                 word_t* field_addr = (word_t*)field - 1;
-                if(heap_in_heap(heap, field_addr) && bitmap_get_bit(heap->bitmap, field_addr) && header_unpack_tag(field_addr) == tag_allocated) {
+                if(heap_in_heap(heap, field_addr) && bitmap_get_bit(heap->bitmap, field_addr)) {
                     bitmap_clear_bit(heap->bitmap, field_addr);
                     assert(heap_in_heap(heap, field_addr));
                     assert(header_unpack_tag(field_addr) == tag_allocated);
@@ -227,5 +237,6 @@ void mark_roots(Heap* _heap) {
     overflow_current_addr = heap->heap_start;
     mark_roots_stack();
     mark_roots_modules();
+
     _mark();
 }

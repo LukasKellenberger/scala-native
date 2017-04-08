@@ -67,14 +67,14 @@ void check_block(FreeList* free_list, word_t* block, size_t size) {
 }
 
 void free_list_add_chunk(FreeList* list, word_t* chunk, size_t chunk_size) {
-    memset(chunk, 0, chunk_size * sizeof(word_t));
+    //memset(chunk, 0, chunk_size * sizeof(word_t));
     chunk_allocator_add_chunk(list->chunk_allocator, (Chunk*)chunk, chunk_size);
     list->free += chunk_size;
 }
 
 // Adds a block to one of the linkedlist.
 void free_list_add_block(FreeList* list, word_t* block, size_t block_size_with_header) {
-    memset(block, 0, block_size_with_header * sizeof(word_t));
+    //memset(block, 0, block_size_with_header * sizeof(word_t));
     assert(block_size_with_header != 2 || (uintptr_t)block % 16 == 0);
     const int list_index = object_size_to_index(block_size_with_header);
     linked_list_add_block(list->list[list_index], (Block*) block, block_size_with_header);
@@ -105,7 +105,7 @@ word_t* free_list_get_block(FreeList* list, size_t object_size) {
     int list_index = object_size_to_index(object_size);
     block = list->list[list_index]->first;
     if(block != NULL) {
-        linked_list_remove_block(list->list[list_index], block, object_size, NULL);
+        linked_list_remove_block(list->list[list_index], block, object_size);
         bitmap_set_bit(list->bitmap, (word_t*) block);
         //check_block(list, (word_t*) block, object_size);
         return (word_t*)block;
