@@ -102,7 +102,23 @@ word_t* free_list_get_block(FreeList* list, size_t object_size) {
         return (word_t*)block;
     }
 
+
     int list_index = object_size_to_index(object_size);
+    size_t block_size = index_to_block_size(list_index);
+
+    block = (Block*) list->chunk[list_index];
+
+    if(block != NULL) {
+        list->chunk[list_index] += block_size;
+        block->header.size = object_size;
+        block->header.tag = tag_allocated;
+        bitmap_set_bit(list->bitmap, (word_t*)block);
+        int remaining = SMALLEST_CHUNK_SIZE - ((uintptr_t)list->chunk[list_index] % (SMALLEST_CHUNK_SIZE * sizeof(word_t)))/sizeof(word_t);
+        list->chunk[list_index] = remaining < block_size || remaining == SMALLEST_CHUNK_SIZE ? NULL : list->chunk[list_index];
+        //check_block(list, (word_t*) block, object_size);
+        return (word_t*)block;
+    }
+
     block = list->list[list_index]->first;
     if(block != NULL) {
         linked_list_remove_block(list->list[list_index], block, object_size);
@@ -111,15 +127,12 @@ word_t* free_list_get_block(FreeList* list, size_t object_size) {
         return (word_t*)block;
     }
 
-    size_t block_size = index_to_block_size(list_index);
-    block = (Block*) list->chunk[list_index];
+    block = (Block*)chunk_allocator_get_chunk(list->chunk_allocator, SMALLEST_CHUNK_SIZE);
     if(block == NULL) {
-        block = (Block*)chunk_allocator_get_chunk(list->chunk_allocator, SMALLEST_CHUNK_SIZE);
-        if(block == NULL) {
-            return NULL;
-        }
-        list->chunk[list_index] = (word_t*)block;
+        return NULL;
     }
+
+    list->chunk[list_index] = (word_t*)block;
     list->chunk[list_index] += block_size;
     block->header.size = object_size;
     block->header.tag = tag_allocated;
