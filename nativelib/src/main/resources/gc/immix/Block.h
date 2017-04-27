@@ -1,7 +1,3 @@
-//
-// Created by Lukas Kellenberger on 19.04.17.
-//
-
 #ifndef IMMIX_BLOCK_H
 #define IMMIX_BLOCK_H
 
@@ -11,13 +7,8 @@
 
 #define LAST_HOLE -1
 
-bool block_lineContainsObject(BlockHeader*, int);
-ObjectHeader* block_lineGetFirstObject(BlockHeader*, int);
-
-BlockHeader* block_getNextBlock(BlockHeader*);
 
 void block_recycle(Allocator*, BlockHeader*);
-
-void block_print(BlockHeader*);
+void block_print(BlockHeader* block);
 
 #endif //IMMIX_BLOCK_H

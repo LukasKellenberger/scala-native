@@ -1,21 +1,29 @@
-//
-// Created by Lukas Kellenberger on 21.04.17.
-//
-
 #include <stdio.h>
+#include <setjmp.h>
 #include "Marker.h"
 #include "Object.h"
+#include "Log.h"
+#include "Heap.h"
+#include "Allocator.h"
+#include "stats/AllocatorStats.h"
 
-extern int __OBJECT_ARRAY_ID__;
+#define UNW_LOCAL_ONLY
+#include <libunwind.h>
+
+extern int __object_array_id;
+extern word_t* __modules;
+extern int __modules_size;
 
 
-void markObject(Stack* stack, ObjectHeader* object) {
+
+void markObject(Heap* heap, Stack* stack, ObjectHeader* object) {
     assert(!object_isMarked(object));
-    //printf("\tadd: %p %d\n", object, object->rtti->id);
-    //fflush(stdout);
-    //size_t testSize = object_size((ObjectHeader*)0x0000000101008188);
+    assert(object_size(object) != 0);
     object_mark(object);
     stack_push(stack, object);
+#ifdef ALLOCATOR_STATS
+    heap->allocator->stats->liveObjectCount++;
+#endif
 }
 
 void mark(Heap* heap, Stack* stack, word_t* address) {
@@ -23,51 +31,23 @@ void mark(Heap* heap, Stack* stack, word_t* address) {
     ObjectHeader* object = NULL;
     if(heap_isWordInSmallHeap(heap, address)) {
         object = object_getObject(address);
+        assert(object == NULL || line_header_containsObject(&block_getBlockHeader((word_t*)object)->lineHeaders[
+                block_getLineIndexFromWord(block_getBlockHeader((word_t*)object), (word_t*)object)]));
     } else {
         object = object_getLargeObject(heap->largeAllocator, address);
     }
 
     if(object != NULL && !object_isMarked(object)) {
-        markObject(stack, object);
-    } /*else if(object == NULL) {
-        printf("Not marking: %p\n", address);
-    }*/
-}
-
-void markModules(Heap* heap, Stack* stack, word_t** modules, int moduleCount) {
-    for(int i=0; i < moduleCount; i++) {
-        word_t* module = modules[i] - 1;
-        if(heap_isWordInHeap(heap, module)) {
-            mark(heap, stack, module);
-        }
+        markObject(heap, stack, object);
     }
 }
 
-void markStack(Heap* heap, Stack* stack, word_t* stackTop, word_t* stackBottom) {
-
-    while(stackTop < stackBottom) {
-
-        word_t* object = (*(word_t**)stackTop) - 1;
-        if(heap_isWordInHeap(heap, object)) {
-            mark(heap, stack, object);
-        }
-        stackTop++;
-    }
-}
-
-void marker_markRoots(Heap* heap, Roots* roots, Stack* stack) {
-    assert(stack_isEmpty(stack));
-    markStack(heap, stack, roots->stackTop, roots->stackBottom);
-    markModules(heap, stack, roots->moduleStart, roots->moduleCount);
-}
 
 void marker_mark(Heap* heap, Stack* stack) {
-    //printf("mark!\n");
     while(!stack_isEmpty(stack)) {
         ObjectHeader* object = stack_pop(stack);
-        //printf("marking: %p %d\n", object, object->rtti->id);
 
-        if(object->rtti->id == __OBJECT_ARRAY_ID__) {
+        if(object->rtti->rt.id == __object_array_id) {
             // remove header and rtti from size
             size_t size = object_size(object) - 2 * sizeof(word_t);
             size_t nbWords = size / sizeof(word_t);
@@ -76,18 +56,18 @@ void marker_mark(Heap* heap, Stack* stack) {
                 word_t* field = object->fields[i];
                 ObjectHeader* fieldObject = (ObjectHeader*)(field - 1);
                 if(heap_isObjectInHeap(heap, fieldObject) && !object_isMarked(fieldObject)) {
-                    markObject(stack, fieldObject);
+                    markObject(heap, stack, fieldObject);
                 }
 
             }
         } else {
-            int64_t* ptr_map = object->rtti->ptr_map;
+            int64_t* ptr_map = object->rtti->refMapStruct;
             int i=0;
             while(ptr_map[i] != -1) {
                 word_t* field = object->fields[ptr_map[i]/sizeof(word_t) - 1];
                 ObjectHeader* fieldObject = (ObjectHeader*)(field - 1);
                 if(heap_isObjectInHeap(heap, fieldObject) && !object_isMarked(fieldObject)) {
-                    markObject(stack, fieldObject);
+                    markObject(heap, stack, fieldObject);
                 }
                 ++i;
             }
@@ -127,8 +107,8 @@ void mark_roots_stack(Heap* heap, Stack* stack) {
 }
 
 void mark_roots_modules(Heap* heap, Stack* stack) {
-    word_t** module = __MODULES__;
-    int nb_modules = __MODULES_SIZE__;
+    word_t** module = &__modules;
+    int nb_modules = __modules_size;
 
     for(int i=0; i < nb_modules; i++) {
         word_t* addr = module[i] - 1;
@@ -139,10 +119,12 @@ void mark_roots_modules(Heap* heap, Stack* stack) {
 }
 
 void mark_roots(Heap* heap, Stack* stack) {
+#ifdef ALLOCATOR_STATS
+    heap->allocator->stats->liveObjectCount = 0;
+#endif
 
     // Dumps registers into 'regs' which is on stack
     jmp_buf regs;
-    //memset(&regs, 0, sizeof(jmp_buf));
     setjmp(regs);
 
     mark_roots_stack(heap, stack);

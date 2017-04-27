@@ -1,12 +1,8 @@
-//
-// Created by Lukas Kellenberger on 22.04.17.
-//
-
 #include <stddef.h>
-#include <printf.h>
+#include <stdio.h>
 #include "BlocList.h"
-
-
+#include "../Log.h"
+#include "../headers/BlockHeader.h"
 
 
 int32_t _getBlockIndex(word_t* heapStart, BlockHeader* blockHeader) {
@@ -67,7 +63,7 @@ void blockList_print(BlockList* blockList) {
     printf("BlockList: ");
     BlockHeader* current = blockList->first;
     while(current != NULL) {
-        printf("[%p] -> ", current);
+        printf("[%p %d] -> ", current, current->header.first);
         current = _getNextBlock(blockList->heapStart, current);
     }
     printf("\n");

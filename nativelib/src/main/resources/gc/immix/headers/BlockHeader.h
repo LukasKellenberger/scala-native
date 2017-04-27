@@ -1,16 +1,11 @@
-//
-// Created by Lukas Kellenberger on 19.04.17.
-//
-
 #ifndef IMMIX_BLOCKHEADER_H
 #define IMMIX_BLOCKHEADER_H
 
-
 #include <stdint.h>
 #include "LineHeader.h"
-#include "gc_types.h"
+#include "../GCTypes.h"
 #include "../Constants.h"
-#include "ObjectHeader.h"
+#include "../Log.h"
 
 typedef enum {
     block_free = 0x0,
@@ -18,7 +13,7 @@ typedef enum {
     block_unavailable = 0x2
 } BlockFlag;
 
-typedef word_t Line[WORDS_IN_LINE];
+typedef word_t* Line_t;
 
 typedef struct {
     struct {
@@ -28,7 +23,6 @@ typedef struct {
         int32_t nextBlock;
     } header;
     LineHeader lineHeaders[LINE_COUNT];
-    Line lines[LINE_COUNT];
 } BlockHeader;
 
 static inline bool block_isRecyclable(BlockHeader* blockHeader) {
@@ -61,20 +55,28 @@ static inline BlockHeader* block_getBlockHeader(word_t* word) {
 
 }
 
-static inline FreeLineHeader* block_getFreeLineHeader(BlockHeader* blockHeader, int lineIndex) {
-    return (FreeLineHeader*)&blockHeader->lines[lineIndex][0];
+static inline word_t* block_getLineAddress(BlockHeader* blockHeader, int lineIndex) {
+    assert(lineIndex < LINE_COUNT);
+    return (word_t*)((ubyte_t*)blockHeader + BLOCK_METADATA_ALIGNED_SIZE + (lineIndex * LINE_SIZE));
 }
 
-static inline BlockHeader* block_blockHeaderFromObjectHeader(ObjectHeader* objectHeader) {
-    return block_getBlockHeader((word_t*) objectHeader);
+static inline word_t* block_getLineWord(BlockHeader* blockHeader, int lineIndex, int wordIndex) {
+    assert(wordIndex < WORDS_IN_LINE);
+    return &block_getLineAddress(blockHeader, lineIndex)[wordIndex];
 }
+
+
+static inline FreeLineHeader* block_getFreeLineHeader(BlockHeader* blockHeader, int lineIndex) {
+    return (FreeLineHeader*)block_getLineAddress(blockHeader, lineIndex);
+}
+
 
 static inline BlockHeader* block_blockHeaderFromLineHeader(LineHeader* lineHeader) {
     return block_getBlockHeader((word_t*) lineHeader);
 }
 
 static inline word_t* block_getFirstWord(BlockHeader* blockHeader) {
-    return (word_t*)(&blockHeader->lines);
+    return (word_t*)((ubyte_t*)blockHeader + BLOCK_METADATA_ALIGNED_SIZE);
 }
 
 
@@ -89,10 +91,6 @@ static inline uint32_t block_getLineIndexFromLineHeader(BlockHeader* blockHeader
 static inline uint32_t block_getLineIndexFromWord(BlockHeader* blockHeader, word_t* word) {
     word_t* firstWord = block_getFirstWord(blockHeader);
     return (uint32_t)((word_t)word - (word_t)firstWord) >> LINE_SIZE_BITS;
-}
-
-static inline uint32_t block_getLineIndexFromObjectHeader(BlockHeader* blockHeader, ObjectHeader* objectHeader) {
-    return block_getLineIndexFromWord(blockHeader, (word_t*)objectHeader);
 }
 
 

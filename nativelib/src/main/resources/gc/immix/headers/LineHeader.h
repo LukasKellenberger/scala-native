@@ -1,9 +1,3 @@
-//
-// Created by Lukas Kellenberger on 19.04.17.
-//
-
-
-
 #ifndef IMMIX_LINEHEADER_H
 #define IMMIX_LINEHEADER_H
 
@@ -55,13 +49,8 @@ static inline bool line_header_containsObject(LineHeader* lineHeader) {
 }
 
 static inline void line_header_setOffset(LineHeader* lineHeader, uint8_t offset) {
-    *lineHeader = (offset & FIRST_OBJECT_OFFSET_MASK);
+    *lineHeader = (offset & FIRST_OBJECT_OFFSET_MASK) | line_contains_object;
 }
-
-static inline void line_header_setLineContainsObject(LineHeader* lineHeader) {
-    *lineHeader |= line_contains_object;
-}
-
 
 static inline uint8_t line_header_getFirstObjectOffset(LineHeader* lineHeader) {
     return *lineHeader & FIRST_OBJECT_OFFSET_MASK;

@@ -1,15 +1,13 @@
-//
-// Created by Lukas Kellenberger on 19.04.17.
-//
-
 #ifndef IMMIX_OBJECTHEADER_H
 #define IMMIX_OBJECTHEADER_H
 
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "gc_types.h"
+#include <stddef.h>
+#include "../GCTypes.h"
 #include "../Constants.h"
+#include "../Log.h"
 
 typedef enum {
     object_forward = 0x0,
@@ -21,17 +19,27 @@ typedef struct {
     uint32_t size;
     uint8_t type;
     uint8_t marked;
+    uint8_t allocated; // used only for large objects
 } ObjectHeaderLine;
 
 typedef struct {
-    int32_t id;
-    word_t* name;
+    struct {
+        int32_t id;
+        word_t* name;
+        int8_t kind;
+    } rt;
     int64_t size;
-    int32_t dyn_method_count;
-    word_t* dyn_method_salt;
-    word_t* dyn_method_keys;
-    word_t* dyn_methods;
-    int64_t* ptr_map;
+    struct {
+        int32_t from;
+        int32_t to;
+    } range;
+    struct {
+        int32_t dyn_method_count;
+        word_t* dyn_method_salt;
+        word_t* dyn_method_keys;
+        word_t* dyn_methods;
+    } dynDispatchTable;
+    int64_t* refMapStruct;
 } Rtti;
 
 typedef word_t* Field_t;
@@ -43,13 +51,27 @@ typedef struct {
 } ObjectHeader;
 
 static inline bool object_isMarked(ObjectHeader* objectHeader) {
-    return objectHeader->header.marked == 1;
+    return objectHeader->header.marked == 0x1;
 }
+
 static inline void object_markObjectHeader(ObjectHeader* objectHeader) {
-    objectHeader->header.marked = 1;
+    objectHeader->header.marked = 0x1;
 }
+
 static inline void object_unmarkObjectHeader(ObjectHeader* objectHeader) {
-    objectHeader->header.marked = 0;
+    objectHeader->header.marked = 0x0;
+}
+
+static inline void object_setAllocated(ObjectHeader* objectHeader) {
+    objectHeader->header.allocated = 0x1;
+}
+
+static inline void object_setNotAllocated(ObjectHeader* objectHeader) {
+    objectHeader->header.allocated = 0x0;
+}
+
+static inline bool object_isAllocated(ObjectHeader* objectHeader) {
+    return objectHeader->header.allocated;
 }
 
 static inline bool object_isStandardObject(ObjectHeader* objectHeader) {
@@ -58,9 +80,11 @@ static inline bool object_isStandardObject(ObjectHeader* objectHeader) {
 static inline bool object_isLargeObject(ObjectHeader* objectHeader) {
     return objectHeader->header.type == object_large;
 }
+
 static inline bool object_isForwardObject(ObjectHeader* objectHeader) {
     return objectHeader->header.type == object_forward;
 }
+
 static inline void object_setObjectType(ObjectHeader* objectHeader, ObjectType objectType) {
     objectHeader->header.type = objectType;
 }

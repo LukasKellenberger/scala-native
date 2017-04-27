@@ -1,13 +1,10 @@
-//
-// Created by Lukas Kellenberger on 24.04.17.
-//
-
 #include <stdlib.h>
-#include <printf.h>
+#include <stdio.h>
+#include <string.h>
 #include "LargeAllocator.h"
 #include "utils/MathUtils.h"
 #include "Object.h"
-#include "headers/ObjectHeader.h"
+#include "Log.h"
 
 inline static int size_to_linked_list(size_t size) {
     assert(size >= MIN_BLOCK_SIZE);
@@ -64,11 +61,10 @@ Chunk* chunkAddOffset(Chunk* chunk, size_t words) {
     return (Chunk*)((ubyte_t *)chunk + words);
 }
 
-void print(LargeAllocator*);
-
 void largeAllocator_addChunk(LargeAllocator* allocator, Chunk* chunk, size_t total_block_size) {
     assert(total_block_size >= MIN_BLOCK_SIZE);
     assert(total_block_size % MIN_BLOCK_SIZE == 0);
+
     size_t remaining_size = total_block_size;
     ubyte_t* current = (ubyte_t*)chunk;
     while(remaining_size > 0) {
@@ -82,12 +78,12 @@ void largeAllocator_addChunk(LargeAllocator* allocator, Chunk* chunk, size_t tot
         freeList_addBlockLast(&allocator->freeLists[listIndex], (Chunk*)current);
         currentChunk->header.size = (uint32_t)chunkSize;
         currentChunk->header.type = object_large;
+        object_setNotAllocated((ObjectHeader*) currentChunk);
         bitmap_setBit(allocator->bitmap, current);
 
         current += chunkSize;
         remaining_size -= chunkSize;
     }
-    //print(allocator);
 }
 
 ObjectHeader* largeAllocator_getBlock(LargeAllocator* allocator, size_t requestedBlockSize) {
@@ -96,7 +92,6 @@ ObjectHeader* largeAllocator_getBlock(LargeAllocator* allocator, size_t requeste
 
     int listIndex = size_to_linked_list(requiredChunkSize);
     Chunk* chunk = NULL;
-    //print(allocator);
     while(listIndex <= FREE_LIST_COUNT - 1 && (chunk = allocator->freeLists[listIndex].first) == NULL) {
         ++listIndex;
     }
@@ -118,9 +113,10 @@ ObjectHeader* largeAllocator_getBlock(LargeAllocator* allocator, size_t requeste
     }
 
     bitmap_setBit(allocator->bitmap, (ubyte_t*)chunk);
-
-    //print(allocator);
-    return (ObjectHeader*) chunk;
+    ObjectHeader* object = (ObjectHeader*)chunk;
+    object_setAllocated(object);
+    memset((word_t*)object + 1, 0, actualBlockSize - WORD_SIZE);
+    return object;
 
 }
 
@@ -135,7 +131,7 @@ void freeList_print(FreeList* list, int i) {
     printf("\n");
 }
 
-void print(LargeAllocator* alloc) {
+void largeAllocator_print(LargeAllocator* alloc) {
     for(int i = 0; i < FREE_LIST_COUNT; i++) {
         if(alloc->freeLists[i].first != NULL) {
 
@@ -176,6 +172,5 @@ void largeAllocator_sweep(LargeAllocator* allocator) {
         }
     }
 
-    //print(allocator);
 }
 
