@@ -30,10 +30,49 @@ static inline bool isWordAligned(word_t* word) {
     return ((word_t)word & WORD_MASK) == (word_t)word;
 }
 
+ObjectHeader* object_getFromInnerPointerInLine(BlockHeader* blockHeader, int lineIndex, word_t* innerPointer) {
+    ObjectHeader* object = line_header_getFirstObject(&blockHeader->lineHeaders[lineIndex]);
+    while(object != NULL && (word_t*) object_next_object(object) < innerPointer) {
+        object = object_next_object(object);
+    }
+    if(object == NULL) {
+        return NULL;
+    } else {
+        ObjectHeader* nextObjectStart = object_next_object(object);
+        if(object < nextObjectStart) {
+            return object;
+        } else {
+            return NULL;
+        }
+    }
+}
+
+ObjectHeader* object_getFromInnerPointer(word_t* word) {
+    assert(isWordAligned(word));
+    BlockHeader* blockHeader = block_getBlockHeader(word);
+    uint32_t lineIndex = block_getLineIndexFromWord(blockHeader, word);
+    ObjectHeader* header = NULL;
+    if(line_header_containsObject(&blockHeader->lineHeaders[lineIndex])) {
+        // Search in line
+        header = object_getFromInnerPointerInLine(blockHeader, lineIndex, word);
+    } else {
+        // Search in previous lines
+        bool contains = false;
+        while(lineIndex > 0 && !(contains = line_header_containsObject(&blockHeader->lineHeaders[lineIndex]))) {
+            lineIndex--;
+        }
+        if(contains) {
+            header = object_getFromInnerPointerInLine(blockHeader, lineIndex, word);
+        }
+    }
+    assert(header == NULL || (word >= (word_t*) header && word < (word_t*)object_next_object(header)));
+    return header;
+}
+
 ObjectHeader* object_getObject(word_t* word) {
     if(!isWordAligned(word)) {
         printf("Could be inner pointer (Not aligned) %p\n", word);
-        return NULL;
+        return object_getFromInnerPointer((word_t*)((word_t) word & WORD_MASK));
     }
     BlockHeader* blockHeader = block_getBlockHeader(word);
     if(word < block_getFirstWord(blockHeader)) {
@@ -54,7 +93,7 @@ ObjectHeader* object_getObject(word_t* word) {
         return current;
     } else {
         printf("Could be inner pointer %p\n", word);
-        return NULL;
+        return object_getFromInnerPointer(word);
     }
 }
 
