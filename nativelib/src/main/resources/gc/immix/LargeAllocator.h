@@ -1,12 +1,8 @@
-//
-// Created by Lukas Kellenberger on 24.04.17.
-//
-
 #ifndef IMMIX_LARGEALLOCATOR_H
 #define IMMIX_LARGEALLOCATOR_H
 
-#include "bitmap/Bitmap.h"
-#include "headers/gc_types.h"
+#include "datastructures/Bitmap.h"
+#include "GCTypes.h"
 #include "Constants.h"
 #include "headers/ObjectHeader.h"
 
@@ -36,5 +32,6 @@ typedef struct {
 LargeAllocator* largeAllocator_create(word_t*, size_t);
 ObjectHeader* largeAllocator_getBlock(LargeAllocator* allocator, size_t requestedBlockSize);
 void largeAllocator_sweep(LargeAllocator* allocator);
+void largeAllocator_print(LargeAllocator* alloc);
 
 #endif //IMMIX_LARGEALLOCATOR_H

@@ -1,14 +1,11 @@
-//
-// Created by Lukas Kellenberger on 20.04.17.
-//
-
-
-
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <stdio.h>
 #include "Heap.h"
 #include "Block.h"
+#include "Log.h"
+#include "Allocator.h"
+#include "stats/AllocatorStats.h"
 
 #define MAX_SIZE 64*1024*1024*1024L
 // Allow read and write
@@ -25,7 +22,6 @@ word_t* mapAndAlign(int alignmentMask) {
 
     // Heap start not aligned on
     if(((word_t)heapStart & alignmentMask) != (word_t)heapStart) {
-        printf("Not aligned\n");
         word_t* previousBlock = (word_t*)((word_t)heapStart & BLOCK_SIZE_IN_BYTES_INVERSE_MASK);
         heapStart = previousBlock + WORDS_IN_BLOCK;
     }
@@ -40,12 +36,9 @@ Heap* heap_create(size_t initialSize) {
     word_t* smallHeapStart = mapAndAlign(BLOCK_SIZE_IN_BYTES_INVERSE_MASK);
 
 
-    printf("initial size: %zu\n", initialSize);
     heap->smallHeapSize = initialSize;
     heap->heapStart = smallHeapStart;
     heap->heapEnd = smallHeapStart + initialSize / sizeof(word_t);
-    printf("Heap bounds[%p - %p[\n", smallHeapStart, heap->heapEnd);
-    fflush(stdout);
     heap->allocator = allocator_create(smallHeapStart, initialSize / BLOCK_TOTAL_SIZE);
 
 
@@ -68,13 +61,19 @@ ObjectHeader* heap_alloc(Heap* heap, uint32_t objectSize) {
         }
         object_setObjectType(object, object_large);
         object_setSize(object, size);
-        //printf("Alloc large %u %u %p!\n", objectSize, object->header.size, object);
         return object;
     } else {
         ObjectHeader* block = (ObjectHeader*) allocator_alloc(heap->allocator, size);
         if(block != NULL) {
             object_setObjectType(block, object_standard);
             object_setSize(block, size);
+
+#ifdef ALLOCATOR_STATS
+            heap->allocator->stats->bytesAllocated += objectSize;
+            heap->allocator->stats->totalBytesAllocated += objectSize;
+            heap->allocator->stats->totalAllocatedObjectCount++;
+#endif
+
         }
         return block;
     }
@@ -84,33 +83,27 @@ bool heap_recycle(Heap* heap) {
     blockList_clear(&heap->allocator->recycledBlocks);
     blockList_clear(&heap->allocator->freeBlocks);
 
-    heap->allocator->freeBlockCount = 0;
-    heap->allocator->recyclableBlockCount = 0;
+#ifdef ALLOCATOR_STATS
+    allocatorStats_resetBlockDistribution(heap->allocator->stats);
+#endif
 
     word_t* current = heap->heapStart;
     while(current != heap->heapEnd) {
         BlockHeader* blockHeader = (BlockHeader*) current;
         block_recycle(heap->allocator, blockHeader);
+        //block_print(blockHeader);
         current += WORDS_IN_BLOCK;
     }
     largeAllocator_sweep(heap->largeAllocator);
-    printf("Recyclable: %d\nFree: %d\n", heap->allocator->recyclableBlockCount, heap->allocator->freeBlockCount);
+
+#ifdef ALLOCATOR_STATS
+    allocatorStats_print(heap->allocator->stats);
+    heap->allocator->stats->liveObjectCount = 0;
+    heap->allocator->stats->bytesAllocated = 0;
+#endif
+
     return allocator_initCursors(heap->allocator);
 }
 
-inline bool heap_isWordInLargeHeap(Heap* heap, word_t* word) {
-    return word != NULL && word >= heap->largeHeapStart && word < heap->largeHeapEnd;
-}
-
-inline bool heap_isWordInSmallHeap(Heap* heap, word_t* word) {
-    return word != NULL && word >= heap->heapStart && word < heap->heapEnd;
-}
-
-inline bool heap_isWordInHeap(Heap* heap, word_t* word) {
-    return heap_isWordInSmallHeap(heap, word) || heap_isWordInLargeHeap(heap, word);
-}
-inline bool heap_isObjectInHeap(Heap* heap, ObjectHeader* object) {
-    return heap_isWordInHeap(heap, (word_t*) object);
-}
 
 void heap_grow(Heap* heap, size_t size) {}

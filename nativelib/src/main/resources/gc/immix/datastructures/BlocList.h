@@ -1,7 +1,3 @@
-//
-// Created by Lukas Kellenberger on 22.04.17.
-//
-
 #ifndef IMMIX_BLOCLIST_H
 #define IMMIX_BLOCLIST_H
 
@@ -21,7 +17,6 @@ void blockList_clear(BlockList*);
 bool blockList_isEmpty(BlockList* blockList);
 BlockHeader* blockList_removeFirstBlock(BlockList*);
 void blockList_addLast(BlockList*, BlockHeader*);
-
-void blockList_print(BlockList*);
+void blockList_print(BlockList* blockList);
 
 #endif //IMMIX_BLOCLIST_H

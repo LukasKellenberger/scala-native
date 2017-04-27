@@ -1,11 +1,7 @@
-//
-// Created by Lukas Kellenberger on 20.04.17.
-//
-
 #ifndef IMMIX_HEAP_H
 #define IMMIX_HEAP_H
 
-#include "headers/gc_types.h"
+#include "GCTypes.h"
 #include "Allocator.h"
 #include "LargeAllocator.h"
 
@@ -20,12 +16,23 @@ typedef struct {
     LargeAllocator* largeAllocator;
 } Heap;
 
+static inline bool heap_isWordInLargeHeap(Heap* heap, word_t* word) {
+    return word != NULL && word >= heap->largeHeapStart && word < heap->largeHeapEnd;
+}
+
+static inline bool heap_isWordInSmallHeap(Heap* heap, word_t* word) {
+    return word != NULL && word >= heap->heapStart && word < heap->heapEnd;
+}
+
+static inline bool heap_isWordInHeap(Heap* heap, word_t* word) {
+    return heap_isWordInSmallHeap(heap, word) || heap_isWordInLargeHeap(heap, word);
+}
+static inline bool heap_isObjectInHeap(Heap* heap, ObjectHeader* object) {
+    return heap_isWordInHeap(heap, (word_t*) object);
+}
+
 Heap* heap_create(size_t);
 ObjectHeader* heap_alloc(Heap*, uint32_t);
-bool heap_isWordInHeap(Heap*, word_t*);
-bool heap_isWordInSmallHeap(Heap* heap, word_t* word);
-bool heap_isWordInLargeHeap(Heap* heap, word_t* word);
-bool heap_isObjectInHeap(Heap*, ObjectHeader*);
 bool heap_recycle(Heap*);
 void heap_grow(Heap*, size_t);
 

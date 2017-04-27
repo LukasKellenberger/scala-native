@@ -1,39 +1,24 @@
-//
-// Created by Lukas Kellenberger on 19.04.17.
-//
-
-#include <printf.h>
+#include <stdio.h>
 #include <memory.h>
 #include "Block.h"
 #include "Object.h"
+#include "Log.h"
+#include "Allocator.h"
+#include "stats/AllocatorStats.h"
 #include "headers/BlockHeader.h"
 #include "headers/LineHeader.h"
-#include "Allocator.h"
 
-bool block_lineContainsObject(BlockHeader* blockHeader, int lineIndex) {
-    LineHeader* lineHeader = &(blockHeader->lineHeaders[lineIndex]);
-    return line_header_containsObject(lineHeader);
-}
-
-ObjectHeader* block_lineGetFirstObject(BlockHeader* blockHeader, int lineIndex) {
-    LineHeader* lineHeader = &(blockHeader->lineHeaders[lineIndex]);
-    return line_header_getFirstObject(lineHeader);
-}
 
 void block_recycle(Allocator* allocator, BlockHeader* blockHeader) {
-    /*for(int i=0; i < LINE_COUNT; i++) {
-        if(line_header_isMarked(&blockHeader->lineHeaders[i])) {
-            printf("M");
-        } else {
-            printf("A");
-        }
-    }
-    printf("\n");*/
 
     if(!block_isMarked(blockHeader)) {
-        memset(blockHeader, 0, BLOCK_TOTAL_SIZE);
+        memset(blockHeader, 0, LINE_SIZE);
         blockList_addLast(&allocator->freeBlocks, blockHeader);
-        allocator->freeBlockCount++;
+        block_setFlag(blockHeader, block_free);
+#ifdef ALLOCATOR_STATS
+        allocator->stats->availableBlockCount++;
+#endif
+
     } else {
         assert(block_isMarked(blockHeader));
         block_unmark(blockHeader);
@@ -48,10 +33,10 @@ void block_recycle(Allocator* allocator, BlockHeader* blockHeader) {
                 if(line_header_containsObject(lineHeader)) {
                     //Unmark all objects in line
                     ObjectHeader *object = line_header_getFirstObject(lineHeader);
-                    word_t *lineEnd = &blockHeader->lines[lineIndex + 1][0];
+                    word_t *lineEnd = block_getLineAddress(blockHeader, lineIndex) + WORDS_IN_LINE;
                     while (object != NULL && (word_t *) object < lineEnd) {
                         object_unmarkObjectHeader(object);
-                        object = object_next_object(object);
+                        object = object_nextObject(object);
                     }
                 }
                 lineIndex++;
@@ -65,48 +50,51 @@ void block_recycle(Allocator* allocator, BlockHeader* blockHeader) {
                 line_header_setEmpty(lineHeader);
                 lineIndex++;
                 uint8_t size = 1;
-                while(lineIndex < LINE_COUNT && !line_header_isMarked(lineHeader = &blockHeader->lineHeaders[lineIndex])) {
+                while(lineIndex < LINE_COUNT
+                      && !line_header_isMarked(lineHeader = &blockHeader->lineHeaders[lineIndex])) {
                     size++;
                     lineIndex++;
                     line_header_setEmpty(lineHeader);
                 }
                 block_getFreeLineHeader(blockHeader, lastRecyclable)->size = size;
-                memset(&blockHeader->lines[lastRecyclable][0], 0, size*LINE_SIZE);
             }
         }
         if(lastRecyclable == -1) {
             block_setFlag(blockHeader, block_unavailable);
+
+#ifdef ALLOCATOR_STATS
+            allocator->stats->unavailableBlockCount++;
+#endif
+
         } else {
             block_getFreeLineHeader(blockHeader, lastRecyclable)->next = LAST_HOLE;
             block_setFlag(blockHeader, block_recyclable);
             blockList_addLast(&allocator->recycledBlocks, blockHeader);
-            allocator->recyclableBlockCount++;
+
+            assert(blockHeader->header.first != -1);
+
+#ifdef ALLOCATOR_STATS
+            allocator->stats->recyclableBlockCount++;
+#endif
+
         }
     }
-    /*block_print(blockHeader);
-    for(int i=0; i < LINE_COUNT; i++) {
-        if(line_header_containsObject(&blockHeader->lineHeaders[i])) {
-            printf("C");
-        } else {
-            printf("E");
-        }
-    }
-    printf("\n");*/
 }
 
-void block_print(BlockHeader* blockHeader) {
-    if(block_isFree(blockHeader)){
-        printf("Block %p, FREE\n", blockHeader);
-    } else if(block_isRecyclable(blockHeader)) {
-        printf("Block %p, RECYCLABLE: ", blockHeader);
-        int lineIndex = blockHeader->header.first;
+void block_print(BlockHeader* block) {
+    printf("%p ", block);
+    if(block_isFree(block)) {
+        printf("FREE\n");
+    } else if (block_isUnavailable(block)) {
+        printf("UNAVAILABLE\n");
+    } else {
+        int lineIndex = block->header.first;
         while(lineIndex != LAST_HOLE) {
-            FreeLineHeader* lineHeader = block_getFreeLineHeader(blockHeader, lineIndex);
-            printf("[%d size: %u] -> ", lineIndex, lineHeader->size);
-            lineIndex = block_getFreeLineHeader(blockHeader, lineIndex)->next;
+            FreeLineHeader* freeLineHeader = block_getFreeLineHeader(block, lineIndex);
+            printf("[index: %d, size: %d] -> ", lineIndex, freeLineHeader->size);
+            lineIndex = freeLineHeader->next;
         }
         printf("\n");
-    } else {
-        printf("Block %p, UNAVAILABLE\n", blockHeader);
     }
+    fflush(stdout);
 }

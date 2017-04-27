@@ -1,12 +1,8 @@
-//
-// Created by Lukas Kellenberger on 21.04.17.
-//
-
 #ifndef IMMIX_STACK_H
 #define IMMIX_STACK_H
 
-#include "headers/gc_types.h"
-#include "headers/ObjectHeader.h"
+#include "../GCTypes.h"
+#include "../headers/ObjectHeader.h"
 
 #define PRINT_STACK_OVERFLOW
 

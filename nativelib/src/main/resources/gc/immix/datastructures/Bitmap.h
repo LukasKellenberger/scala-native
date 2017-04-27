@@ -1,14 +1,10 @@
-//
-// Created by Lukas Kellenberger on 24.04.17.
-//
-
 #ifndef IMMIX_BITMAP_H
 #define IMMIX_BITMAP_H
 
 #include <stddef.h>
 #include <stdlib.h>
 #include <limits.h>
-#include "../headers/gc_types.h"
+#include "../GCTypes.h"
 
 typedef struct {
     size_t size;
