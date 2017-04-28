@@ -46,7 +46,7 @@ void scan_heap_after_overflow(Stack* stack) {
         while(block <= chunk_end && !found) {
             if(bitmap_get_bit(heap->bitmap_copy, block) && !bitmap_get_bit(heap->bitmap, block) && header_unpack_tag(block) == tag_allocated) {
                 Rtti rtti = *((Rtti*) *(block+1));
-                if(rtti.id == __OBJECT_ARRAY_ID__) {
+                if(rtti.rt.id == __OBJECT_ARRAY_ID__) {
 
                     size_t size = header_unpack_object_size(block) - 1;
 
@@ -62,7 +62,7 @@ void scan_heap_after_overflow(Stack* stack) {
                         }
                     }
                 } else {
-                    int64_t* ptr_map = rtti.ptr_map;
+                    int64_t* ptr_map = rtti.refMapStruct;
                     int i=0;
                     while(ptr_map[i] != -1) {
                         assert(ptr_map[i] % 8 == 0);
@@ -99,7 +99,7 @@ void _mark() {
 
         Rtti rtti = *((Rtti*) *(block+1));
 
-        if(rtti.id == __OBJECT_ARRAY_ID__) {
+        if(rtti.rt.id == __OBJECT_ARRAY_ID__) {
             size_t size = header_unpack_object_size(block) - 1;
             assert(size < heap->heap_end - heap->heap_start);
 
@@ -116,7 +116,7 @@ void _mark() {
                 }
             }
         } else {
-            int64_t* ptr_map = rtti.ptr_map;
+            int64_t* ptr_map = rtti.refMapStruct;
             int i=0;
             while(ptr_map[i] != -1) {
                 assert(ptr_map[i] % 8 == 0);

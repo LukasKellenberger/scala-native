@@ -23,7 +23,7 @@ void bitmap_print_with_rtti(Bitmap* bitmap) {
     for(unsigned long i=0; i < nb_words; i++) {
         if(bitmap_get_bit(bitmap, current)) {
             Rtti* rtti = (Rtti*)(*(current + 1));
-            printf("%lu:%d:%zu:%d ", i, rtti == NULL ? -1 : rtti->id, header_unpack_block_size(current), header_unpack_tag(current));
+            printf("%lu:%d:%zu:%d ", i, rtti == NULL ? -1 : rtti->rt.id, header_unpack_block_size(current), header_unpack_tag(current));
         }
         current = current + 1;
     }
