@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <printf.h>
+#include <string.h>
 #include "LargeAllocator.h"
 #include "utils/MathUtils.h"
 #include "Object.h"
@@ -69,6 +70,8 @@ void print(LargeAllocator*);
 void largeAllocator_addChunk(LargeAllocator* allocator, Chunk* chunk, size_t total_block_size) {
     assert(total_block_size >= MIN_BLOCK_SIZE);
     assert(total_block_size % MIN_BLOCK_SIZE == 0);
+    memset((word_t*)chunk + 1, 0, total_block_size - sizeof(word_t*));
+
     size_t remaining_size = total_block_size;
     ubyte_t* current = (ubyte_t*)chunk;
     while(remaining_size > 0) {
@@ -82,6 +85,7 @@ void largeAllocator_addChunk(LargeAllocator* allocator, Chunk* chunk, size_t tot
         freeList_addBlockLast(&allocator->freeLists[listIndex], (Chunk*)current);
         currentChunk->header.size = (uint32_t)chunkSize;
         currentChunk->header.type = object_large;
+        //object_setNotAllocated((ObjectHeader*) currentChunk);
         bitmap_setBit(allocator->bitmap, current);
 
         current += chunkSize;
@@ -118,9 +122,9 @@ ObjectHeader* largeAllocator_getBlock(LargeAllocator* allocator, size_t requeste
     }
 
     bitmap_setBit(allocator->bitmap, (ubyte_t*)chunk);
-
-    //print(allocator);
-    return (ObjectHeader*) chunk;
+    ObjectHeader* object = (ObjectHeader*)chunk;
+    //object_setAllocated(object);
+    return object;
 
 }
 
@@ -176,6 +180,5 @@ void largeAllocator_sweep(LargeAllocator* allocator) {
         }
     }
 
-    //print(allocator);
 }
 

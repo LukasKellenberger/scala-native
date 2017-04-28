@@ -7,6 +7,7 @@
 #include "Object.h"
 #include "headers/BlockHeader.h"
 #include "Line.h"
+#include "LargeAllocator.h"
 
 
 ObjectHeader* objectNextLargeObject(ObjectHeader* objectHeader) {
@@ -71,7 +72,7 @@ ObjectHeader* object_getFromInnerPointer(word_t* word) {
 
 ObjectHeader* object_getObject(word_t* word) {
     if(!isWordAligned(word)) {
-        printf("Could be inner pointer (Not aligned) %p\n", word);
+        //printf("Could be inner pointer (Not aligned) %p\n", word);
         return object_getFromInnerPointer((word_t*)((word_t) word & WORD_MASK));
     }
     BlockHeader* blockHeader = block_getBlockHeader(word);
@@ -92,18 +93,45 @@ ObjectHeader* object_getObject(word_t* word) {
     if((word_t*)current == word) {
         return current;
     } else {
-        printf("Could be inner pointer %p\n", word);
+        //printf("Could be inner pointer %p\n", word);
         return object_getFromInnerPointer(word);
+    }
+}
+
+ObjectHeader* object_getLargeInnerPointer(LargeAllocator* allocator, word_t* word) {
+    word_t* current = (word_t*)((word_t)word & LARGE_BLOCK_MASK);
+    printf("current %p, word: %p\n", current, word);
+    fflush(stdout);
+
+    while(!bitmap_getBit(allocator->bitmap, (ubyte_t*)current)) {
+        current -= LARGE_BLOCK_SIZE/WORD_SIZE;
+        printf("current %p\n", current);
+        fflush(stdout);
+    }
+    printf("end loop\n");
+    fflush(stdout);
+
+    ObjectHeader* objectHeader = (ObjectHeader*) current;
+    printf("size: %zu\n", object_chunkSize(objectHeader));
+    if(word < (word_t*)objectHeader + object_chunkSize(objectHeader)/WORD_SIZE && objectHeader->rtti != NULL) {
+
+        printf("return 1\n");
+        fflush(stdout);
+        return NULL;//objectHeader;
+    } else {
+        printf("return 2\n");
+        fflush(stdout);
+        return NULL;
     }
 }
 
 ObjectHeader* object_getLargeObject(LargeAllocator* allocator, word_t* word) {
     if(bitmap_getBit(allocator->bitmap, (ubyte_t*) word)) {
-        printf("Mark large!\n");
         return (ObjectHeader*) word;
     } else {
         printf("Could be inner pointer %p (Large)\n", word);
-        return NULL;
+        fflush(stdout);
+        return object_getLargeInnerPointer(allocator, word);
     }
 }
 
@@ -133,9 +161,4 @@ void object_mark(ObjectHeader* objectHeader) {
 
 size_t object_chunkSize(ObjectHeader* objectHeader) {
     return (object_size(objectHeader) + MIN_BLOCK_SIZE - 1) / MIN_BLOCK_SIZE * MIN_BLOCK_SIZE;
-}
-
-
-bool object_isInnerPointerOrNext(ObjectHeader* objectHeader, word_t* ptr) {
-    return false;
 }
