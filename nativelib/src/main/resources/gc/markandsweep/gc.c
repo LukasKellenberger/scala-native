@@ -24,7 +24,7 @@
 FreeList* free_list = NULL;
 Heap* heap_ = NULL;
 
-#define CHUNK 2*1024*1024
+#define CHUNK 256*1024
 Timer* in_gc = NULL;
 Timer* outside_gc = NULL;
 
@@ -320,7 +320,7 @@ void scalanative_collect() {
     printf("ingc: %ld outgc: %ld\n", in_gc->time, outside_gc->time);
     fflush(stdout);
     if(/*free_percent < 25 ||*/ (in_gc->time > outside_gc->time && in_gc->nb_intervals > 10)) {
-        grow_heap(0);
+        //grow_heap(0);
         gc_timer_reset(in_gc);
         gc_timer_reset(outside_gc);
     }

@@ -20,9 +20,9 @@
 #define UNW_LOCAL_ONLY
 
 
-extern word_t** __MODULES__;
-extern int __MODULES_SIZE__;
-extern int __OBJECT_ARRAY_ID__;
+extern word_t* __modules;
+extern int __modules_size;
+extern int __object_array_id;
 
 void mark_roots();
 void mark_init(FreeList* free_list);

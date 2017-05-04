@@ -46,7 +46,7 @@ void scan_heap_after_overflow(Stack* stack) {
         while(block <= chunk_end && !found) {
             if(bitmap_get_bit(heap->bitmap_copy, block) && !bitmap_get_bit(heap->bitmap, block) && header_unpack_tag(block) == tag_allocated) {
                 Rtti rtti = *((Rtti*) *(block+1));
-                if(rtti.rt.id == __OBJECT_ARRAY_ID__) {
+                if(rtti.rt.id == __object_array_id) {
 
                     size_t size = header_unpack_object_size(block) - 1;
 
@@ -99,7 +99,7 @@ void _mark() {
 
         Rtti rtti = *((Rtti*) *(block+1));
 
-        if(rtti.rt.id == __OBJECT_ARRAY_ID__) {
+        if(rtti.rt.id == __object_array_id) {
             size_t size = header_unpack_object_size(block) - 1;
             assert(size < heap->heap_end - heap->heap_start);
 
@@ -210,8 +210,8 @@ void mark_roots_stack() {
 }
 
 void mark_roots_modules() {
-    word_t** module = __MODULES__;
-    int nb_modules = __MODULES_SIZE__;
+    word_t** module = &__modules;
+    int nb_modules = __modules_size;
 
     for(int i=0; i < nb_modules; i++) {
         word_t* addr = module[i] - 1;
