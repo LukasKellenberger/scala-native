@@ -6,7 +6,9 @@
 #include "Marker.h"
 #include "Object.h"
 
-extern int __OBJECT_ARRAY_ID__;
+extern int __object_array_id;
+extern word_t* __modules;
+extern int __modules_size;
 
 
 void markObject(Stack* stack, ObjectHeader* object) {
@@ -67,7 +69,7 @@ void marker_mark(Heap* heap, Stack* stack) {
         ObjectHeader* object = stack_pop(stack);
         //printf("marking: %p %d\n", object, object->rtti->id);
 
-        if(object->rtti->id == __OBJECT_ARRAY_ID__) {
+        if(object->rtti->rt.id == __object_array_id) {
             // remove header and rtti from size
             size_t size = object_size(object) - 2 * sizeof(word_t);
             size_t nbWords = size / sizeof(word_t);
@@ -81,7 +83,7 @@ void marker_mark(Heap* heap, Stack* stack) {
 
             }
         } else {
-            int64_t* ptr_map = object->rtti->ptr_map;
+            int64_t* ptr_map = object->rtti->refMapStruct;
             int i=0;
             while(ptr_map[i] != -1) {
                 word_t* field = object->fields[ptr_map[i]/sizeof(word_t) - 1];
@@ -127,8 +129,8 @@ void mark_roots_stack(Heap* heap, Stack* stack) {
 }
 
 void mark_roots_modules(Heap* heap, Stack* stack) {
-    word_t** module = __MODULES__;
-    int nb_modules = __MODULES_SIZE__;
+    word_t** module = &__modules;
+    int nb_modules = __modules_size;
 
     for(int i=0; i < nb_modules; i++) {
         word_t* addr = module[i] - 1;

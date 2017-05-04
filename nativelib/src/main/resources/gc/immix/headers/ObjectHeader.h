@@ -24,14 +24,23 @@ typedef struct {
 } ObjectHeaderLine;
 
 typedef struct {
-    int32_t id;
-    word_t* name;
+    struct {
+        int32_t id;
+        word_t* name;
+        int8_t kind;
+    } rt;
     int64_t size;
-    int32_t dyn_method_count;
-    word_t* dyn_method_salt;
-    word_t* dyn_method_keys;
-    word_t* dyn_methods;
-    int64_t* ptr_map;
+    struct {
+        int32_t from;
+        int32_t to;
+    } range;
+    struct {
+        int32_t dyn_method_count;
+        word_t* dyn_method_salt;
+        word_t* dyn_method_keys;
+        word_t* dyn_methods;
+    } dynDispatchTable;
+    int64_t* refMapStruct;
 } Rtti;
 
 typedef word_t* Field_t;

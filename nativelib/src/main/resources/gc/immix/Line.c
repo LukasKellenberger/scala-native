@@ -2,7 +2,7 @@
 // Created by Lukas Kellenberger on 19.04.17.
 //
 
-#include <printf.h>
+#include <stdio.h>
 #include "Line.h"
 #include "headers/BlockHeader.h"
 

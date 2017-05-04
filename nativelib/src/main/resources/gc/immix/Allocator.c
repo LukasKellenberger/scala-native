@@ -3,11 +3,9 @@
 //
 
 #include <stdlib.h>
-#include <printf.h>
 #include "Allocator.h"
 #include "Line.h"
 #include "Block.h"
-#include "headers/BlockHeader.h"
 
 word_t* _allocate_slow(Allocator* allocator, size_t size);
 BlockHeader* _get_next_block(Allocator* allocator);
