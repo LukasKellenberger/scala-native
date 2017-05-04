@@ -13,4 +13,5 @@ object GarbageCollector {
   object None  extends GarbageCollector("none")
   object Boehm extends GarbageCollector("boehm", Seq("gc"))
   object Immix extends GarbageCollector("immix")
+  object MarkAndSweep extends GarbageCollector("markandsweep")
 }

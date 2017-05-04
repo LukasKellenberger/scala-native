@@ -438,7 +438,8 @@ lazy val benchmarks =
     .settings(projectSettings)
     .settings(noPublishSettings)
     .settings(
-      nativeMode := "release",
+      nativeMode in Compile := "release",
+      nativeGC in Compile := "markandsweep",
       sourceGenerators in Compile += Def.task {
         val dir = (scalaSource in Compile).value
         val benchmarks = (dir ** "*Benchmark.scala").get

@@ -197,7 +197,7 @@ object ScalaNativePluginInternal {
       workdir
     },
     nativeLogger := streams.value.log,
-    nativeGC := "boehm",
+    nativeGC := "markandsweep",
     nativeCompileLib := {
       val cwd       = nativeWorkdir.value
       val logger    = nativeLogger.value
@@ -205,7 +205,7 @@ object ScalaNativePluginInternal {
       val clang     = nativeClang.value
       val clangpp   = nativeClangPP.value
       val classpath = (fullClasspath in Compile).value
-      val opts      = nativeCompileOptions.value ++ Seq("-O2")
+      val opts      = Seq("-O2")
 
       val lib = cwd / "lib"
       val jar =
@@ -497,6 +497,7 @@ object ScalaNativePluginInternal {
     case "none"  => GarbageCollector.None
     case "boehm" => GarbageCollector.Boehm
     case "immix" => GarbageCollector.Immix
+    case "markandsweep" => GarbageCollector.MarkAndSweep
     case value =>
       throw new MessageOnlyException(
         "nativeGC can be either \"none\", \"boehm\" or \"immix\", not: " + value)
