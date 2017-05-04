@@ -430,6 +430,7 @@ lazy val sandbox =
     .in(file("sandbox"))
     .settings(noPublishSettings)
     .settings(
+      nativeGC := "markandsweep"
       // nativeOptimizerReporter := OptimizerReporter.toDirectory(
       //   crossTarget.value)
       scalaVersion := libScalaVersion
@@ -443,6 +444,9 @@ lazy val benchmarks =
     .settings(noPublishSettings)
     .settings(
       nativeMode := "release",
+      nativeGC := "markandsweep",
+      nativeOptimizerReporter := OptimizerReporter.toDirectory(
+        crossTarget.value),
       sourceGenerators in Compile += Def.task {
         val dir = (scalaSource in Compile).value
         val benchmarks = (dir ** "*Benchmark.scala").get
