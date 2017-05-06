@@ -1,21 +1,21 @@
-//
-// Created by Lukas Kellenberger on 21.04.17.
-//
-
 #include <stdio.h>
+#include <setjmp.h>
 #include "Marker.h"
 #include "Object.h"
+#include "Log.h"
+#include "headers/ObjectHeader.h"
+
+#define UNW_LOCAL_ONLY
+#include <libunwind.h>
 
 extern int __object_array_id;
 extern word_t* __modules;
 extern int __modules_size;
 
 
+
 void markObject(Stack* stack, ObjectHeader* object) {
     assert(!object_isMarked(object));
-    //printf("\tadd: %p %d\n", object, object->rtti->id);
-    //fflush(stdout);
-    //size_t testSize = object_size((ObjectHeader*)0x0000000101008188);
     object_mark(object);
     stack_push(stack, object);
 }
@@ -31,43 +31,13 @@ void mark(Heap* heap, Stack* stack, word_t* address) {
 
     if(object != NULL && !object_isMarked(object)) {
         markObject(stack, object);
-    } /*else if(object == NULL) {
-        printf("Not marking: %p\n", address);
-    }*/
-}
-
-void markModules(Heap* heap, Stack* stack, word_t** modules, int moduleCount) {
-    for(int i=0; i < moduleCount; i++) {
-        word_t* module = modules[i] - 1;
-        if(heap_isWordInHeap(heap, module)) {
-            mark(heap, stack, module);
-        }
     }
 }
 
-void markStack(Heap* heap, Stack* stack, word_t* stackTop, word_t* stackBottom) {
-
-    while(stackTop < stackBottom) {
-
-        word_t* object = (*(word_t**)stackTop) - 1;
-        if(heap_isWordInHeap(heap, object)) {
-            mark(heap, stack, object);
-        }
-        stackTop++;
-    }
-}
-
-void marker_markRoots(Heap* heap, Roots* roots, Stack* stack) {
-    assert(stack_isEmpty(stack));
-    markStack(heap, stack, roots->stackTop, roots->stackBottom);
-    markModules(heap, stack, roots->moduleStart, roots->moduleCount);
-}
 
 void marker_mark(Heap* heap, Stack* stack) {
-    //printf("mark!\n");
     while(!stack_isEmpty(stack)) {
         ObjectHeader* object = stack_pop(stack);
-        //printf("marking: %p %d\n", object, object->rtti->id);
 
         if(object->rtti->rt.id == __object_array_id) {
             // remove header and rtti from size
@@ -144,7 +114,6 @@ void mark_roots(Heap* heap, Stack* stack) {
 
     // Dumps registers into 'regs' which is on stack
     jmp_buf regs;
-    //memset(&regs, 0, sizeof(jmp_buf));
     setjmp(regs);
 
     mark_roots_stack(heap, stack);

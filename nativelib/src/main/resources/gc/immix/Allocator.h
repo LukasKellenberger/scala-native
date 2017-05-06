@@ -1,12 +1,8 @@
-//
-// Created by Lukas Kellenberger on 20.04.17.
-//
-
 #ifndef IMMIX_ALLOCATOR_H
 #define IMMIX_ALLOCATOR_H
 
-#include "headers/gc_types.h"
-#include "BlockList/BlocList.h"
+#include "GCTypes.h"
+#include "datastructures/BlocList.h"
 
 typedef struct {
     word_t* heapStart;

@@ -1,12 +1,8 @@
-//
-// Created by Lukas Kellenberger on 24.04.17.
-//
-
 #ifndef IMMIX_LARGEALLOCATOR_H
 #define IMMIX_LARGEALLOCATOR_H
 
-#include "bitmap/Bitmap.h"
-#include "headers/gc_types.h"
+#include "datastructures/Bitmap.h"
+#include "GCTypes.h"
 #include "Constants.h"
 #include "headers/ObjectHeader.h"
 

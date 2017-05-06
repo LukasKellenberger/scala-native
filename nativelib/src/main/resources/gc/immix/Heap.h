@@ -1,11 +1,7 @@
-//
-// Created by Lukas Kellenberger on 20.04.17.
-//
-
 #ifndef IMMIX_HEAP_H
 #define IMMIX_HEAP_H
 
-#include "headers/gc_types.h"
+#include "GCTypes.h"
 #include "Allocator.h"
 #include "LargeAllocator.h"
 

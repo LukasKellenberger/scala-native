@@ -1,14 +1,9 @@
-//
-// Created by Lukas Kellenberger on 20.04.17.
-//
-
-
-
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <stdio.h>
 #include "Heap.h"
 #include "Block.h"
+#include "Log.h"
 
 #define MAX_SIZE 64*1024*1024*1024L
 // Allow read and write

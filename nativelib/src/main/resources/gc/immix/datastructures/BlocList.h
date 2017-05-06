@@ -1,7 +1,3 @@
-//
-// Created by Lukas Kellenberger on 22.04.17.
-//
-
 #ifndef IMMIX_BLOCLIST_H
 #define IMMIX_BLOCLIST_H
 

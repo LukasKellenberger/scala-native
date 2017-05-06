@@ -1,11 +1,8 @@
-//
-// Created by Lukas Kellenberger on 21.04.17.
-//
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include "Stack.h"
+#include "../Log.h"
 
 Stack* stack_alloc(size_t size) {
     assert(size % sizeof(Stack_Type) == 0);

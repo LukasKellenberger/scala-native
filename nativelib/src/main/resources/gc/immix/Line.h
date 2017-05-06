@@ -1,7 +1,3 @@
-//
-// Created by Lukas Kellenberger on 19.04.17.
-//
-
 #ifndef IMMIX_LINE_H
 #define IMMIX_LINE_H
 
@@ -11,4 +7,5 @@
 
 ObjectHeader* line_header_getFirstObject(LineHeader*);
 void line_header_update(word_t* objectStart, word_t* objectEnd);
+
 #endif //IMMIX_LINE_H

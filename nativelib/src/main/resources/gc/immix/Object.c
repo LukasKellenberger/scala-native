@@ -1,13 +1,9 @@
-//
-// Created by Lukas Kellenberger on 19.04.17.
-//
-
 #include <stddef.h>
 #include <stdio.h>
 #include "Object.h"
 #include "headers/BlockHeader.h"
 #include "Line.h"
-
+#include "Log.h"
 
 ObjectHeader* objectNextLargeObject(ObjectHeader* objectHeader) {
     size_t size = object_chunkSize(objectHeader);
@@ -32,7 +28,7 @@ static inline bool isWordAligned(word_t* word) {
 
 ObjectHeader* object_getFromInnerPointerInLine(BlockHeader* blockHeader, int lineIndex, word_t* innerPointer) {
     ObjectHeader* object = line_header_getFirstObject(&blockHeader->lineHeaders[lineIndex]);
-    while(object != NULL && (word_t*) object_next_object(object) < innerPointer) {
+    while(object != NULL && (word_t*) object_next_object(object) <= innerPointer) {
         object = object_next_object(object);
     }
     if(object == NULL) {
@@ -52,18 +48,23 @@ ObjectHeader* object_getFromInnerPointer(word_t* word) {
     BlockHeader* blockHeader = block_getBlockHeader(word);
     uint32_t lineIndex = block_getLineIndexFromWord(blockHeader, word);
     ObjectHeader* header = NULL;
-    if(line_header_containsObject(&blockHeader->lineHeaders[lineIndex])) {
+    if(line_header_containsObject(&blockHeader->lineHeaders[lineIndex]) && (word_t*)line_header_getFirstObject(&blockHeader->lineHeaders[lineIndex]) <= word) {
         // Search in line
         header = object_getFromInnerPointerInLine(blockHeader, lineIndex, word);
     } else {
         // Search in previous lines
         bool contains = false;
+        lineIndex--;
         while(lineIndex > 0 && !(contains = line_header_containsObject(&blockHeader->lineHeaders[lineIndex]))) {
             lineIndex--;
         }
         if(contains) {
             header = object_getFromInnerPointerInLine(blockHeader, lineIndex, word);
         }
+    }
+    if(!(header == NULL || (word >= (word_t*) header && word < (word_t*)object_next_object(header)))) {
+        printf("header: %p %p %p\n", header, word, (word_t*)object_next_object(header));
+        fflush(stdout);
     }
     assert(header == NULL || (word >= (word_t*) header && word < (word_t*)object_next_object(header)));
     return header;
@@ -99,27 +100,16 @@ ObjectHeader* object_getObject(word_t* word) {
 
 ObjectHeader* object_getLargeInnerPointer(LargeAllocator* allocator, word_t* word) {
     word_t* current = (word_t*)((word_t)word & LARGE_BLOCK_MASK);
-    printf("current %p, word: %p\n", current, word);
-    fflush(stdout);
 
     while(!bitmap_getBit(allocator->bitmap, (ubyte_t*)current)) {
         current -= LARGE_BLOCK_SIZE/WORD_SIZE;
-        printf("current %p\n", current);
-        fflush(stdout);
     }
-    printf("end loop\n");
-    fflush(stdout);
 
     ObjectHeader* objectHeader = (ObjectHeader*) current;
-    printf("size: %zu\n", object_chunkSize(objectHeader));
     if(word < (word_t*)objectHeader + object_chunkSize(objectHeader)/WORD_SIZE && objectHeader->rtti != NULL) {
-
-        printf("return 1\n");
-        fflush(stdout);
-        return NULL;//objectHeader;
+        return objectHeader;
     } else {
-        printf("return 2\n");
-        fflush(stdout);
+
         return NULL;
     }
 }
@@ -130,7 +120,9 @@ ObjectHeader* object_getLargeObject(LargeAllocator* allocator, word_t* word) {
     } else {
         printf("Could be inner pointer %p (Large)\n", word);
         fflush(stdout);
-        return object_getLargeInnerPointer(allocator, word);
+        ObjectHeader* object = object_getLargeInnerPointer(allocator, word);
+        assert(object == NULL || (word >= (word_t*) object && word < (word_t*) objectNextLargeObject(object)));
+        return object;
     }
 }
 

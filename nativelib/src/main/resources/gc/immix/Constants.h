@@ -1,7 +1,3 @@
-//
-// Created by Lukas Kellenberger on 19.04.17.
-//
-
 #ifndef IMMIX_CONSTANTS_H
 #define IMMIX_CONSTANTS_H
 

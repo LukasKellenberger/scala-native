@@ -1,7 +1,3 @@
-//
-// Created by Lukas Kellenberger on 20.04.17.
-//
-
 #include <stdlib.h>
 #include "Allocator.h"
 #include "Line.h"
@@ -93,10 +89,6 @@ word_t* allocator_alloc(Allocator* allocator, size_t size) {
     allocator->cursor = end;
 
     line_header_update(start, end);
-    /*BlockHeader* first = block_getBlockHeader(allocator->heapStart);
-    ObjectHeader* firstObject = (ObjectHeader*) block_getFirstWord(first);
-    printf("first object: %zu\nblock header: (%d flag, %d first, %d next)\n", object_size(firstObject), first->header.flags, first->header.first, first->header.nextBlock);
-*/
 
     return start;
 }

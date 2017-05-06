@@ -1,14 +1,8 @@
-//
-// Created by Lukas Kellenberger on 19.04.17.
-//
-
 #include <stdio.h>
 #include <memory.h>
 #include "Block.h"
 #include "Object.h"
-#include "headers/BlockHeader.h"
-#include "headers/LineHeader.h"
-#include "Allocator.h"
+#include "Log.h"
 
 bool block_lineContainsObject(BlockHeader* blockHeader, int lineIndex) {
     LineHeader* lineHeader = &(blockHeader->lineHeaders[lineIndex]);
@@ -21,14 +15,6 @@ ObjectHeader* block_lineGetFirstObject(BlockHeader* blockHeader, int lineIndex) 
 }
 
 void block_recycle(Allocator* allocator, BlockHeader* blockHeader) {
-    /*for(int i=0; i < LINE_COUNT; i++) {
-        if(line_header_isMarked(&blockHeader->lineHeaders[i])) {
-            printf("M");
-        } else {
-            printf("A");
-        }
-    }
-    printf("\n");*/
 
     if(!block_isMarked(blockHeader)) {
         memset(blockHeader, 0, BLOCK_TOTAL_SIZE);
@@ -82,31 +68,5 @@ void block_recycle(Allocator* allocator, BlockHeader* blockHeader) {
             blockList_addLast(&allocator->recycledBlocks, blockHeader);
             allocator->recyclableBlockCount++;
         }
-    }
-    /*block_print(blockHeader);
-    for(int i=0; i < LINE_COUNT; i++) {
-        if(line_header_containsObject(&blockHeader->lineHeaders[i])) {
-            printf("C");
-        } else {
-            printf("E");
-        }
-    }
-    printf("\n");*/
-}
-
-void block_print(BlockHeader* blockHeader) {
-    if(block_isFree(blockHeader)){
-        printf("Block %p, FREE\n", blockHeader);
-    } else if(block_isRecyclable(blockHeader)) {
-        printf("Block %p, RECYCLABLE: ", blockHeader);
-        int lineIndex = blockHeader->header.first;
-        while(lineIndex != LAST_HOLE) {
-            FreeLineHeader* lineHeader = block_getFreeLineHeader(blockHeader, lineIndex);
-            printf("[%d size: %u] -> ", lineIndex, lineHeader->size);
-            lineIndex = block_getFreeLineHeader(blockHeader, lineIndex)->next;
-        }
-        printf("\n");
-    } else {
-        printf("Block %p, UNAVAILABLE\n", blockHeader);
     }
 }

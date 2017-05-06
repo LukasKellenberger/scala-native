@@ -1,14 +1,10 @@
-//
-// Created by Lukas Kellenberger on 24.04.17.
-//
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include "LargeAllocator.h"
 #include "utils/MathUtils.h"
 #include "Object.h"
-#include "headers/ObjectHeader.h"
+#include "Log.h"
 
 inline static int size_to_linked_list(size_t size) {
     assert(size >= MIN_BLOCK_SIZE);

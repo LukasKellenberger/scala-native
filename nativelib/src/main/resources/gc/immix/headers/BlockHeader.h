@@ -1,14 +1,9 @@
-//
-// Created by Lukas Kellenberger on 19.04.17.
-//
-
 #ifndef IMMIX_BLOCKHEADER_H
 #define IMMIX_BLOCKHEADER_H
 
-
 #include <stdint.h>
 #include "LineHeader.h"
-#include "gc_types.h"
+#include "../GCTypes.h"
 #include "../Constants.h"
 #include "ObjectHeader.h"
 

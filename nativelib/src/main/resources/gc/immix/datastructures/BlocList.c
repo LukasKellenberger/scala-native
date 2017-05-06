@@ -1,12 +1,7 @@
-//
-// Created by Lukas Kellenberger on 22.04.17.
-//
-
 #include <stddef.h>
 #include <stdio.h>
 #include "BlocList.h"
-
-
+#include "../Log.h"
 
 
 int32_t _getBlockIndex(word_t* heapStart, BlockHeader* blockHeader) {

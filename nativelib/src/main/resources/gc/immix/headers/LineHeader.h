@@ -1,9 +1,3 @@
-//
-// Created by Lukas Kellenberger on 19.04.17.
-//
-
-
-
 #ifndef IMMIX_LINEHEADER_H
 #define IMMIX_LINEHEADER_H
 

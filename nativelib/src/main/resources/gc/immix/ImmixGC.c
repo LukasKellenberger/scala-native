@@ -1,24 +1,18 @@
-//
-// Created by Lukas Kellenberger on 20.04.17.
-//
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
-#include "headers/gc_types.h"
+#include "GCTypes.h"
 #include "Heap.h"
-#include "ProgramRoots.h"
-#include "Stack.h"
+#include "datastructures/Stack.h"
 #include "Marker.h"
+#include "Log.h"
+#include "Object.h"
 
 
-
-#define INITIAL_HEAP_SIZE (256*1024*1024)
+#define INITIAL_HEAP_SIZE (128*1024*1024)
 
 
 Heap* heap = NULL;
-Roots* roots = NULL;
 Stack* stack = NULL;
 
 
@@ -49,8 +43,7 @@ void* scalanative_alloc_raw(size_t size) {
         }
 
     }
-    //printf("alloc: %p %zu\n", block, size + sizeof(word_t));
-    //fflush(stdout);
+    assert((object_isLargeObject(block) && object_chunkSize(block) >= size && object_chunkSize(block) <= 2 * size) || (object_isStandardObject(block) && object_size(block) >= size && object_size(block) <= 2 * size));
     memset((word_t*)block + 1, 0, size);
     return (word_t*)block + 1;
 }
@@ -62,7 +55,6 @@ void* scalanative_alloc_raw_atomic(size_t size) {
 void* scalanative_alloc(void* info, size_t size) {
     void** alloc = (void**) scalanative_alloc_raw(size);
     *alloc = info;
-    //printf("alloc id: %d\n",((Rtti*)info)->id);
     return (void*) alloc;
 }
 
@@ -72,11 +64,8 @@ void* alloc(size_t size) {
 
 void scalanative_collect() {
     printf("Collect\n");
-    //printf("allocator: %p - %p, %p - %p\n", heap->allocator->cursor, heap->allocator->limit, heap->allocator->largeCursor, heap->allocator->largeLimit);
     fflush(stdout);
-    //ProgramRoots_getRoots(&roots);
-    //marker_markRoots(heap, roots, stack);
-    //marker_mark(heap, stack);
+
     mark_roots(heap, stack);
     bool success = heap_recycle(heap);
 
@@ -85,7 +74,7 @@ void scalanative_collect() {
         fflush(stdout);
         exit(1);
     }
-    //printf("allocator: %p - %p, %p - %p\n", heap->allocator->cursor, heap->allocator->limit, heap->allocator->largeCursor, heap->allocator->largeLimit);
+
     printf("End collect\n");
     fflush(stdout);
 }

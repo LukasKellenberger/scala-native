@@ -1,15 +1,12 @@
-//
-// Created by Lukas Kellenberger on 19.04.17.
-//
-
 #ifndef IMMIX_OBJECTHEADER_H
 #define IMMIX_OBJECTHEADER_H
 
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "gc_types.h"
+#include "../GCTypes.h"
 #include "../Constants.h"
+#include "../Log.h"
 
 typedef enum {
     object_forward = 0x0,

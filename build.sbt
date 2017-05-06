@@ -9,8 +9,7 @@ val libCrossScalaVersions = Seq("2.11.8", "2.11.11")
 
 lazy val baseSettings = Seq(
   organization := "org.scala-native",
-  version := nativeVersion,
-  nativeGC := "immix"
+  version := nativeVersion
 )
 
 addCommandAlias(
@@ -183,8 +182,7 @@ lazy val libSettings =
 lazy val projectSettings =
   ScalaNativePlugin.projectSettings ++ Seq(
     scalaVersion := libScalaVersion,
-    resolvers := Nil,
-    nativeGC := "immix"
+    resolvers := Nil
   )
 
 lazy val util =
