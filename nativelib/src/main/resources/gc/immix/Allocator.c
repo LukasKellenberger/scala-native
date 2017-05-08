@@ -67,7 +67,7 @@ word_t* _overflow_allocation(Allocator* allocator, size_t size) {
 
     allocator->largeCursor = end;
 
-    line_header_update(start, end);
+    line_header_update(start);
 
     //printf("overflow alloc\n");
 
@@ -88,7 +88,7 @@ word_t* allocator_alloc(Allocator* allocator, size_t size) {
 
     allocator->cursor = end;
 
-    line_header_update(start, end);
+    line_header_update(start);
 
     return start;
 }

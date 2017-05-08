@@ -6,6 +6,6 @@
 #include "headers/LineHeader.h"
 
 ObjectHeader* line_header_getFirstObject(LineHeader*);
-void line_header_update(word_t* objectStart, word_t* objectEnd);
+void line_header_update(word_t* objectStart);
 
 #endif //IMMIX_LINE_H

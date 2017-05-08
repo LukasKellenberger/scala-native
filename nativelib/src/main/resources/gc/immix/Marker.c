@@ -4,6 +4,7 @@
 #include "Object.h"
 #include "Log.h"
 #include "headers/ObjectHeader.h"
+#include "headers/BlockHeader.h"
 
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
@@ -25,6 +26,7 @@ void mark(Heap* heap, Stack* stack, word_t* address) {
     ObjectHeader* object = NULL;
     if(heap_isWordInSmallHeap(heap, address)) {
         object = object_getObject(address);
+        assert(object == NULL || line_header_containsObject(&block_getBlockHeader((word_t*)object)->lineHeaders[block_getLineIndexFromWord(block_getBlockHeader((word_t*)object), (word_t*)object)]));
     } else {
         object = object_getLargeObject(heap->largeAllocator, address);
     }
