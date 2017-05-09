@@ -3,6 +3,7 @@
 
 
 inline ObjectHeader* line_header_getFirstObject(LineHeader* lineHeader) {
+    assert(line_header_containsObject(lineHeader));
     BlockHeader* blockHeader = block_blockHeaderFromLineHeader(lineHeader);
     uint8_t offset = line_header_getFirstObjectOffset(lineHeader);
 

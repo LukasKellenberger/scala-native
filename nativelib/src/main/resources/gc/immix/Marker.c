@@ -17,6 +17,7 @@ extern int __modules_size;
 
 void markObject(Stack* stack, ObjectHeader* object) {
     assert(!object_isMarked(object));
+    assert(object_size(object) != 0);
     object_mark(object);
     stack_push(stack, object);
 }
@@ -26,12 +27,14 @@ void mark(Heap* heap, Stack* stack, word_t* address) {
     ObjectHeader* object = NULL;
     if(heap_isWordInSmallHeap(heap, address)) {
         object = object_getObject(address);
-        assert(object == NULL || line_header_containsObject(&block_getBlockHeader((word_t*)object)->lineHeaders[block_getLineIndexFromWord(block_getBlockHeader((word_t*)object), (word_t*)object)]));
+        assert(object == NULL || line_header_containsObject(&block_getBlockHeader((word_t*)object)->lineHeaders[
+                block_getLineIndexFromWord(block_getBlockHeader((word_t*)object), (word_t*)object)]));
     } else {
         object = object_getLargeObject(heap->largeAllocator, address);
     }
 
     if(object != NULL && !object_isMarked(object)) {
+        //printf("mark root: %p\n", object);
         markObject(stack, object);
     }
 }
@@ -50,6 +53,7 @@ void marker_mark(Heap* heap, Stack* stack) {
                 word_t* field = object->fields[i];
                 ObjectHeader* fieldObject = (ObjectHeader*)(field - 1);
                 if(heap_isObjectInHeap(heap, fieldObject) && !object_isMarked(fieldObject)) {
+                    //printf("mark from array(%p): %p\n", object, fieldObject);
                     markObject(stack, fieldObject);
                 }
 
@@ -61,6 +65,7 @@ void marker_mark(Heap* heap, Stack* stack) {
                 word_t* field = object->fields[ptr_map[i]/sizeof(word_t) - 1];
                 ObjectHeader* fieldObject = (ObjectHeader*)(field - 1);
                 if(heap_isObjectInHeap(heap, fieldObject) && !object_isMarked(fieldObject)) {
+                    //printf("mark from object(%p): %p\n", object, fieldObject);
                     markObject(stack, fieldObject);
                 }
                 ++i;

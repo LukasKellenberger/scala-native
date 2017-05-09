@@ -66,7 +66,7 @@ void print(LargeAllocator*);
 void largeAllocator_addChunk(LargeAllocator* allocator, Chunk* chunk, size_t total_block_size) {
     assert(total_block_size >= MIN_BLOCK_SIZE);
     assert(total_block_size % MIN_BLOCK_SIZE == 0);
-    memset((word_t*)chunk + 1, 0, total_block_size - sizeof(word_t*));
+    //memset((word_t*)chunk + 1, 0, total_block_size - sizeof(word_t*));
 
     size_t remaining_size = total_block_size;
     ubyte_t* current = (ubyte_t*)chunk;
@@ -120,6 +120,7 @@ ObjectHeader* largeAllocator_getBlock(LargeAllocator* allocator, size_t requeste
     bitmap_setBit(allocator->bitmap, (ubyte_t*)chunk);
     ObjectHeader* object = (ObjectHeader*)chunk;
     //object_setAllocated(object);
+    memset((word_t*)object + 1, 0, actualBlockSize - WORD_SIZE);
     return object;
 
 }

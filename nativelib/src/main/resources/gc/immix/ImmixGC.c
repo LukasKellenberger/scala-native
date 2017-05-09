@@ -47,7 +47,7 @@ void* scalanative_alloc_raw(size_t size) {
            || (object_isStandardObject(block) && object_size(block) > size && object_size(block) <= 2 * size));
     assert(object_isLargeObject(block) || (word_t*)block >= block_getFirstWord(block_getBlockHeader((word_t*)block)));
 
-    memset((word_t*)block + 1, 0, size);
+    //memset((word_t*)block + 1, 0, size);
 
     return (word_t*)block + 1;
 }
@@ -67,8 +67,10 @@ void* alloc(size_t size) {
 }
 
 void scalanative_collect() {
+#ifdef DEBUG_PRINT
     printf("Collect\n");
     fflush(stdout);
+#endif
 
     mark_roots(heap, stack);
     bool success = heap_recycle(heap);
@@ -78,7 +80,8 @@ void scalanative_collect() {
         fflush(stdout);
         exit(1);
     }
-
+#ifdef DEBUG_PRINT
     printf("End collect\n");
     fflush(stdout);
+#endif
 }

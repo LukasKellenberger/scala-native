@@ -20,7 +20,6 @@ word_t* mapAndAlign(int alignmentMask) {
 
     // Heap start not aligned on
     if(((word_t)heapStart & alignmentMask) != (word_t)heapStart) {
-        printf("Not aligned\n");
         word_t* previousBlock = (word_t*)((word_t)heapStart & BLOCK_SIZE_IN_BYTES_INVERSE_MASK);
         heapStart = previousBlock + WORDS_IN_BLOCK;
     }
@@ -35,12 +34,9 @@ Heap* heap_create(size_t initialSize) {
     word_t* smallHeapStart = mapAndAlign(BLOCK_SIZE_IN_BYTES_INVERSE_MASK);
 
 
-    printf("initial size: %zu\n", initialSize);
     heap->smallHeapSize = initialSize;
     heap->heapStart = smallHeapStart;
     heap->heapEnd = smallHeapStart + initialSize / sizeof(word_t);
-    printf("Heap bounds[%p - %p[\n", smallHeapStart, heap->heapEnd);
-    fflush(stdout);
     heap->allocator = allocator_create(smallHeapStart, initialSize / BLOCK_TOTAL_SIZE);
 
 
@@ -63,7 +59,6 @@ ObjectHeader* heap_alloc(Heap* heap, uint32_t objectSize) {
         }
         object_setObjectType(object, object_large);
         object_setSize(object, size);
-        //printf("Alloc large %u %u %p!\n", objectSize, object->header.size, object);
         return object;
     } else {
         ObjectHeader* block = (ObjectHeader*) allocator_alloc(heap->allocator, size);
@@ -89,7 +84,9 @@ bool heap_recycle(Heap* heap) {
         current += WORDS_IN_BLOCK;
     }
     largeAllocator_sweep(heap->largeAllocator);
+#ifdef DEBUG_PRINT
     printf("Recyclable: %d\nFree: %d\n", heap->allocator->recyclableBlockCount, heap->allocator->freeBlockCount);
+#endif
     return allocator_initCursors(heap->allocator);
 }
 

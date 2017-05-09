@@ -17,7 +17,7 @@ ObjectHeader* block_lineGetFirstObject(BlockHeader* blockHeader, int lineIndex) 
 void block_recycle(Allocator* allocator, BlockHeader* blockHeader) {
 
     if(!block_isMarked(blockHeader)) {
-        memset(blockHeader, 0, BLOCK_TOTAL_SIZE);
+        memset(blockHeader, 0, LINE_SIZE);
         blockList_addLast(&allocator->freeBlocks, blockHeader);
         allocator->freeBlockCount++;
     } else {
@@ -34,7 +34,7 @@ void block_recycle(Allocator* allocator, BlockHeader* blockHeader) {
                 if(line_header_containsObject(lineHeader)) {
                     //Unmark all objects in line
                     ObjectHeader *object = line_header_getFirstObject(lineHeader);
-                    word_t *lineEnd = block_getLineAddress(blockHeader, lineIndex) + LINE_SIZE / WORD_SIZE;
+                    word_t *lineEnd = block_getLineAddress(blockHeader, lineIndex) + WORDS_IN_LINE;
                     while (object != NULL && (word_t *) object < lineEnd) {
                         object_unmarkObjectHeader(object);
                         object = object_nextObject(object);

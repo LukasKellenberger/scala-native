@@ -3,6 +3,7 @@
 #include "Line.h"
 #include "Block.h"
 #include <stdio.h>
+#include <memory.h>
 
 word_t* _allocate_slow(Allocator* allocator, size_t size);
 BlockHeader* _get_next_block(Allocator* allocator);
@@ -68,6 +69,12 @@ word_t* _overflow_allocation(Allocator* allocator, size_t size) {
         return _overflow_allocation(allocator, size);
     }
 
+    if(end == allocator->largeLimit) {
+        memset(start, 0, size);
+    } else {
+        memset(start, 0, size + WORD_SIZE);
+    }
+
     allocator->largeCursor = end;
 
     line_header_update(allocator->largeBlock, start);
@@ -85,6 +92,12 @@ word_t* allocator_alloc(Allocator* allocator, size_t size) {
         } else {
             return _allocate_slow(allocator, size);
         }
+    }
+
+    if(end == allocator->limit) {
+        memset(start, 0, size);
+    } else {
+        memset(start, 0, size + WORD_SIZE);
     }
 
     allocator->cursor = end;
