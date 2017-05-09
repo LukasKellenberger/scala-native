@@ -8,8 +8,10 @@ typedef struct {
     word_t* heapStart;
     BlockList recycledBlocks;
     BlockList freeBlocks;
+    BlockHeader* block;
     word_t* cursor;
     word_t* limit;
+    BlockHeader* largeBlock;
     word_t* largeCursor;
     word_t* largeLimit;
     int freeBlockCount;

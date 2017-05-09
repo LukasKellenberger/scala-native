@@ -10,6 +10,5 @@ ObjectHeader* object_getObject(word_t*);
 ObjectHeader* object_getLargeObject(LargeAllocator*, word_t*);
 void object_mark(ObjectHeader* objectHeader);
 size_t object_chunkSize(ObjectHeader*);
-bool object_isInnerPointerOrNext(ObjectHeader*, word_t*);
 
 #endif //IMMIX_OBJECT_H

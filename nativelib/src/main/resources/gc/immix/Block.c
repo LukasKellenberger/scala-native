@@ -57,7 +57,7 @@ void block_recycle(Allocator* allocator, BlockHeader* blockHeader) {
                     line_header_setEmpty(lineHeader);
                 }
                 block_getFreeLineHeader(blockHeader, lastRecyclable)->size = size;
-                memset(block_getLineAddress(blockHeader, lastRecyclable), 0, size*LINE_SIZE);
+                memset(block_getLineAddress(blockHeader, lastRecyclable), 0, WORD_SIZE/*size*LINE_SIZE*/);
             }
         }
         if(lastRecyclable == -1) {

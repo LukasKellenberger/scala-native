@@ -18,7 +18,9 @@ ObjectHeader* object_nextObject(ObjectHeader *objectHeader) {
         return NULL;
     }
     ObjectHeader* next = (ObjectHeader*)((ubyte_t *)objectHeader + size);
-    assert(block_getBlockHeader((word_t*)next) == block_getBlockHeader((word_t*)objectHeader) || (ubyte_t*)block_getBlockHeader((word_t*)next) == (ubyte_t*)block_getBlockHeader((word_t*)objectHeader) + BLOCK_TOTAL_SIZE);
+    assert(block_getBlockHeader((word_t*)next) == block_getBlockHeader((word_t*)objectHeader)
+           || (ubyte_t*)block_getBlockHeader((word_t*)next) ==
+                                 (ubyte_t*)block_getBlockHeader((word_t*)objectHeader) + BLOCK_TOTAL_SIZE);
     return next;
 }
 
@@ -48,7 +50,8 @@ ObjectHeader* object_getFromInnerPointer(word_t* word) {
     BlockHeader* blockHeader = block_getBlockHeader(word);
     uint32_t lineIndex = block_getLineIndexFromWord(blockHeader, word);
     ObjectHeader* header = NULL;
-    if(line_header_containsObject(&blockHeader->lineHeaders[lineIndex]) && (word_t*)line_header_getFirstObject(&blockHeader->lineHeaders[lineIndex]) <= word) {
+    if(line_header_containsObject(&blockHeader->lineHeaders[lineIndex])
+       && (word_t*)line_header_getFirstObject(&blockHeader->lineHeaders[lineIndex]) <= word) {
         // Search in line
         header = object_getFromInnerPointerInLine(blockHeader, lineIndex, word);
     } else {
@@ -63,27 +66,34 @@ ObjectHeader* object_getFromInnerPointer(word_t* word) {
             header = object_getFromInnerPointerInLine(blockHeader, lineIndex, word);
         }
     }
-    if(!(header == NULL || (word >= (word_t*) header && word < (word_t*) object_nextObject(header)))) {
-        printf("header: %p %p %p\n", header, word, (word_t*) object_nextObject(header));
+    assert(header == NULL || (word >= (word_t*) header && word < (word_t*) object_nextObject(header)));
+#ifdef DEBUG_PRINT
+    if(header != NULL) {
+        printf("inner pointer: %p object: %p\n", word, header);
         fflush(stdout);
     }
-    assert(header == NULL || (word >= (word_t*) header && word < (word_t*) object_nextObject(header)));
+#endif
     return header;
 }
 
 ObjectHeader* object_getObject(word_t* word) {
     BlockHeader* blockHeader = block_getBlockHeader(word);
     if(word < block_getFirstWord(blockHeader)) {
+#ifdef DEBUG_PRINT
         printf("Points on block header\n");
+        fflush(stdout);
+#endif
         return NULL;
     }
     if(!isWordAligned(word)) {
-        //printf("Could be inner pointer (Not aligned) %p\n", word);
         return object_getFromInnerPointer((word_t*)((word_t) word & WORD_INVERSE_MASK));
     }
     uint32_t lineIndex = block_getLineIndexFromWord(blockHeader, word);
     if(!line_header_containsObject(&blockHeader->lineHeaders[lineIndex])) {
+#ifdef DEBUG_PRINT
         printf("Empty line\n");
+        fflush(stdout);
+#endif
         return NULL;
     }
 
@@ -94,7 +104,6 @@ ObjectHeader* object_getObject(word_t* word) {
     if((word_t*)current == word) {
         return current;
     } else {
-        //printf("Could be inner pointer %p\n", word);
         return object_getFromInnerPointer(word);
     }
 }
@@ -119,8 +128,10 @@ ObjectHeader* object_getLargeObject(LargeAllocator* allocator, word_t* word) {
     if(bitmap_getBit(allocator->bitmap, (ubyte_t*) word)) {
         return (ObjectHeader*) word;
     } else {
+#ifdef DEBUG_PRINT
         printf("Could be inner pointer %p (Large)\n", word);
         fflush(stdout);
+#endif
         ObjectHeader* object = object_getLargeInnerPointer(allocator, word);
         assert(object == NULL || (word >= (word_t*) object && word < (word_t*) objectNextLargeObject(object)));
         return object;
@@ -137,7 +148,7 @@ void object_mark(ObjectHeader* objectHeader) {
         block_mark(blockHeader);
 
         // Mark all Lines
-        int startIndex = block_getLineIndexFromObjectHeader(blockHeader, objectHeader);
+        int startIndex = block_getLineIndexFromWord(blockHeader, (word_t*)objectHeader);
         word_t* lastWord = (word_t*) object_nextObject(objectHeader) - 1;
         int endIndex = block_getLineIndexFromWord(blockHeader, lastWord);
         assert(startIndex >= 0 && startIndex < LINE_COUNT);

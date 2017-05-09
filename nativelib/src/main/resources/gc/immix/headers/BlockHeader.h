@@ -5,7 +5,7 @@
 #include "LineHeader.h"
 #include "../GCTypes.h"
 #include "../Constants.h"
-#include "ObjectHeader.h"
+#include "../Log.h"
 
 typedef enum {
     block_free = 0x0,
@@ -91,10 +91,6 @@ static inline uint32_t block_getLineIndexFromLineHeader(BlockHeader* blockHeader
 static inline uint32_t block_getLineIndexFromWord(BlockHeader* blockHeader, word_t* word) {
     word_t* firstWord = block_getFirstWord(blockHeader);
     return (uint32_t)((word_t)word - (word_t)firstWord) >> LINE_SIZE_BITS;
-}
-
-static inline uint32_t block_getLineIndexFromObjectHeader(BlockHeader* blockHeader, ObjectHeader* objectHeader) {
-    return block_getLineIndexFromWord(blockHeader, (word_t*)objectHeader);
 }
 
 

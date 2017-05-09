@@ -93,19 +93,5 @@ bool heap_recycle(Heap* heap) {
     return allocator_initCursors(heap->allocator);
 }
 
-inline bool heap_isWordInLargeHeap(Heap* heap, word_t* word) {
-    return word != NULL && word >= heap->largeHeapStart && word < heap->largeHeapEnd;
-}
-
-inline bool heap_isWordInSmallHeap(Heap* heap, word_t* word) {
-    return word != NULL && word >= heap->heapStart && word < heap->heapEnd;
-}
-
-inline bool heap_isWordInHeap(Heap* heap, word_t* word) {
-    return heap_isWordInSmallHeap(heap, word) || heap_isWordInLargeHeap(heap, word);
-}
-inline bool heap_isObjectInHeap(Heap* heap, ObjectHeader* object) {
-    return heap_isWordInHeap(heap, (word_t*) object);
-}
 
 void heap_grow(Heap* heap, size_t size) {}

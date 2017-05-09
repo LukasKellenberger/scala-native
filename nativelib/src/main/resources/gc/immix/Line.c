@@ -12,9 +12,7 @@ inline ObjectHeader* line_header_getFirstObject(LineHeader* lineHeader) {
 
 }
 
-inline void line_header_update(word_t* objectStart) {
-
-    BlockHeader* blockHeader = block_getBlockHeader(objectStart);
+inline void line_header_update(BlockHeader* blockHeader, word_t* objectStart) {
 
     int lineIndex = block_getLineIndexFromWord(blockHeader, objectStart);
     LineHeader* lineHeader = &blockHeader->lineHeaders[lineIndex];
