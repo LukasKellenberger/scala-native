@@ -50,26 +50,16 @@ typedef struct {
 
 static inline bool object_isMarked(ObjectHeader* objectHeader) {
     return objectHeader->header.marked == 0x1;
-    //return objectHeader->header.marked & 1;
-}
-static inline void object_markObjectHeader(ObjectHeader* objectHeader) {
-    objectHeader->header.marked = 0x1;
-    //objectHeader->header.marked = (uint8_t)(objectHeader->header.marked | 1);
-}
-static inline void object_unmarkObjectHeader(ObjectHeader* objectHeader) {
-    objectHeader->header.marked = 0x0;
-    //objectHeader->header.marked &= ~1;
 }
 
-/*static inline bool object_isAllocated(ObjectHeader* objectHeader) {
-    return (objectHeader->header.marked & 0x2) == 0x2;
+static inline void object_markObjectHeader(ObjectHeader* objectHeader) {
+    objectHeader->header.marked = 0x1;
 }
-static inline void object_setAllocated(ObjectHeader* objectHeader) {
-    objectHeader->header.marked |= 0x2;
+
+static inline void object_unmarkObjectHeader(ObjectHeader* objectHeader) {
+    objectHeader->header.marked = 0x0;
 }
-static inline void object_setNotAllocated(ObjectHeader* objectHeader) {
-    objectHeader->header.marked &= ~0x2;
-}*/
+
 
 static inline bool object_isStandardObject(ObjectHeader* objectHeader) {
     return objectHeader->header.type == object_standard;
@@ -77,9 +67,11 @@ static inline bool object_isStandardObject(ObjectHeader* objectHeader) {
 static inline bool object_isLargeObject(ObjectHeader* objectHeader) {
     return objectHeader->header.type == object_large;
 }
+
 static inline bool object_isForwardObject(ObjectHeader* objectHeader) {
     return objectHeader->header.type == object_forward;
 }
+
 static inline void object_setObjectType(ObjectHeader* objectHeader, ObjectType objectType) {
     objectHeader->header.type = objectType;
 }

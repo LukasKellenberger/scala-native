@@ -34,10 +34,10 @@ void block_recycle(Allocator* allocator, BlockHeader* blockHeader) {
                 if(line_header_containsObject(lineHeader)) {
                     //Unmark all objects in line
                     ObjectHeader *object = line_header_getFirstObject(lineHeader);
-                    word_t *lineEnd = &blockHeader->lines[lineIndex + 1][0];
+                    word_t *lineEnd = block_getLineAddress(blockHeader, lineIndex) + LINE_SIZE / WORD_SIZE;
                     while (object != NULL && (word_t *) object < lineEnd) {
                         object_unmarkObjectHeader(object);
-                        object = object_next_object(object);
+                        object = object_nextObject(object);
                     }
                 }
                 lineIndex++;
@@ -57,7 +57,7 @@ void block_recycle(Allocator* allocator, BlockHeader* blockHeader) {
                     line_header_setEmpty(lineHeader);
                 }
                 block_getFreeLineHeader(blockHeader, lastRecyclable)->size = size;
-                memset(&blockHeader->lines[lastRecyclable][0], 0, size*LINE_SIZE);
+                memset(block_getLineAddress(blockHeader, lastRecyclable), 0, size*LINE_SIZE);
             }
         }
         if(lastRecyclable == -1) {

@@ -2,6 +2,7 @@
 #include "Allocator.h"
 #include "Line.h"
 #include "Block.h"
+#include <stdio.h>
 
 word_t* _allocate_slow(Allocator* allocator, size_t size);
 BlockHeader* _get_next_block(Allocator* allocator);
@@ -69,8 +70,6 @@ word_t* _overflow_allocation(Allocator* allocator, size_t size) {
 
     line_header_update(start);
 
-    //printf("overflow alloc\n");
-
     return start;
 }
 
@@ -105,7 +104,8 @@ word_t* _allocate_slow(Allocator* allocator, size_t size) {
 
 bool _get_next_line(Allocator* allocator) {
     // If cursor is null or the block was free, we need a new block
-    if(allocator->cursor == NULL || block_isFree(block_getBlockHeader(allocator->cursor))) {
+    // Can point on first word of next block, thus `- WORD_SIZE`
+    if(allocator->cursor == NULL || block_isFree(block_getBlockHeader(allocator->cursor - WORD_SIZE))) {
         // request the new block.
         BlockHeader* block = _get_next_block(allocator);
         // return false if there is no block left.
@@ -119,7 +119,7 @@ bool _get_next_line(Allocator* allocator) {
         } else {
             assert(block_isRecyclable(block));
             int16_t lineIndex = block->header.first;
-            word_t* line = block_getFirstWord(block) + (lineIndex * WORDS_IN_LINE);
+            word_t* line = block_getLineAddress(block, lineIndex);
 
             allocator->cursor = line;
             FreeLineHeader* lineHeader = (FreeLineHeader*)line;
@@ -132,6 +132,7 @@ bool _get_next_line(Allocator* allocator) {
     } else {
         // If we have a recycled block
         BlockHeader* block = block_getBlockHeader(allocator->cursor);
+        assert(block_isRecyclable(block));
 
         int16_t lineIndex = block->header.first;
         if(lineIndex == LAST_HOLE) {
@@ -139,7 +140,7 @@ bool _get_next_line(Allocator* allocator) {
             return _get_next_line(allocator);
         }
 
-        word_t* line = block_getFirstWord(block) + (lineIndex * WORDS_IN_LINE);
+        word_t* line = block_getLineAddress(block, lineIndex);
 
         allocator->cursor = line;
         FreeLineHeader* lineHeader = (FreeLineHeader*)line;
@@ -159,6 +160,5 @@ BlockHeader* _get_next_block(Allocator* allocator) {
     } else if (!blockList_isEmpty(&allocator->freeBlocks)){
         block = blockList_removeFirstBlock(&allocator->freeBlocks);
     }
-    //printf("Using new block: %p %d\n", block, block != NULL ? 4 : block->header.flags);
     return block;
 }

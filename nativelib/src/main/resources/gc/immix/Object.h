@@ -5,7 +5,7 @@
 #include "LargeAllocator.h"
 
 ObjectHeader* objectNextLargeObject(ObjectHeader* objectHeader);
-ObjectHeader* object_next_object(ObjectHeader*);
+ObjectHeader* object_nextObject(ObjectHeader *);
 ObjectHeader* object_getObject(word_t*);
 ObjectHeader* object_getLargeObject(LargeAllocator*, word_t*);
 void object_mark(ObjectHeader* objectHeader);
