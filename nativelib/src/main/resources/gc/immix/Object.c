@@ -23,7 +23,7 @@ ObjectHeader* object_nextObject(ObjectHeader *objectHeader) {
 }
 
 static inline bool isWordAligned(word_t* word) {
-    return ((word_t)word & WORD_MASK) == (word_t)word;
+    return ((word_t)word & WORD_INVERSE_MASK) == (word_t)word;
 }
 
 ObjectHeader* object_getFromInnerPointerInLine(BlockHeader* blockHeader, int lineIndex, word_t* innerPointer) {
@@ -79,7 +79,7 @@ ObjectHeader* object_getObject(word_t* word) {
     }
     if(!isWordAligned(word)) {
         //printf("Could be inner pointer (Not aligned) %p\n", word);
-        return object_getFromInnerPointer((word_t*)((word_t) word & WORD_MASK));
+        return object_getFromInnerPointer((word_t*)((word_t) word & WORD_INVERSE_MASK));
     }
     uint32_t lineIndex = block_getLineIndexFromWord(blockHeader, word);
     if(!line_header_containsObject(&blockHeader->lineHeaders[lineIndex])) {
