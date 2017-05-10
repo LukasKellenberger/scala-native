@@ -28,6 +28,7 @@ Allocator* allocator_create(word_t* heapStart, int blockCount) {
     //Block stats
     allocator->freeBlockCount = blockCount;
     allocator->recyclableBlockCount = 0;
+    allocator->unavailableBlockCount = 0;
 
     return allocator;
 }

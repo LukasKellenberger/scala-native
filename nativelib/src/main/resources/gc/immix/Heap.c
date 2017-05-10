@@ -4,6 +4,7 @@
 #include "Heap.h"
 #include "Block.h"
 #include "Log.h"
+#include "Allocator.h"
 
 #define MAX_SIZE 64*1024*1024*1024L
 // Allow read and write
@@ -76,6 +77,7 @@ bool heap_recycle(Heap* heap) {
 
     heap->allocator->freeBlockCount = 0;
     heap->allocator->recyclableBlockCount = 0;
+    heap->allocator->unavailableBlockCount = 0;
 
     word_t* current = heap->heapStart;
     while(current != heap->heapEnd) {
@@ -85,7 +87,7 @@ bool heap_recycle(Heap* heap) {
     }
     largeAllocator_sweep(heap->largeAllocator);
 #ifdef DEBUG_PRINT
-    printf("Recyclable: %d\nFree: %d\n", heap->allocator->recyclableBlockCount, heap->allocator->freeBlockCount);
+    printf("Recyclable: %d\nFree: %d\nUnavailable: %d\n", heap->allocator->recyclableBlockCount, heap->allocator->freeBlockCount, heap->allocator->unavailableBlockCount);
 #endif
     return allocator_initCursors(heap->allocator);
 }

@@ -16,6 +16,7 @@ typedef struct {
     word_t* largeLimit;
     int freeBlockCount;
     int recyclableBlockCount;
+    int unavailableBlockCount;
 } Allocator;
 
 

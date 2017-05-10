@@ -53,6 +53,7 @@ void block_recycle(Allocator* allocator, BlockHeader* blockHeader) {
         }
         if(lastRecyclable == -1) {
             block_setFlag(blockHeader, block_unavailable);
+            allocator->unavailableBlockCount++;
         } else {
             block_getFreeLineHeader(blockHeader, lastRecyclable)->next = LAST_HOLE;
             block_setFlag(blockHeader, block_recyclable);

@@ -49,8 +49,6 @@ void* scalanative_alloc_raw(size_t size) {
            || (object_isStandardObject(block) && object_size(block) > size && object_size(block) <= 2 * size));
     assert(object_isLargeObject(block) || (word_t*)block >= block_getFirstWord(block_getBlockHeader((word_t*)block)));
 
-    //memset((word_t*)block + 1, 0, size);
-
     return (word_t*)block + 1;
 }
 
