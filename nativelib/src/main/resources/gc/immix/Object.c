@@ -130,10 +130,9 @@ ObjectHeader* object_getLargeInnerPointer(LargeAllocator* allocator, word_t* wor
 
 ObjectHeader* object_getLargeObject(LargeAllocator* allocator, word_t* word) {
     if(((word_t)word & LARGE_BLOCK_MASK) != (word_t)word) {
-        printf("Not aligned !");
         word = (word_t*)((word_t)word & LARGE_BLOCK_MASK);
     }
-    if(bitmap_getBit(allocator->bitmap, (ubyte_t*) word)) {
+    if(bitmap_getBit(allocator->bitmap, (ubyte_t*) word) && object_isAllocated((ObjectHeader*) word)) {
         return (ObjectHeader*) word;
     } else {
         ObjectHeader* object = object_getLargeInnerPointer(allocator, word);

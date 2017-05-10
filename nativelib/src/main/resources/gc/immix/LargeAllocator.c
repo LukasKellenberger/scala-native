@@ -61,12 +61,9 @@ Chunk* chunkAddOffset(Chunk* chunk, size_t words) {
     return (Chunk*)((ubyte_t *)chunk + words);
 }
 
-void print(LargeAllocator*);
-
 void largeAllocator_addChunk(LargeAllocator* allocator, Chunk* chunk, size_t total_block_size) {
     assert(total_block_size >= MIN_BLOCK_SIZE);
     assert(total_block_size % MIN_BLOCK_SIZE == 0);
-    //memset((word_t*)chunk + 1, 0, total_block_size - sizeof(word_t*));
 
     size_t remaining_size = total_block_size;
     ubyte_t* current = (ubyte_t*)chunk;
@@ -81,13 +78,12 @@ void largeAllocator_addChunk(LargeAllocator* allocator, Chunk* chunk, size_t tot
         freeList_addBlockLast(&allocator->freeLists[listIndex], (Chunk*)current);
         currentChunk->header.size = (uint32_t)chunkSize;
         currentChunk->header.type = object_large;
-        //object_setNotAllocated((ObjectHeader*) currentChunk);
+        object_setNotAllocated((ObjectHeader*) currentChunk);
         bitmap_setBit(allocator->bitmap, current);
 
         current += chunkSize;
         remaining_size -= chunkSize;
     }
-    //print(allocator);
 }
 
 ObjectHeader* largeAllocator_getBlock(LargeAllocator* allocator, size_t requestedBlockSize) {
@@ -96,7 +92,6 @@ ObjectHeader* largeAllocator_getBlock(LargeAllocator* allocator, size_t requeste
 
     int listIndex = size_to_linked_list(requiredChunkSize);
     Chunk* chunk = NULL;
-    //print(allocator);
     while(listIndex <= FREE_LIST_COUNT - 1 && (chunk = allocator->freeLists[listIndex].first) == NULL) {
         ++listIndex;
     }
@@ -119,7 +114,7 @@ ObjectHeader* largeAllocator_getBlock(LargeAllocator* allocator, size_t requeste
 
     bitmap_setBit(allocator->bitmap, (ubyte_t*)chunk);
     ObjectHeader* object = (ObjectHeader*)chunk;
-    //object_setAllocated(object);
+    object_setAllocated(object);
     memset((word_t*)object + 1, 0, actualBlockSize - WORD_SIZE);
     return object;
 

@@ -19,6 +19,7 @@ typedef struct {
     uint32_t size;
     uint8_t type;
     uint8_t marked;
+    uint8_t allocated; // used only for large objects
 } ObjectHeaderLine;
 
 typedef struct {
@@ -61,6 +62,17 @@ static inline void object_unmarkObjectHeader(ObjectHeader* objectHeader) {
     objectHeader->header.marked = 0x0;
 }
 
+static inline void object_setAllocated(ObjectHeader* objectHeader) {
+    objectHeader->header.allocated = 0x1;
+}
+
+static inline void object_setNotAllocated(ObjectHeader* objectHeader) {
+    objectHeader->header.allocated = 0x0;
+}
+
+static inline bool object_isAllocated(ObjectHeader* objectHeader) {
+    return objectHeader->header.allocated;
+}
 
 static inline bool object_isStandardObject(ObjectHeader* objectHeader) {
     return objectHeader->header.type == object_standard;

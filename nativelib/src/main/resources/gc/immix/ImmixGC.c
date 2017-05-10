@@ -9,7 +9,7 @@
 #include "Object.h"
 
 
-#define INITIAL_HEAP_SIZE (64*1024*1024)
+#define INITIAL_HEAP_SIZE (128*1024*1024)
 
 
 Heap* heap = NULL;
@@ -73,7 +73,6 @@ void scalanative_collect() {
     printf("Collect\n");
     fflush(stdout);
 #endif
-    largeAllocator_print(heap->largeAllocator);
 
     mark_roots(heap, stack);
     bool success = heap_recycle(heap);

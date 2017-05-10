@@ -2,9 +2,9 @@
 #define IMMIX_LOG_H
 
 
-//#define NDEBUG
+#define NDEBUG
 #include <assert.h>
 
-#define DEBUG_PRINT
+//#define DEBUG_PRINT
 
 #endif //IMMIX_LOG_H

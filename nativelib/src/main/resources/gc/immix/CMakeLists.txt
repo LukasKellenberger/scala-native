@@ -8,8 +8,9 @@ set(SOURCE_FILES
         datastructures/Bitmap.h
         datastructures/BlocList.c
         datastructures/BlocList.h
+        datastructures/Stack.c
+        datastructures/Stack.h
         headers/BlockHeader.h
-        GCTypes.h
         headers/LineHeader.h
         headers/ObjectHeader.h
         utils/MathUtils.h
@@ -18,6 +19,7 @@ set(SOURCE_FILES
         Block.c
         Block.h
         Constants.h
+        GCTypes.h
         Heap.c
         Heap.h
         ImmixGC.c
@@ -25,11 +27,10 @@ set(SOURCE_FILES
         LargeAllocator.h
         Line.c
         Line.h
+        Log.h
         Marker.c
         Marker.h
         Object.c
-        Object.h
-        datastructures/Stack.c
-        datastructures/Stack.h Log.h)
+        Object.h)
 
 add_executable(immix ${SOURCE_FILES})

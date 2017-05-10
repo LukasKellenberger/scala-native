@@ -15,10 +15,6 @@ extern int __modules_size;
 
 void markObject(Stack* stack, ObjectHeader* object) {
     assert(!object_isMarked(object));
-    if(object_size(object) == 0) {
-        printf("object %p %llu %d\n", object, *object, object_isLargeObject(object));
-        fflush(stdout);
-    }
     assert(object_size(object) != 0);
     object_mark(object);
     stack_push(stack, object);
@@ -36,7 +32,6 @@ void mark(Heap* heap, Stack* stack, word_t* address) {
     }
 
     if(object != NULL && !object_isMarked(object)) {
-        printf("mark root: %p %p large: %d\n", object, address, heap_isWordInLargeHeap(heap, address));
         markObject(stack, object);
     }
 }
@@ -55,7 +50,6 @@ void marker_mark(Heap* heap, Stack* stack) {
                 word_t* field = object->fields[i];
                 ObjectHeader* fieldObject = (ObjectHeader*)(field - 1);
                 if(heap_isObjectInHeap(heap, fieldObject) && !object_isMarked(fieldObject)) {
-                    printf("\tmark from array(%p): %p\n", object, fieldObject);
                     markObject(stack, fieldObject);
                 }
 
@@ -67,7 +61,6 @@ void marker_mark(Heap* heap, Stack* stack) {
                 word_t* field = object->fields[ptr_map[i]/sizeof(word_t) - 1];
                 ObjectHeader* fieldObject = (ObjectHeader*)(field - 1);
                 if(heap_isObjectInHeap(heap, fieldObject) && !object_isMarked(fieldObject)) {
-                    printf("\tmark from object(%p): %p\n", object, fieldObject);
                     markObject(stack, fieldObject);
                 }
                 ++i;
