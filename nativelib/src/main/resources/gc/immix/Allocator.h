@@ -22,5 +22,6 @@ typedef struct {
 Allocator* allocator_create(word_t*, int);
 bool allocator_initCursors(Allocator* allocator);
 word_t* allocator_alloc(Allocator* allocator, size_t size);
+void countBlockList(Allocator* allocator);
 
 #endif //IMMIX_ALLOCATOR_H

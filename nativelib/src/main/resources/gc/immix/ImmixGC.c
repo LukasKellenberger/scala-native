@@ -9,7 +9,7 @@
 #include "Object.h"
 
 
-#define INITIAL_HEAP_SIZE (128*1024*1024)
+#define INITIAL_HEAP_SIZE (64*1024*1024)
 
 
 Heap* heap = NULL;
@@ -37,6 +37,8 @@ void* scalanative_alloc_raw(size_t size) {
 
         block = heap_alloc(heap, (uint32_t)size);
         if(block == NULL) {
+            largeAllocator_print(heap->largeAllocator);
+            printf("Failed to alloc: %zu\n", size + 8);
             printf("No more memory available\n");
             fflush(stdout);
             exit(1);
@@ -71,11 +73,13 @@ void scalanative_collect() {
     printf("Collect\n");
     fflush(stdout);
 #endif
+    largeAllocator_print(heap->largeAllocator);
 
     mark_roots(heap, stack);
     bool success = heap_recycle(heap);
 
     if(!success) {
+        printf("Failed to recycle enough memory.\n");
         printf("No more memory available\n");
         fflush(stdout);
         exit(1);

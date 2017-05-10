@@ -32,5 +32,6 @@ typedef struct {
 LargeAllocator* largeAllocator_create(word_t*, size_t);
 ObjectHeader* largeAllocator_getBlock(LargeAllocator* allocator, size_t requestedBlockSize);
 void largeAllocator_sweep(LargeAllocator* allocator);
+void largeAllocator_print(LargeAllocator* alloc);
 
 #endif //IMMIX_LARGEALLOCATOR_H

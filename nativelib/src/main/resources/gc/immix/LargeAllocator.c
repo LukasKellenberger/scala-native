@@ -136,7 +136,7 @@ void freeList_print(FreeList* list, int i) {
     printf("\n");
 }
 
-void print(LargeAllocator* alloc) {
+void largeAllocator_print(LargeAllocator* alloc) {
     for(int i = 0; i < FREE_LIST_COUNT; i++) {
         if(alloc->freeLists[i].first != NULL) {
 

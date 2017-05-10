@@ -18,6 +18,4 @@ bool blockList_isEmpty(BlockList* blockList);
 BlockHeader* blockList_removeFirstBlock(BlockList*);
 void blockList_addLast(BlockList*, BlockHeader*);
 
-void blockList_print(BlockList*);
-
 #endif //IMMIX_BLOCLIST_H

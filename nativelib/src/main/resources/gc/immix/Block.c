@@ -4,15 +4,6 @@
 #include "Object.h"
 #include "Log.h"
 
-bool block_lineContainsObject(BlockHeader* blockHeader, int lineIndex) {
-    LineHeader* lineHeader = &(blockHeader->lineHeaders[lineIndex]);
-    return line_header_containsObject(lineHeader);
-}
-
-ObjectHeader* block_lineGetFirstObject(BlockHeader* blockHeader, int lineIndex) {
-    LineHeader* lineHeader = &(blockHeader->lineHeaders[lineIndex]);
-    return line_header_getFirstObject(lineHeader);
-}
 
 void block_recycle(Allocator* allocator, BlockHeader* blockHeader) {
 

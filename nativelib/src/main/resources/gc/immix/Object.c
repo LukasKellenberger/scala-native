@@ -117,6 +117,10 @@ ObjectHeader* object_getLargeInnerPointer(LargeAllocator* allocator, word_t* wor
 
     ObjectHeader* objectHeader = (ObjectHeader*) current;
     if(word < (word_t*)objectHeader + object_chunkSize(objectHeader)/WORD_SIZE && objectHeader->rtti != NULL) {
+#ifdef DEBUG_PRINT
+        printf("large inner pointer: %p, object: %p\n", word, objectHeader);
+        fflush(stdout);
+#endif
         return objectHeader;
     } else {
 
@@ -125,13 +129,13 @@ ObjectHeader* object_getLargeInnerPointer(LargeAllocator* allocator, word_t* wor
 }
 
 ObjectHeader* object_getLargeObject(LargeAllocator* allocator, word_t* word) {
+    if(((word_t)word & LARGE_BLOCK_MASK) != (word_t)word) {
+        printf("Not aligned !");
+        word = (word_t*)((word_t)word & LARGE_BLOCK_MASK);
+    }
     if(bitmap_getBit(allocator->bitmap, (ubyte_t*) word)) {
         return (ObjectHeader*) word;
     } else {
-#ifdef DEBUG_PRINT
-        printf("Could be inner pointer %p (Large)\n", word);
-        fflush(stdout);
-#endif
         ObjectHeader* object = object_getLargeInnerPointer(allocator, word);
         assert(object == NULL || (word >= (word_t*) object && word < (word_t*) objectNextLargeObject(object)));
         return object;

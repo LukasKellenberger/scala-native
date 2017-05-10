@@ -116,7 +116,6 @@ word_t* _allocate_slow(Allocator* allocator, size_t size) {
 }
 
 
-
 bool _get_next_line(Allocator* allocator) {
     // If cursor is null or the block was free, we need a new block
     // Can point on first word of next block, thus `- WORD_SIZE`
