@@ -9,7 +9,7 @@
 #include "Object.h"
 
 
-#define INITIAL_HEAP_SIZE (128*1024*1024)
+#define INITIAL_HEAP_SIZE (1024*1024 + 512*1024)
 
 
 Heap* heap = NULL;
@@ -48,7 +48,7 @@ void* scalanative_alloc_raw(size_t size) {
     assert((object_isLargeObject(block) && object_chunkSize(block) > size && object_chunkSize(block) <= 2 * size)
            || (object_isStandardObject(block) && object_size(block) > size && object_size(block) <= 2 * size));
     assert(object_isLargeObject(block) || (word_t*)block >= block_getFirstWord(block_getBlockHeader((word_t*)block)));
-
+    printf("Alloc: %zu", size);
     return (word_t*)block + 1;
 }
 
@@ -59,6 +59,7 @@ void* scalanative_alloc_raw_atomic(size_t size) {
 void* scalanative_alloc(void* info, size_t size) {
     void** alloc = (void**) scalanative_alloc_raw(size);
     *alloc = info;
+    printf(" %d\n", ((Rtti*)info)->rt.id);
     return (void*) alloc;
 }
 
@@ -85,6 +86,7 @@ void scalanative_collect() {
     printf("End collect\n");
     fflush(stdout);
 #endif
+    exit(2);
 }
 
 void scalanative_safepoint() {}
