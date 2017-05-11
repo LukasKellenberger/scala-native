@@ -86,3 +86,5 @@ void scalanative_collect() {
     fflush(stdout);
 #endif
 }
+
+void scalanative_safepoint() {}
