@@ -3,6 +3,7 @@
 
 #include "GCTypes.h"
 #include "datastructures/BlocList.h"
+#include "stats/AllocatorStats.h"
 
 typedef struct {
     word_t* heapStart;
@@ -14,9 +15,9 @@ typedef struct {
     BlockHeader* largeBlock;
     word_t* largeCursor;
     word_t* largeLimit;
-    int freeBlockCount;
-    int recyclableBlockCount;
-    int unavailableBlockCount;
+#ifdef ALLOCATOR_STATS
+    AllocatorStats* stats;
+#endif
 } Allocator;
 
 

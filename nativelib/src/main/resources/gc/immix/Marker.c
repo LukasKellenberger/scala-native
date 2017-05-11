@@ -3,6 +3,9 @@
 #include "Marker.h"
 #include "Object.h"
 #include "Log.h"
+#include "Heap.h"
+#include "Allocator.h"
+#include "stats/AllocatorStats.h"
 
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
@@ -13,11 +16,14 @@ extern int __modules_size;
 
 
 
-void markObject(Stack* stack, ObjectHeader* object) {
+void markObject(Heap* heap, Stack* stack, ObjectHeader* object) {
     assert(!object_isMarked(object));
     assert(object_size(object) != 0);
     object_mark(object);
     stack_push(stack, object);
+#ifdef ALLOCATOR_STATS
+    heap->allocator->stats->liveObjectCount++;
+#endif
 }
 
 void mark(Heap* heap, Stack* stack, word_t* address) {
@@ -32,7 +38,7 @@ void mark(Heap* heap, Stack* stack, word_t* address) {
     }
 
     if(object != NULL && !object_isMarked(object)) {
-        markObject(stack, object);
+        markObject(heap, stack, object);
     }
 }
 
@@ -50,7 +56,7 @@ void marker_mark(Heap* heap, Stack* stack) {
                 word_t* field = object->fields[i];
                 ObjectHeader* fieldObject = (ObjectHeader*)(field - 1);
                 if(heap_isObjectInHeap(heap, fieldObject) && !object_isMarked(fieldObject)) {
-                    markObject(stack, fieldObject);
+                    markObject(heap, stack, fieldObject);
                 }
 
             }
@@ -61,7 +67,7 @@ void marker_mark(Heap* heap, Stack* stack) {
                 word_t* field = object->fields[ptr_map[i]/sizeof(word_t) - 1];
                 ObjectHeader* fieldObject = (ObjectHeader*)(field - 1);
                 if(heap_isObjectInHeap(heap, fieldObject) && !object_isMarked(fieldObject)) {
-                    markObject(stack, fieldObject);
+                    markObject(heap, stack, fieldObject);
                 }
                 ++i;
             }
@@ -113,6 +119,9 @@ void mark_roots_modules(Heap* heap, Stack* stack) {
 }
 
 void mark_roots(Heap* heap, Stack* stack) {
+#ifdef ALLOCATOR_STATS
+    heap->allocator->stats->liveObjectCount = 0;
+#endif
 
     // Dumps registers into 'regs' which is on stack
     jmp_buf regs;

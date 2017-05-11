@@ -3,6 +3,8 @@
 #include "Block.h"
 #include "Object.h"
 #include "Log.h"
+#include "Allocator.h"
+#include "stats/AllocatorStats.h"
 
 
 void block_recycle(Allocator* allocator, BlockHeader* blockHeader) {
@@ -10,7 +12,11 @@ void block_recycle(Allocator* allocator, BlockHeader* blockHeader) {
     if(!block_isMarked(blockHeader)) {
         memset(blockHeader, 0, LINE_SIZE);
         blockList_addLast(&allocator->freeBlocks, blockHeader);
-        allocator->freeBlockCount++;
+
+#ifdef ALLOCATOR_STATS
+        allocator->stats->availableBlockCount++;
+#endif
+
     } else {
         assert(block_isMarked(blockHeader));
         block_unmark(blockHeader);
@@ -53,12 +59,20 @@ void block_recycle(Allocator* allocator, BlockHeader* blockHeader) {
         }
         if(lastRecyclable == -1) {
             block_setFlag(blockHeader, block_unavailable);
-            allocator->unavailableBlockCount++;
+
+#ifdef ALLOCATOR_STATS
+            allocator->stats->unavailableBlockCount++;
+#endif
+
         } else {
             block_getFreeLineHeader(blockHeader, lastRecyclable)->next = LAST_HOLE;
             block_setFlag(blockHeader, block_recyclable);
             blockList_addLast(&allocator->recycledBlocks, blockHeader);
-            allocator->recyclableBlockCount++;
+
+#ifdef ALLOCATOR_STATS
+            allocator->stats->recyclableBlockCount++;
+#endif
+
         }
     }
 }

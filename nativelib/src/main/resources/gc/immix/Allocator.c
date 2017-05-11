@@ -2,6 +2,7 @@
 #include "Allocator.h"
 #include "Line.h"
 #include "Block.h"
+#include "stats/AllocatorStats.h"
 #include <stdio.h>
 #include <memory.h>
 
@@ -26,13 +27,13 @@ Allocator* allocator_create(word_t* heapStart, int blockCount) {
     allocator_initCursors(allocator);
 
     //Block stats
-    allocator->freeBlockCount = blockCount;
-    allocator->recyclableBlockCount = 0;
-    allocator->unavailableBlockCount = 0;
+#ifdef ALLOCATOR_STATS
+    allocator->stats = allocatorStats_create();
+    allocator->stats->blockCount = (uint64_t)blockCount;
+#endif
 
     return allocator;
 }
-
 
 bool allocator_initCursors(Allocator* allocator) {
 

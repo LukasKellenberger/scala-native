@@ -31,6 +31,6 @@ set(SOURCE_FILES
         Marker.c
         Marker.h
         Object.c
-        Object.h)
+        Object.h stats/AllocatorStats.c stats/AllocatorStats.h)
 
 add_executable(immix ${SOURCE_FILES})

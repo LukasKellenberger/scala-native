@@ -5,6 +5,7 @@
 #include "Block.h"
 #include "Log.h"
 #include "Allocator.h"
+#include "stats/AllocatorStats.h"
 
 #define MAX_SIZE 64*1024*1024*1024L
 // Allow read and write
@@ -66,6 +67,13 @@ ObjectHeader* heap_alloc(Heap* heap, uint32_t objectSize) {
         if(block != NULL) {
             object_setObjectType(block, object_standard);
             object_setSize(block, size);
+
+#ifdef ALLOCATOR_STATS
+            heap->allocator->stats->bytesAllocated += objectSize;
+            heap->allocator->stats->totalBytesAllocated += objectSize;
+            heap->allocator->stats->totalAllocatedObjectCount++;
+#endif
+
         }
         return block;
     }
@@ -75,9 +83,9 @@ bool heap_recycle(Heap* heap) {
     blockList_clear(&heap->allocator->recycledBlocks);
     blockList_clear(&heap->allocator->freeBlocks);
 
-    heap->allocator->freeBlockCount = 0;
-    heap->allocator->recyclableBlockCount = 0;
-    heap->allocator->unavailableBlockCount = 0;
+#ifdef ALLOCATOR_STATS
+    allocatorStats_resetBlockDistribution(heap->allocator->stats);
+#endif
 
     word_t* current = heap->heapStart;
     while(current != heap->heapEnd) {
@@ -86,9 +94,13 @@ bool heap_recycle(Heap* heap) {
         current += WORDS_IN_BLOCK;
     }
     largeAllocator_sweep(heap->largeAllocator);
-#ifdef DEBUG_PRINT
-    printf("Recyclable: %d\nFree: %d\nUnavailable: %d\n", heap->allocator->recyclableBlockCount, heap->allocator->freeBlockCount, heap->allocator->unavailableBlockCount);
+
+#ifdef ALLOCATOR_STATS
+    allocatorStats_print(heap->allocator->stats);
+    heap->allocator->stats->liveObjectCount = 0;
+    heap->allocator->stats->bytesAllocated = 0;
 #endif
+
     return allocator_initCursors(heap->allocator);
 }
 

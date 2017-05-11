@@ -68,7 +68,7 @@ void* alloc(size_t size) {
 
 void scalanative_collect() {
 #ifdef DEBUG_PRINT
-    printf("Collect\n");
+    printf("\nCollect\n");
     fflush(stdout);
 #endif
 
