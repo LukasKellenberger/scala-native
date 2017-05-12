@@ -5,6 +5,7 @@
 #include "Log.h"
 #include "Allocator.h"
 #include "stats/AllocatorStats.h"
+#include "headers/BlockHeader.h"
 
 
 void block_recycle(Allocator* allocator, BlockHeader* blockHeader) {
@@ -12,7 +13,7 @@ void block_recycle(Allocator* allocator, BlockHeader* blockHeader) {
     if(!block_isMarked(blockHeader)) {
         memset(blockHeader, 0, LINE_SIZE);
         blockList_addLast(&allocator->freeBlocks, blockHeader);
-
+        block_setFlag(blockHeader, block_free);
 #ifdef ALLOCATOR_STATS
         allocator->stats->availableBlockCount++;
 #endif
@@ -48,13 +49,13 @@ void block_recycle(Allocator* allocator, BlockHeader* blockHeader) {
                 line_header_setEmpty(lineHeader);
                 lineIndex++;
                 uint8_t size = 1;
-                while(lineIndex < LINE_COUNT && !line_header_isMarked(lineHeader = &blockHeader->lineHeaders[lineIndex])) {
+                while(lineIndex < LINE_COUNT
+                      && !line_header_isMarked(lineHeader = &blockHeader->lineHeaders[lineIndex])) {
                     size++;
                     lineIndex++;
                     line_header_setEmpty(lineHeader);
                 }
                 block_getFreeLineHeader(blockHeader, lastRecyclable)->size = size;
-                memset(block_getLineAddress(blockHeader, lastRecyclable), 0, WORD_SIZE/*size*LINE_SIZE*/);
             }
         }
         if(lastRecyclable == -1) {
@@ -68,6 +69,8 @@ void block_recycle(Allocator* allocator, BlockHeader* blockHeader) {
             block_getFreeLineHeader(blockHeader, lastRecyclable)->next = LAST_HOLE;
             block_setFlag(blockHeader, block_recyclable);
             blockList_addLast(&allocator->recycledBlocks, blockHeader);
+
+            assert(blockHeader->header.first != -1);
 
 #ifdef ALLOCATOR_STATS
             allocator->stats->recyclableBlockCount++;

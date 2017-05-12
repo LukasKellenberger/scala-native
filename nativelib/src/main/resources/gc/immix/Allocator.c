@@ -24,13 +24,13 @@ Allocator* allocator_create(word_t* heapStart, int blockCount) {
     allocator->freeBlocks.last = lastBlockHeader;
     lastBlockHeader->header.nextBlock = LAST_BLOCK;
 
-    allocator_initCursors(allocator);
-
     //Block stats
 #ifdef ALLOCATOR_STATS
     allocator->stats = allocatorStats_create();
     allocator->stats->blockCount = (uint64_t)blockCount;
 #endif
+
+    allocator_initCursors(allocator);
 
     return allocator;
 }
@@ -41,6 +41,9 @@ bool allocator_initCursors(Allocator* allocator) {
     allocator->block = NULL;
     allocator->cursor = NULL;
     allocator->limit = NULL;
+    if(allocator->stats->availableBlockCount == 1) {
+        printf("1\n");
+    }
     _get_next_line(allocator);
 
     // Init large cursor
@@ -138,12 +141,14 @@ bool _get_next_line(Allocator* allocator) {
         } else {
             assert(block_isRecyclable(block));
             int16_t lineIndex = block->header.first;
+            assert(lineIndex < LINE_COUNT);
             word_t* line = block_getLineAddress(block, lineIndex);
 
             allocator->cursor = line;
             FreeLineHeader* lineHeader = (FreeLineHeader*)line;
             block->header.first = lineHeader->next;
             uint16_t size = lineHeader->size;
+            assert(size > 0);
             allocator->limit = line + (size * WORDS_IN_LINE);
         }
 

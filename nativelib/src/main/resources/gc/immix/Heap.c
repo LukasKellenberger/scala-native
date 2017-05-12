@@ -91,6 +91,7 @@ bool heap_recycle(Heap* heap) {
     while(current != heap->heapEnd) {
         BlockHeader* blockHeader = (BlockHeader*) current;
         block_recycle(heap->allocator, blockHeader);
+        printf("block: %p, free %d, recyclable: %d\n", current, block_isFree(blockHeader), block_isRecyclable(blockHeader));
         current += WORDS_IN_BLOCK;
     }
     largeAllocator_sweep(heap->largeAllocator);
