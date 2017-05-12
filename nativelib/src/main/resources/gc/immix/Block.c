@@ -6,6 +6,7 @@
 #include "Allocator.h"
 #include "stats/AllocatorStats.h"
 #include "headers/BlockHeader.h"
+#include "headers/LineHeader.h"
 
 
 void block_recycle(Allocator* allocator, BlockHeader* blockHeader) {
@@ -78,4 +79,22 @@ void block_recycle(Allocator* allocator, BlockHeader* blockHeader) {
 
         }
     }
+}
+
+void block_print(BlockHeader* block) {
+    printf("%p ", block);
+    if(block_isFree(block)) {
+        printf("FREE\n");
+    } else if (block_isUnavailable(block)) {
+        printf("UNAVAILABLE\n");
+    } else {
+        int lineIndex = block->header.first;
+        while(lineIndex != LAST_HOLE) {
+            FreeLineHeader* freeLineHeader = block_getFreeLineHeader(block, lineIndex);
+            printf("[index: %d, size: %d] -> ", lineIndex, freeLineHeader->size);
+            lineIndex = freeLineHeader->next;
+        }
+        printf("\n");
+    }
+    fflush(stdout);
 }

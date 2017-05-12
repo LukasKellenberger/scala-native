@@ -155,7 +155,7 @@ bool _get_next_line(Allocator* allocator) {
         return true;
     } else {
         // If we have a recycled block
-        BlockHeader* block = block_getBlockHeader(allocator->cursor);
+        BlockHeader* block = block_getBlockHeader(allocator->cursor - WORD_SIZE);
         assert(block_isRecyclable(block));
 
         int16_t lineIndex = block->header.first;
@@ -178,6 +178,7 @@ bool _get_next_line(Allocator* allocator) {
 
 // Returns a block, first from recycled if available, otherwise from chunk_allocator
 BlockHeader* _get_next_block(Allocator* allocator) {
+    //blockList_print(&allocator->recycledBlocks);
     BlockHeader* block = NULL;
     if(!blockList_isEmpty(&allocator->recycledBlocks)) {
         block = blockList_removeFirstBlock(&allocator->recycledBlocks);

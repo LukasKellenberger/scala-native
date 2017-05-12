@@ -9,5 +9,6 @@
 
 
 void block_recycle(Allocator*, BlockHeader*);
+void block_print(BlockHeader* block);
 
 #endif //IMMIX_BLOCK_H

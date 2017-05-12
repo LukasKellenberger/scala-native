@@ -9,9 +9,7 @@
 #include "Object.h"
 
 
-#define INITIAL_HEAP_SIZE (16*1024*1024)
-
-int gcCount = 0;
+#define INITIAL_HEAP_SIZE (2*1024*1024)
 
 Heap* heap = NULL;
 Stack* stack = NULL;
@@ -71,7 +69,6 @@ void scalanative_collect() {
     printf("\nCollect\n");
     fflush(stdout);
 #endif
-    printf("GC: %d\n", ++gcCount);
     mark_roots(heap, stack);
     bool success = heap_recycle(heap);
 
