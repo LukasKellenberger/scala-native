@@ -41,9 +41,7 @@ bool allocator_initCursors(Allocator* allocator) {
     allocator->block = NULL;
     allocator->cursor = NULL;
     allocator->limit = NULL;
-    if(allocator->stats->availableBlockCount == 1) {
-        printf("1\n");
-    }
+
     _get_next_line(allocator);
 
     // Init large cursor

@@ -2,10 +2,10 @@
 #define IMMIX_LOG_H
 
 
-//#define NDEBUG
+#define NDEBUG
 #include <assert.h>
 
-#define DEBUG_PRINT
-#define ALLOCATOR_STATS
+//#define DEBUG_PRINT
+//#define ALLOCATOR_STATS
 
 #endif //IMMIX_LOG_H
