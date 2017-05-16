@@ -28,6 +28,5 @@ class FieldLayout(cls: Class) {
   val referenceOffsetsTy =
     Type.Struct(Global.None, Seq(Type.Ptr))
   val referenceOffsetsValue =
-    Val.Struct(Global.None,
-               Seq(Val.Const(Val.Array(Type.Long, layout.offsetArray))))
+    Val.Struct(Global.None, Seq(Val.Const(layout.bitmapArray)))
 }

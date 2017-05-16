@@ -1,0 +1,26 @@
+#ifndef IMMIX_MARKER_GENERATED_H
+#define IMMIX_MARKER_GENERATED_H
+
+#include "headers/ObjectHeader.h"
+#include "datastructures/Stack.h"
+#include "Heap.h"
+#include "Marker.h"
+
+INLINE void markerGenerated_mark(Heap* heap, Stack* stack, ObjectHeader* object, ubyte_t ptrByte, int offset) {
+    switch (ptrByte) {
+% for b in range(128) :
+        case ${b}:
+    % for i in range(7):
+        % if(b >> (7-(i+1)) & 1 == 1):
+            marker_markField(heap, stack, object, offset + ${i});
+        %end
+    %end
+            break;
+%end
+        default:
+            break;
+    }
+}
+
+
+#endif //IMMIX_MARKER_GENERATED_H

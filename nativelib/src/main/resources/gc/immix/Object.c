@@ -141,7 +141,7 @@ ObjectHeader* object_getLargeObject(LargeAllocator* allocator, word_t* word) {
     }
 }
 
-void object_mark(ObjectHeader* objectHeader) {
+INLINE void object_mark(ObjectHeader* objectHeader) {
     // Mark the object itself
     object_markObjectHeader(objectHeader);
 

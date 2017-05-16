@@ -39,7 +39,7 @@ typedef struct {
         word_t* dyn_method_keys;
         word_t* dyn_methods;
     } dynDispatchTable;
-    int64_t* refMapStruct;
+    ubyte_t* refMapStruct;
 } Rtti;
 
 typedef word_t* Field_t;

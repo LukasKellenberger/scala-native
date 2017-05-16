@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <stdio.h>
+#include <time.h>
 #include "Heap.h"
 #include "Block.h"
 #include "Log.h"
@@ -140,11 +141,23 @@ word_t* heap_alloc(Heap* heap, uint32_t objectSize) {
 }
 
 void heap_collect(Heap* heap, Stack* stack) {
-#ifdef DEBUG_PRINT
+#if defined(DEBUG_PRINT) || defined(TIMING_PRINT)
     printf("\nCollect\n");
     fflush(stdout);
 #endif
+#ifdef TIMING_PRINT
+    clock_t start = clock(), diff;
+#endif
     mark_roots(heap, stack);
+
+#ifdef TIMING_PRINT
+    diff = clock() - start;
+    int msec = diff * 1000 / CLOCKS_PER_SEC;
+    printf("Time taken %d seconds %d milliseconds\n", msec/1000, msec%1000);
+
+    start = clock();
+#endif
+
     bool success = heap_recycle(heap);
 
     if(!success) {
@@ -153,7 +166,12 @@ void heap_collect(Heap* heap, Stack* stack) {
         fflush(stdout);
         exit(1);
     }
-#ifdef DEBUG_PRINT
+#ifdef TIMING_PRINT
+    diff = clock() - start;
+    msec = diff * 1000 / CLOCKS_PER_SEC;
+    printf("Time taken %d seconds %d milliseconds\n", msec/1000, msec%1000);
+#endif
+#if defined(DEBUG_PRINT) || defined(TIMING_PRINT)
     printf("End collect\n");
     fflush(stdout);
 #endif

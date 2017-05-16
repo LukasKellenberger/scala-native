@@ -6,6 +6,7 @@
 #include "Heap.h"
 #include "Allocator.h"
 #include "stats/AllocatorStats.h"
+#include "MarkerGenerated.h"
 
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
@@ -13,6 +14,7 @@
 extern int __object_array_id;
 extern word_t* __modules;
 extern int __modules_size;
+
 
 
 
@@ -39,39 +41,6 @@ void mark(Heap* heap, Stack* stack, word_t* address) {
 
     if(object != NULL && !object_isMarked(object)) {
         markObject(heap, stack, object);
-    }
-}
-
-
-void marker_mark(Heap* heap, Stack* stack) {
-    while(!stack_isEmpty(stack)) {
-        ObjectHeader* object = stack_pop(stack);
-
-        if(object->rtti->rt.id == __object_array_id) {
-            // remove header and rtti from size
-            size_t size = object_size(object) - 2 * sizeof(word_t);
-            size_t nbWords = size / sizeof(word_t);
-            for(int i = 0; i < nbWords; i++) {
-
-                word_t* field = object->fields[i];
-                ObjectHeader* fieldObject = (ObjectHeader*)(field - 1);
-                if(heap_isObjectInHeap(heap, fieldObject) && !object_isMarked(fieldObject)) {
-                    markObject(heap, stack, fieldObject);
-                }
-
-            }
-        } else {
-            int64_t* ptr_map = object->rtti->refMapStruct;
-            int i=0;
-            while(ptr_map[i] != -1) {
-                word_t* field = object->fields[ptr_map[i]/sizeof(word_t) - 1];
-                ObjectHeader* fieldObject = (ObjectHeader*)(field - 1);
-                if(heap_isObjectInHeap(heap, fieldObject) && !object_isMarked(fieldObject)) {
-                    markObject(heap, stack, fieldObject);
-                }
-                ++i;
-            }
-        }
     }
 }
 
@@ -127,10 +96,56 @@ void mark_roots(Heap* heap, Stack* stack) {
     jmp_buf regs;
     setjmp(regs);
 
+
     mark_roots_stack(heap, stack);
 
     mark_roots_modules(heap, stack);
 
     marker_mark(heap, stack);
+}
 
+INLINE void marker_markField(Heap* heap, Stack* stack, ObjectHeader* object, int index) {
+    word_t* field = object->fields[index];
+    ObjectHeader* fieldObject = (ObjectHeader*)(field - 1);
+    if(heap_isObjectInHeap(heap, fieldObject) && !object_isMarked(fieldObject)) {
+        markObject(heap, stack, fieldObject);
+    }
+}
+
+
+void marker_mark(Heap* heap, Stack* stack) {
+    while(!stack_isEmpty(stack)) {
+        ObjectHeader* object = stack_pop(stack);
+
+        Rtti *rtti = object->rtti;
+        int32_t *idptr = (int32_t *) rtti;
+        int32_t id = *idptr;
+
+        int arrayId = __object_array_id;
+        bool comp = id == arrayId;
+        if(comp) {
+            // remove header and rtti from size
+            size_t size = object_size(object) - 2 * sizeof(word_t);
+            size_t nbWords = size / sizeof(word_t);
+            for(int i = 0; i < nbWords; i++) {
+
+                word_t* field = object->fields[i];
+                ObjectHeader* fieldObject = (ObjectHeader*)(field - 1);
+                if(heap_isObjectInHeap(heap, fieldObject) && !object_isMarked(fieldObject)) {
+                    markObject(heap, stack, fieldObject);
+                }
+            }
+        } else {
+            ubyte_t* p = rtti->refMapStruct;
+            ubyte_t ptrByte = 0;
+            int i=0;
+            do {
+                ptrByte = p[i];
+
+                markerGenerated_mark(heap, stack, object, (ubyte_t)0x7F & ptrByte, i*7);
+
+                ++i;
+            } while(ptrByte < 128);
+        }
+    }
 }

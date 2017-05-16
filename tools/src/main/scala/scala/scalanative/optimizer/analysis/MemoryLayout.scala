@@ -6,14 +6,43 @@ import scala.scalanative.optimizer.analysis.MemoryLayout.PositionedType
 import scala.scalanative.util.unsupported
 
 final case class MemoryLayout(size: Long, tys: List[PositionedType]) {
-  lazy val offsetArray: Seq[Val] = {
-    val ptrOffsets =
-      tys.collect {
-        case MemoryLayout.Tpe(_, offset, _: RefKind) => Val.Long(offset)
-      }
 
-    ptrOffsets :+ Val.Long(-1)
+  lazy val bitmapArray: Val.Array = {
+    val ptrOffsets = tys.collect {
+      case MemoryLayout.Tpe(_, offset, _: RefKind) =>
+        // word index, without rtti
+        offset / 8 - 1
+    }
+    val bytes = if (ptrOffsets.isEmpty) {
+      Seq(Val.Byte(128.toByte))
+    } else {
+      val minBits   = ptrOffsets.last + 1
+      val offsetSet = ptrOffsets.toSet
+      val range     = 0 until (Math.ceil(minBits / 7.0).toInt * 7)
+      val boolSeq   = range.map(i => offsetSet(i))
+
+      def toByteArray(bools: Seq[Boolean]): Seq[Byte] = bools match {
+        case Nil => Nil
+        case _ =>
+          val (current, next) = bools.splitAt(7)
+
+          val isLast = next match {
+            case Nil => 1
+            case _   => 0
+          }
+          current
+            .foldLeft(isLast) {
+              case (b, true)  => (b << 1) | 1
+              case (b, false) => b << 1
+
+            }
+            .toByte +: toByteArray(next)
+      }
+      toByteArray(boolSeq).map(Val.Byte)
+    }
+    Val.Array(Type.Byte, bytes)
   }
+
 }
 
 object MemoryLayout {
