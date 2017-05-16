@@ -7,6 +7,7 @@
 #include "Allocator.h"
 #include "stats/AllocatorStats.h"
 #include "MarkerGenerated.h"
+#include "headers/ObjectHeader.h"
 
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
@@ -104,48 +105,48 @@ void mark_roots(Heap* heap, Stack* stack) {
     marker_mark(heap, stack);
 }
 
-INLINE void marker_markField(Heap* heap, Stack* stack, ObjectHeader* object, int index) {
+INLINE void marker_markField(Heap* heap, word_t* heapStart, word_t* heapEnd, word_t* largeHeapStart, word_t* largeHeapEnd, Stack* stack, ObjectHeader* object, int index) {
     word_t* field = object->fields[index];
     ObjectHeader* fieldObject = (ObjectHeader*)(field - 1);
-    if(heap_isObjectInHeap(heap, fieldObject) && !object_isMarked(fieldObject)) {
-        markObject(heap, stack, fieldObject);
+    if(heap_isInObjectInHeapFast(heapStart, heapEnd, largeHeapStart, largeHeapEnd, fieldObject)) {
+        assert(heap_isObjectInHeap(heap, fieldObject));
+        if(!object_isMarked(fieldObject)) {
+            markObject(heap, stack, fieldObject);
+        }
+    } else {
+        assert(!heap_isObjectInHeap(heap, fieldObject));
+    }
+}
+
+void marker_markObjectArray(Heap* heap, word_t* heapStart, word_t* heapEnd, word_t* largeHeapStart, word_t* largeHeapEnd, Stack* stack, ObjectHeader* object) {
+    size_t size = object_size(object) - 2 * sizeof(word_t);
+    size_t nbWords = size / sizeof(word_t);
+    for(int i = 0; i < nbWords; i++) {
+
+        word_t* field = object->fields[i];
+        ObjectHeader* fieldObject = (ObjectHeader*)(field - 1);
+        if(heap_isInObjectInHeapFast(heapStart, heapEnd, largeHeapStart, largeHeapEnd, fieldObject)) {
+            assert(heap_isObjectInHeap(heap, fieldObject));
+            if(!object_isMarked(fieldObject)) {
+                markObject(heap, stack, fieldObject);
+            }
+        } else {
+            assert(!heap_isObjectInHeap(heap, fieldObject));
+        }
     }
 }
 
 
 void marker_mark(Heap* heap, Stack* stack) {
+    word_t* heapStart = heap->heapStart;
+    word_t* heapEnd = heap->heapEnd;
+    word_t* largeHeapStart = heap->largeHeapStart;
+    word_t* largeHeapEnd = heap->largeHeapEnd;
     while(!stack_isEmpty(stack)) {
         ObjectHeader* object = stack_pop(stack);
 
         Rtti *rtti = object->rtti;
-        int32_t *idptr = (int32_t *) rtti;
-        int32_t id = *idptr;
 
-        int arrayId = __object_array_id;
-        bool comp = id == arrayId;
-        if(comp) {
-            // remove header and rtti from size
-            size_t size = object_size(object) - 2 * sizeof(word_t);
-            size_t nbWords = size / sizeof(word_t);
-            for(int i = 0; i < nbWords; i++) {
-
-                word_t* field = object->fields[i];
-                ObjectHeader* fieldObject = (ObjectHeader*)(field - 1);
-                if(heap_isObjectInHeap(heap, fieldObject) && !object_isMarked(fieldObject)) {
-                    markObject(heap, stack, fieldObject);
-                }
-            }
-        } else {
-            ubyte_t* p = rtti->refMapStruct;
-            ubyte_t ptrByte = 0;
-            int i=0;
-            do {
-                ptrByte = p[i];
-
-                markerGenerated_mark(heap, stack, object, (ubyte_t)0x7F & ptrByte, i*7);
-
-                ++i;
-            } while(ptrByte < 128);
-        }
+        markerGenerated_mark(heap, heapStart, heapEnd, largeHeapStart, largeHeapEnd, stack, object, rtti->refMapStruct);
     }
 }

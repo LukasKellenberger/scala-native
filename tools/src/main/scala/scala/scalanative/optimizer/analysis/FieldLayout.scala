@@ -27,6 +27,15 @@ class FieldLayout(cls: Class) {
   val size   = layout.size
   val referenceOffsetsTy =
     Type.Struct(Global.None, Seq(Type.Ptr))
+
+  private val isObjectArray = cls.name == Global.Top(
+      "scala.scalanative.runtime.ObjectArray")
   val referenceOffsetsValue =
-    Val.Struct(Global.None, Seq(Val.Const(layout.bitmapArray)))
+    Val.Struct(Global.None,
+               Seq(
+                 Val.Const(
+                   if (isObjectArray)
+                     MemoryLayout.objectArrayBitmapArray
+                   else
+                     layout.bitmapArray)))
 }

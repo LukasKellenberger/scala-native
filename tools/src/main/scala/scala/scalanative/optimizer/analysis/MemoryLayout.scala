@@ -14,21 +14,21 @@ final case class MemoryLayout(size: Long, tys: List[PositionedType]) {
         offset / 8 - 1
     }
     val bytes = if (ptrOffsets.isEmpty) {
-      Seq(Val.Byte(128.toByte))
+      Seq(Val.Byte(0.toByte))
     } else {
       val minBits   = ptrOffsets.last + 1
       val offsetSet = ptrOffsets.toSet
-      val range     = 0 until (Math.ceil(minBits / 7.0).toInt * 7)
+      val range     = 0 until (Math.ceil(minBits / 6.0).toInt * 6)
       val boolSeq   = range.map(i => offsetSet(i))
 
       def toByteArray(bools: Seq[Boolean]): Seq[Byte] = bools match {
         case Nil => Nil
         case _ =>
-          val (current, next) = bools.splitAt(7)
+          val (current, next) = bools.splitAt(6)
 
           val isLast = next match {
-            case Nil => 1
-            case _   => 0
+            case Nil => 0
+            case _   => 1
           }
           current
             .foldLeft(isLast) {
@@ -46,6 +46,8 @@ final case class MemoryLayout(size: Long, tys: List[PositionedType]) {
 }
 
 object MemoryLayout {
+
+  val objectArrayBitmapArray = Val.Array(Type.Byte, Seq(Val.Byte(128.toByte)))
 
   sealed abstract class PositionedType {
     def size: Long
