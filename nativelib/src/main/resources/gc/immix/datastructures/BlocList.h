@@ -17,6 +17,7 @@ void blockList_clear(BlockList*);
 bool blockList_isEmpty(BlockList* blockList);
 BlockHeader* blockList_removeFirstBlock(BlockList*);
 void blockList_addLast(BlockList*, BlockHeader*);
+void blockList_addBlocksLast(BlockList* blockList, BlockHeader* first, BlockHeader* last);
 void blockList_print(BlockList* blockList);
 
 #endif //IMMIX_BLOCLIST_H

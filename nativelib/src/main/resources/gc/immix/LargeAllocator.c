@@ -11,9 +11,6 @@ inline static int size_to_linked_list(size_t size) {
     return log2_floor(size) - LARGE_OBJECT_MIN_SIZE_BITS;
 }
 
-
-void largeAllocator_addChunk(LargeAllocator* allocator, Chunk* chunk, size_t total_block_size);
-
 void freeList_init(FreeList* freeList) {
     freeList->first = NULL;
     freeList->last = NULL;

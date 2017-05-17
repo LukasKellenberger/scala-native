@@ -46,4 +46,6 @@
 
 #define LARGE_BLOCK_MASK (~((1 << LARGE_OBJECT_MIN_SIZE_BITS) - 1))
 
+#define GROWTH_RATE 20
+
 #endif //IMMIX_CONSTANTS_H

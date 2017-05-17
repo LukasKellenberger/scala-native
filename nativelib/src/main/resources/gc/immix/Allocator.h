@@ -8,8 +8,11 @@
 
 typedef struct {
     word_t* heapStart;
+    uint64_t blockCount;
     BlockList recycledBlocks;
+    uint64_t recycledBlockCount;
     BlockList freeBlocks;
+    uint64_t freeBlockCount;
     BlockHeader* block;
     word_t* cursor;
     word_t* limit;
@@ -23,8 +26,10 @@ typedef struct {
 
 
 Allocator* allocator_create(word_t*, int);
-bool allocator_initCursors(Allocator* allocator);
+bool allocator_canInitCursors(Allocator* allocator);
+void allocator_initCursors(Allocator* allocator);
 word_t* allocator_alloc(Allocator* allocator, size_t size);
-void countBlockList(Allocator* allocator);
+
+bool allocator_shouldGrow(Allocator* allocator);
 
 #endif //IMMIX_ALLOCATOR_H

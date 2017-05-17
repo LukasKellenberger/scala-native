@@ -25,6 +25,10 @@ Allocator* allocator_create(word_t* heapStart, int blockCount) {
     lastBlockHeader->header.nextBlock = LAST_BLOCK;
 
     //Block stats
+    allocator->blockCount = (uint64_t)blockCount;
+    allocator->freeBlockCount = (uint64_t)blockCount;
+    allocator->recycledBlockCount = 0;
+
 #ifdef ALLOCATOR_STATS
     allocator->stats = allocatorStats_create();
     allocator->stats->blockCount = (uint64_t)blockCount;
@@ -35,7 +39,12 @@ Allocator* allocator_create(word_t* heapStart, int blockCount) {
     return allocator;
 }
 
-bool allocator_initCursors(Allocator* allocator) {
+bool allocator_canInitCursors(Allocator* allocator) {
+    return allocator->freeBlockCount >= 2 || (allocator->freeBlockCount == 1 && allocator->recycledBlockCount > 0);
+}
+
+void allocator_initCursors(Allocator* allocator) {
+    assert(allocator_canInitCursors(allocator));
 
     // Init cursor
     allocator->block = NULL;
@@ -45,15 +54,11 @@ bool allocator_initCursors(Allocator* allocator) {
     _get_next_line(allocator);
 
     // Init large cursor
-    if(blockList_isEmpty(&allocator->freeBlocks)) {
-        return false;
-    }
+    assert(!blockList_isEmpty(&allocator->freeBlocks));
     BlockHeader* largeHeader = blockList_removeFirstBlock(&allocator->freeBlocks);
     allocator->largeBlock = largeHeader;
     allocator->largeCursor = block_getFirstWord(largeHeader);
     allocator->largeLimit = block_getBlockEnd(largeHeader);
-
-    return true;
 }
 
 word_t* _overflow_allocation(Allocator* allocator, size_t size) {
@@ -184,4 +189,8 @@ BlockHeader* _get_next_block(Allocator* allocator) {
         block = blockList_removeFirstBlock(&allocator->freeBlocks);
     }
     return block;
+}
+
+bool allocator_shouldGrow(Allocator* allocator) {
+    return allocator->freeBlockCount < allocator->blockCount / 3;
 }

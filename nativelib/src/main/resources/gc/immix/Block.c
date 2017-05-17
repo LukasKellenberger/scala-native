@@ -15,9 +15,7 @@ void block_recycle(Allocator* allocator, BlockHeader* blockHeader) {
         memset(blockHeader, 0, LINE_SIZE);
         blockList_addLast(&allocator->freeBlocks, blockHeader);
         block_setFlag(blockHeader, block_free);
-#ifdef ALLOCATOR_STATS
-        allocator->stats->availableBlockCount++;
-#endif
+        allocator->freeBlockCount++;
 
     } else {
         assert(block_isMarked(blockHeader));
@@ -61,11 +59,6 @@ void block_recycle(Allocator* allocator, BlockHeader* blockHeader) {
         }
         if(lastRecyclable == -1) {
             block_setFlag(blockHeader, block_unavailable);
-
-#ifdef ALLOCATOR_STATS
-            allocator->stats->unavailableBlockCount++;
-#endif
-
         } else {
             block_getFreeLineHeader(blockHeader, lastRecyclable)->next = LAST_HOLE;
             block_setFlag(blockHeader, block_recyclable);
@@ -73,9 +66,7 @@ void block_recycle(Allocator* allocator, BlockHeader* blockHeader) {
 
             assert(blockHeader->header.first != -1);
 
-#ifdef ALLOCATOR_STATS
-            allocator->stats->recyclableBlockCount++;
-#endif
+            allocator->recycledBlockCount++;
 
         }
     }

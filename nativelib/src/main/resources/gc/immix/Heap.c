@@ -9,6 +9,9 @@
 #include "stats/AllocatorStats.h"
 #include "Marker.h"
 #include "State.h"
+#include "headers/BlockHeader.h"
+#include "utils/MathUtils.h"
+#include "LargeAllocator.h"
 
 #define MAX_SIZE 64*1024*1024*1024L
 // Allow read and write
@@ -33,6 +36,7 @@ word_t* mapAndAlign(int alignmentMask) {
 
 Heap* heap_create(size_t initialSize) {
     assert(initialSize >= 2*BLOCK_TOTAL_SIZE);
+    assert(initialSize % BLOCK_TOTAL_SIZE == 0);
 
     Heap* heap = malloc(sizeof(Heap));
 
@@ -44,8 +48,10 @@ Heap* heap_create(size_t initialSize) {
     heap->heapEnd = smallHeapStart + initialSize / sizeof(word_t);
     heap->allocator = allocator_create(smallHeapStart, initialSize / BLOCK_TOTAL_SIZE);
 
+    initialSize = 256 * 1024 * 1024;
 
     word_t* largeHeapStart = mapAndAlign(LARGE_BLOCK_MASK);
+    heap->largeHeapSize = initialSize;
     heap->largeAllocator = largeAllocator_create(largeHeapStart, initialSize);
     heap->largeHeapStart = largeHeapStart;
     heap->largeHeapEnd = (word_t*)((ubyte_t*)largeHeapStart + initialSize);
@@ -73,6 +79,8 @@ word_t* heap_allocLarge(Heap* heap, uint32_t objectSize) {
             object_setSize(object, size);
             return (word_t*) object + 1;
         } else {
+            //heap_growLarge(heap, size);
+            //return heap_allocLarge(heap, objectSize);
             largeAllocator_print(heap->largeAllocator);
             printf("Failed to alloc: %u\n", size + 8);
             printf("No more memory available\n");
@@ -158,14 +166,8 @@ void heap_collect(Heap* heap, Stack* stack) {
     start = clock();
 #endif
 
-    bool success = heap_recycle(heap);
+    heap_recycle(heap);
 
-    if(!success) {
-        printf("Failed to recycle enough memory.\n");
-        printf("No more memory available\n");
-        fflush(stdout);
-        exit(1);
-    }
 #ifdef TIMING_PRINT
     diff = clock() - start;
     msec = diff * 1000 / CLOCKS_PER_SEC;
@@ -177,9 +179,11 @@ void heap_collect(Heap* heap, Stack* stack) {
 #endif
 }
 
-bool heap_recycle(Heap* heap) {
+void heap_recycle(Heap* heap) {
     blockList_clear(&heap->allocator->recycledBlocks);
     blockList_clear(&heap->allocator->freeBlocks);
+    heap->allocator->freeBlockCount = 0;
+    heap->allocator->recycledBlockCount = 0;
 
 #ifdef ALLOCATOR_STATS
     allocatorStats_resetBlockDistribution(heap->allocator->stats);
@@ -199,9 +203,52 @@ bool heap_recycle(Heap* heap) {
     heap->allocator->stats->liveObjectCount = 0;
     heap->allocator->stats->bytesAllocated = 0;
 #endif
-
-    return allocator_initCursors(heap->allocator);
+    if(!allocator_canInitCursors(heap->allocator)) {
+        exit(1);
+    }
+    /*if(!allocator_canInitCursors(heap->allocator) || allocator_shouldGrow(heap->allocator)) {
+        size_t increment = heap->smallHeapSize / WORD_SIZE * GROWTH_RATE / 100;
+        increment = (increment - 1 + WORDS_IN_BLOCK) / WORDS_IN_BLOCK * WORDS_IN_BLOCK;
+        heap_grow(heap, increment);
+    }*/
+    allocator_initCursors(heap->allocator);
 }
 
+// increment in words
+void heap_grow(Heap* heap, size_t increment) {
+    assert(increment % WORDS_IN_BLOCK == 0);
 
-void heap_grow(Heap* heap, size_t size) {}
+#ifdef DEBUG_PRINT
+    printf("Growing small heap by %zu bytes, to %zu bytes\n", increment * WORD_SIZE, heap->smallHeapSize + increment * WORD_SIZE);
+    fflush(stdout);
+#endif
+
+    word_t* heapEnd = heap->heapEnd;
+    heap->heapEnd = heapEnd + increment;
+    heap->smallHeapSize += increment * WORD_SIZE;
+
+
+    BlockHeader* lastBlock = (BlockHeader*)(heap->heapEnd - WORDS_IN_BLOCK);
+    blockList_addBlocksLast(&heap->allocator->freeBlocks, (BlockHeader*)heapEnd, lastBlock);
+
+    heap->allocator->blockCount += increment / WORDS_IN_BLOCK;
+    heap->allocator->freeBlockCount += increment / WORDS_IN_BLOCK;
+}
+
+void heap_growLarge(Heap* heap, size_t increment) {
+    increment = 1UL << log2_ceil(increment);
+
+#ifdef DEBUG_PRINT
+    printf("Growing large heap by %zu bytes, to %zu bytes\n", increment * WORD_SIZE, heap->largeHeapSize + increment * WORD_SIZE);
+    fflush(stdout);
+#endif
+
+    word_t* heapEnd = heap->largeHeapEnd;
+    heap->largeHeapEnd += increment;
+    heap->largeHeapSize += increment * WORD_SIZE;
+    heap->largeAllocator->size += increment * WORD_SIZE;
+
+    bitmap_grow(heap->largeAllocator->bitmap, increment * WORD_SIZE);
+
+    largeAllocator_addChunk(heap->largeAllocator, (Chunk*)heapEnd, increment * WORD_SIZE);
+}

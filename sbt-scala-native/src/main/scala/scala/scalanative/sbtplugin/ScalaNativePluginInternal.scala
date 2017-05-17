@@ -204,7 +204,7 @@ object ScalaNativePluginInternal {
       val clang     = nativeClang.value
       val clangpp   = nativeClangPP.value
       val classpath = (fullClasspath in Compile).value
-      val opts      = nativeCompileOptions.value ++ Seq("-O2")
+      val opts      = nativeCompileOptions.value ++ Seq("-g", "-O0")
 
       val lib = cwd / "lib"
       val jar =

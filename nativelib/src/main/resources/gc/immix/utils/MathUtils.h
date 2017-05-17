@@ -13,7 +13,7 @@ static const int MultiplyDeBruijnBitPosition[32] =
                 8, 12, 20, 28, 15, 17, 24, 7, 19, 27, 23, 6, 26, 5, 4, 31
         };
 
-int log2_floor(size_t v) {
+static INLINE int log2_floor(size_t v) {
 
 
     v |= v >> 1; // first round down to one less than a power of 2
@@ -25,7 +25,7 @@ int log2_floor(size_t v) {
     return MultiplyDeBruijnBitPosition[(uint32_t)(v * 0x07C4ACDDU) >> 27];
 }
 
-static inline int log2_ceil(size_t value) {
+static INLINE int log2_ceil(size_t value) {
     return log2_floor(2 * value - 1);
 }
 

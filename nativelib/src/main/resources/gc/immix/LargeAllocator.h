@@ -30,6 +30,7 @@ typedef struct {
 } LargeAllocator;
 
 LargeAllocator* largeAllocator_create(word_t*, size_t);
+void largeAllocator_addChunk(LargeAllocator* allocator, Chunk* chunk, size_t total_block_size);
 ObjectHeader* largeAllocator_getBlock(LargeAllocator* allocator, size_t requestedBlockSize);
 void largeAllocator_sweep(LargeAllocator* allocator);
 void largeAllocator_print(LargeAllocator* alloc);
