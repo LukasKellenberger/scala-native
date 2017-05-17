@@ -1,12 +1,13 @@
 #include "Bitmap.h"
 #include "../Constants.h"
 #include "../Log.h"
+#include "../utils/MathUtils.h"
 
 Bitmap* bitmap_alloc(size_t size, word_t* offset) {
     assert(size % sizeof(word_t) == 0);
     assert(size % MIN_BLOCK_SIZE == 0);
     size_t nbBlocks = size / MIN_BLOCK_SIZE;
-    unsigned long nbWords = (nbBlocks + BITS_PER_WORD - 1) / BITS_PER_WORD;
+    unsigned long nbWords = divAndRoundUp(nbBlocks, BITS_PER_WORD);//(nbBlocks + BITS_PER_WORD - 1) / BITS_PER_WORD;
     void* words = calloc(nbWords, sizeof(word_t));
     Bitmap* bitmap = malloc(sizeof(Bitmap));
     bitmap->words = words;
@@ -43,7 +44,7 @@ int bitmap_getBit(Bitmap* bitmap, ubyte_t* addr) {
 
 
 void bitmap_grow(Bitmap* bitmap, size_t nb_words) {
-    size_t current_nb_words = (bitmap->size / sizeof(word_t) + BITS_PER_WORD - 1) / BITS_PER_WORD;
+    size_t current_nb_words = divAndRoundUp(bitmap->size / sizeof(word_t), BITS_PER_WORD);//bitmap->size / sizeof(word_t) + BITS_PER_WORD - 1) / BITS_PER_WORD;
     size_t new_nb_words = current_nb_words + BITS_PER_WORD * nb_words;
     bitmap->words = realloc(bitmap->words, new_nb_words * sizeof(word_t));
     bitmap->size = new_nb_words * sizeof(word_t);

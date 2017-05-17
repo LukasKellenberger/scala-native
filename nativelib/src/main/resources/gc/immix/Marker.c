@@ -68,7 +68,7 @@ void mark_roots_stack(Heap* heap, Stack* stack) {
 
     while(p < bottom) {
 
-        word_t* pp = (*(word_t**)p) - 1;
+        word_t* pp = (*(word_t**)p) - WORDS_IN_OBJECT_HEADER;
         if(heap_isWordInHeap(heap, pp)) {
             mark(heap, stack, pp);
         }
@@ -81,7 +81,7 @@ void mark_roots_modules(Heap* heap, Stack* stack) {
     int nb_modules = __modules_size;
 
     for(int i=0; i < nb_modules; i++) {
-        word_t* addr = module[i] - 1;
+        word_t* addr = module[i] - WORDS_IN_OBJECT_HEADER;
         if(heap_isWordInHeap(heap, addr)) {
             mark(heap, stack, addr);
         }
@@ -105,10 +105,10 @@ void mark_roots(Heap* heap, Stack* stack) {
     marker_mark(heap, stack);
 }
 
-INLINE void marker_markField(Heap* heap, word_t* heapStart, word_t* heapEnd, word_t* largeHeapStart, word_t* largeHeapEnd, Stack* stack, ObjectHeader* object, int index) {
+INLINE void marker_markField(Heap* heap, Stack* stack, ObjectHeader* object, int index) {
     word_t* field = object->fields[index];
-    ObjectHeader* fieldObject = (ObjectHeader*)(field - 1);
-    if(heap_isInObjectInHeapFast(heapStart, heapEnd, largeHeapStart, largeHeapEnd, fieldObject)) {
+    ObjectHeader* fieldObject = (ObjectHeader*)(field - WORDS_IN_OBJECT_HEADER);
+    if(heap_isObjectInHeap(heap, fieldObject)) {
         assert(heap_isObjectInHeap(heap, fieldObject));
         if(!object_isMarked(fieldObject)) {
             markObject(heap, stack, fieldObject);
@@ -118,35 +118,33 @@ INLINE void marker_markField(Heap* heap, word_t* heapStart, word_t* heapEnd, wor
     }
 }
 
-void marker_markObjectArray(Heap* heap, word_t* heapStart, word_t* heapEnd, word_t* largeHeapStart, word_t* largeHeapEnd, Stack* stack, ObjectHeader* object) {
+INLINE void marker_markObjectArray(Heap* heap, Stack* stack, ObjectHeader* object) {
     size_t size = object_size(object) - 2 * sizeof(word_t);
     size_t nbWords = size / sizeof(word_t);
-    for(int i = 0; i < nbWords; i++) {
 
-        word_t* field = object->fields[i];
-        ObjectHeader* fieldObject = (ObjectHeader*)(field - 1);
-        if(heap_isInObjectInHeapFast(heapStart, heapEnd, largeHeapStart, largeHeapEnd, fieldObject)) {
-            assert(heap_isObjectInHeap(heap, fieldObject));
+    word_t** current = &object->fields[0];
+    word_t** end = current + nbWords;
+
+    while (current < end) {
+
+        word_t* field = *current;
+        ObjectHeader* fieldObject = (ObjectHeader*)(field - WORDS_IN_OBJECT_HEADER);
+        if(heap_isObjectInHeap(heap, fieldObject)) {
             if(!object_isMarked(fieldObject)) {
                 markObject(heap, stack, fieldObject);
             }
-        } else {
-            assert(!heap_isObjectInHeap(heap, fieldObject));
         }
+        current++;
     }
 }
 
 
 void marker_mark(Heap* heap, Stack* stack) {
-    word_t* heapStart = heap->heapStart;
-    word_t* heapEnd = heap->heapEnd;
-    word_t* largeHeapStart = heap->largeHeapStart;
-    word_t* largeHeapEnd = heap->largeHeapEnd;
     while(!stack_isEmpty(stack)) {
         ObjectHeader* object = stack_pop(stack);
 
         Rtti *rtti = object->rtti;
 
-        markerGenerated_mark(heap, heapStart, heapEnd, largeHeapStart, largeHeapEnd, stack, object, rtti->refMapStruct);
+        markerGenerated_mark(heap, stack, object, rtti->refMapStruct);
     }
 }

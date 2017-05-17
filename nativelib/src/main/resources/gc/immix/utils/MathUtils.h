@@ -13,7 +13,7 @@ static const int MultiplyDeBruijnBitPosition[32] =
                 8, 12, 20, 28, 15, 17, 24, 7, 19, 27, 23, 6, 26, 5, 4, 31
         };
 
-int log2_floor(size_t v) {
+static int log2_floor(size_t v) {
 
 
     v |= v >> 1; // first round down to one less than a power of 2
@@ -27,6 +27,14 @@ int log2_floor(size_t v) {
 
 static inline int log2_ceil(size_t value) {
     return log2_floor(2 * value - 1);
+}
+
+static inline size_t roundToNextMultiple(size_t value, size_t multiple) {
+    return (value + multiple - 1) / multiple * multiple;
+}
+
+static inline size_t divAndRoundUp(size_t value, size_t divider) {
+    return (value + divider - 1) / divider;
 }
 
 #endif //IMMIX_MATHUTILS_H

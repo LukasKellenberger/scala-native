@@ -87,7 +87,7 @@ void largeAllocator_addChunk(LargeAllocator* allocator, Chunk* chunk, size_t tot
 }
 
 ObjectHeader* largeAllocator_getBlock(LargeAllocator* allocator, size_t requestedBlockSize) {
-    size_t actualBlockSize = (requestedBlockSize + MIN_BLOCK_SIZE - 1) / MIN_BLOCK_SIZE * MIN_BLOCK_SIZE;
+    size_t actualBlockSize = roundToNextMultiple(requestedBlockSize, MIN_BLOCK_SIZE);//(requestedBlockSize + MIN_BLOCK_SIZE - 1) / MIN_BLOCK_SIZE * MIN_BLOCK_SIZE;
     size_t requiredChunkSize = 1UL << log2_ceil(actualBlockSize);
 
     int listIndex = size_to_linked_list(requiredChunkSize);
