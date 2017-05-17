@@ -6,9 +6,10 @@
 #include "Heap.h"
 #include "Marker.h"
 
-INLINE void markerGenerated_mark(Heap* heap, Stack* stack, ObjectHeader* object, ubyte_t ptrByte, int offset) {
-    switch (ptrByte) {
-
+INLINE void markerGenerated_mark(Heap* heap, Stack* stack, ObjectHeader* object, ubyte_t *ptrByte) {
+    int offset = 0;
+    switchLabel:
+    switch (*ptrByte) {
         case 0:
             break;
         case 1:
@@ -713,6 +714,1094 @@ INLINE void markerGenerated_mark(Heap* heap, Stack* stack, ObjectHeader* object,
             marker_markField(heap, stack, object, offset + 5);
             marker_markField(heap, stack, object, offset + 6);
             break;
+        case 128:
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 129:
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 130:
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 131:
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 132:
+            marker_markField(heap, stack, object, offset + 4);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 133:
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 134:
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 135:
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 136:
+            marker_markField(heap, stack, object, offset + 3);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 137:
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 138:
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 139:
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 140:
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 141:
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 142:
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 143:
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 144:
+            marker_markField(heap, stack, object, offset + 2);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 145:
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 146:
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 147:
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 148:
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 4);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 149:
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 150:
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 151:
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 152:
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 153:
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 154:
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 155:
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 156:
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 157:
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 158:
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 159:
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 160:
+            marker_markField(heap, stack, object, offset + 1);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 161:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 162:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 163:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 164:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 4);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 165:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 166:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 167:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 168:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 3);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 169:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 170:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 171:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 172:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 173:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 174:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 175:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 176:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 177:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 178:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 179:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 180:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 4);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 181:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 182:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 183:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 184:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 185:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 186:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 187:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 188:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 189:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 190:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 191:
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 192:
+            marker_markField(heap, stack, object, offset + 0);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 193:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 194:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 195:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 196:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 4);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 197:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 198:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 199:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 200:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 3);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 201:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 202:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 203:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 204:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 205:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 206:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 207:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 208:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 2);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 209:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 210:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 211:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 212:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 4);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 213:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 214:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 215:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 216:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 217:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 218:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 219:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 220:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 221:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 222:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 223:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 224:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 225:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 226:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 227:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 228:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 4);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 229:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 230:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 231:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 232:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 3);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 233:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 234:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 235:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 236:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 237:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 238:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 239:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 240:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 241:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 242:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 243:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 244:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 4);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 245:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 246:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 247:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 248:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 249:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 250:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 251:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 252:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 253:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 254:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+        case 255:
+            marker_markField(heap, stack, object, offset + 0);
+            marker_markField(heap, stack, object, offset + 1);
+            marker_markField(heap, stack, object, offset + 2);
+            marker_markField(heap, stack, object, offset + 3);
+            marker_markField(heap, stack, object, offset + 4);
+            marker_markField(heap, stack, object, offset + 5);
+            marker_markField(heap, stack, object, offset + 6);
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
         default:
             break;
     }

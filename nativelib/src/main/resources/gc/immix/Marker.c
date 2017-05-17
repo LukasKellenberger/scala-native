@@ -21,6 +21,8 @@ extern int __modules_size;
 void markObject(Heap* heap, Stack* stack, ObjectHeader* object) {
     assert(!object_isMarked(object));
     assert(object_size(object) != 0);
+    assert(object_getObject(object) == object || object_getLargeObject(heap->largeAllocator, object) == object);
+
     object_mark(object);
     stack_push(stack, object);
 #ifdef ALLOCATOR_STATS
@@ -106,6 +108,8 @@ void mark_roots(Heap* heap, Stack* stack) {
 
 INLINE void marker_markField(Heap* heap, Stack* stack, ObjectHeader* object, int index) {
     word_t* field = object->fields[index];
+    assert(object_getObject(object) == object || object_getLargeObject(heap->largeAllocator, object) == object);
+
     ObjectHeader* fieldObject = (ObjectHeader*)(field - 1);
     if(heap_isObjectInHeap(heap, fieldObject) && !object_isMarked(fieldObject)) {
         markObject(heap, stack, fieldObject);
@@ -116,6 +120,7 @@ INLINE void marker_markField(Heap* heap, Stack* stack, ObjectHeader* object, int
 void marker_mark(Heap* heap, Stack* stack) {
     while(!stack_isEmpty(stack)) {
         ObjectHeader* object = stack_pop(stack);
+        assert(object_getObject(object) == object || object_getLargeObject(heap->largeAllocator, object) == object);
 
         Rtti *rtti = object->rtti;
         int32_t *idptr = (int32_t *) rtti;
@@ -127,25 +132,25 @@ void marker_mark(Heap* heap, Stack* stack) {
             // remove header and rtti from size
             size_t size = object_size(object) - 2 * sizeof(word_t);
             size_t nbWords = size / sizeof(word_t);
-            for(int i = 0; i < nbWords; i++) {
 
-                word_t* field = object->fields[i];
+            word_t** current = &object->fields[0];
+            word_t** end = current + nbWords;
+
+            while (current < end) {
+
+                word_t* field = *current;
                 ObjectHeader* fieldObject = (ObjectHeader*)(field - 1);
-                if(heap_isObjectInHeap(heap, fieldObject) && !object_isMarked(fieldObject)) {
-                    markObject(heap, stack, fieldObject);
+                if(heap_isObjectInHeap(heap, fieldObject)) {
+                    if(!object_isMarked(fieldObject)) {
+                        markObject(heap, stack, fieldObject);
+                    }
                 }
+                current++;
             }
         } else {
-            ubyte_t* p = rtti->refMapStruct;
-            ubyte_t ptrByte = 0;
-            int i=0;
-            do {
-                ptrByte = p[i];
 
-                markerGenerated_mark(heap, stack, object, (ubyte_t)0x7F & ptrByte, i*7);
+            markerGenerated_mark(heap, stack, object, rtti->refMapStruct);
 
-                ++i;
-            } while(ptrByte < 128);
         }
     }
 }

@@ -14,7 +14,7 @@ final case class MemoryLayout(size: Long, tys: List[PositionedType]) {
         offset / 8 - 1
     }
     val bytes = if (ptrOffsets.isEmpty) {
-      Seq(Val.Byte(128.toByte))
+      Seq(Val.Byte(0.toByte))
     } else {
       val minBits   = ptrOffsets.last + 1
       val offsetSet = ptrOffsets.toSet
@@ -27,8 +27,8 @@ final case class MemoryLayout(size: Long, tys: List[PositionedType]) {
           val (current, next) = bools.splitAt(7)
 
           val isLast = next match {
-            case Nil => 1
-            case _   => 0
+            case Nil => 0
+            case _   => 1
           }
           current
             .foldLeft(isLast) {
@@ -40,6 +40,7 @@ final case class MemoryLayout(size: Long, tys: List[PositionedType]) {
       }
       toByteArray(boolSeq).map(Val.Byte)
     }
+    println(s"$tys $bytes")
     Val.Array(Type.Byte, bytes)
   }
 

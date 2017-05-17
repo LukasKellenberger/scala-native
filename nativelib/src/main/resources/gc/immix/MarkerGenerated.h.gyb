@@ -6,16 +6,25 @@
 #include "Heap.h"
 #include "Marker.h"
 
-INLINE void markerGenerated_mark(Heap* heap, Stack* stack, ObjectHeader* object, ubyte_t ptrByte, int offset) {
-    switch (ptrByte) {
-% for b in range(128) :
+INLINE void markerGenerated_mark(Heap* heap, Stack* stack, ObjectHeader* object, ubyte_t *ptrByte) {
+    int offset = 0;
+    switchLabel:
+    switch (*ptrByte) {
+% for b in range(256) :
         case ${b}:
     % for i in range(7):
         % if(b >> (7-(i+1)) & 1 == 1):
             marker_markField(heap, stack, object, offset + ${i});
         %end
     %end
+    % if(b < 128):
             break;
+    % else:
+            // update
+            ptrByte += 1;
+            offset += 7;
+            goto switchLabel;
+    % end
 %end
         default:
             break;

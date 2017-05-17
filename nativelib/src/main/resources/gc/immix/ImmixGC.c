@@ -9,7 +9,7 @@
 #include "Object.h"
 #include "State.h"
 
-#define INITIAL_HEAP_SIZE (128*1024*1024L)
+#define INITIAL_HEAP_SIZE (256*1024*1024L)
 
 
 
