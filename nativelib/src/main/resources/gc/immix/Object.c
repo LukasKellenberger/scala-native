@@ -4,6 +4,7 @@
 #include "headers/BlockHeader.h"
 #include "Line.h"
 #include "Log.h"
+#include "utils/MathUtils.h"
 
 ObjectHeader* objectNextLargeObject(ObjectHeader* objectHeader) {
     size_t size = object_chunkSize(objectHeader);
@@ -51,6 +52,10 @@ ObjectHeader* getInLine(BlockHeader* blockHeader, int lineIndex, word_t* word) {
 #endif
         return current;
     } else {
+#ifdef DEBUG_PRINT
+        printf("ignoring %p\n", word);
+        fflush(stdout);
+#endif
         return NULL;
     }
 
@@ -62,13 +67,17 @@ ObjectHeader* object_getObject(word_t* word) {
     //Check if the word points on the block header
     if(word < block_getFirstWord(blockHeader)) {
 #ifdef DEBUG_PRINT
-        printf("Points on block header\n");
+        printf("Points on block header %p\n", word);
         fflush(stdout);
 #endif
         return NULL;
     }
 
     if(!isWordAligned(word)) {
+#ifdef DEBUG_PRINT
+        printf("Word not aligned: %p aligning to %p\n", word, (word_t*)((word_t) word & WORD_INVERSE_MASK));
+        fflush(stdout);
+#endif
         word = (word_t*)((word_t) word & WORD_INVERSE_MASK);
     }
 
@@ -80,6 +89,10 @@ ObjectHeader* object_getObject(word_t* word) {
     if(line_header_containsObject(&blockHeader->lineHeaders[lineIndex])) {
         return getInLine(blockHeader, lineIndex, word);
     } else {
+#ifdef DEBUG_PRINT
+        printf("Word points to empty line %p\n", word);
+        fflush(stdout);
+#endif
         return NULL;
     }
 
@@ -145,5 +158,5 @@ void object_mark(ObjectHeader* objectHeader) {
 }
 
 size_t object_chunkSize(ObjectHeader* objectHeader) {
-    return (object_size(objectHeader) + MIN_BLOCK_SIZE - 1) / MIN_BLOCK_SIZE * MIN_BLOCK_SIZE;
+    return (object_size(objectHeader) + MIN_BLOCK_SIZE - 1) / MIN_BLOCK_SIZE * MIN_BLOCK_SIZE;//roundToNextMultiple(object_size(objectHeader), MIN_BLOCK_SIZE);//
 }

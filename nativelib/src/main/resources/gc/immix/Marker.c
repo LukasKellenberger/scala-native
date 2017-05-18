@@ -33,6 +33,11 @@ void mark(Heap* heap, Stack* stack, word_t* address) {
         object = object_getObject(address);
         assert(object == NULL || line_header_containsObject(&block_getBlockHeader((word_t*)object)->lineHeaders[
                 block_getLineIndexFromWord(block_getBlockHeader((word_t*)object), (word_t*)object)]));
+#ifdef DEBUG_PRINT
+        if(object == NULL) {
+            printf("Not found: %p\n", address);
+        }
+#endif
     } else {
         object = object_getLargeObject(heap->largeAllocator, address);
     }
@@ -54,7 +59,7 @@ void marker_mark(Heap* heap, Stack* stack) {
             for(int i = 0; i < nbWords; i++) {
 
                 word_t* field = object->fields[i];
-                ObjectHeader* fieldObject = (ObjectHeader*)(field - 1);
+                ObjectHeader* fieldObject = object_fromMutatorAddress(field);
                 if(heap_isObjectInHeap(heap, fieldObject) && !object_isMarked(fieldObject)) {
                     markObject(heap, stack, fieldObject);
                 }
@@ -65,7 +70,7 @@ void marker_mark(Heap* heap, Stack* stack) {
             int i=0;
             while(ptr_map[i] != -1) {
                 word_t* field = object->fields[ptr_map[i]/sizeof(word_t) - 1];
-                ObjectHeader* fieldObject = (ObjectHeader*)(field - 1);
+                ObjectHeader* fieldObject = object_fromMutatorAddress(field);
                 if(heap_isObjectInHeap(heap, fieldObject) && !object_isMarked(fieldObject)) {
                     markObject(heap, stack, fieldObject);
                 }
@@ -98,7 +103,7 @@ void mark_roots_stack(Heap* heap, Stack* stack) {
 
     while(p < bottom) {
 
-        word_t* pp = (*(word_t**)p) - 1;
+        word_t* pp = (*(word_t**)p) - WORDS_IN_OBJECT_HEADER;
         if(heap_isWordInHeap(heap, pp)) {
             mark(heap, stack, pp);
         }
@@ -111,7 +116,7 @@ void mark_roots_modules(Heap* heap, Stack* stack) {
     int nb_modules = __modules_size;
 
     for(int i=0; i < nb_modules; i++) {
-        word_t* addr = module[i] - 1;
+        word_t* addr = module[i] - WORDS_IN_OBJECT_HEADER;
         if(heap_isWordInHeap(heap, addr)) {
             mark(heap, stack, addr);
         }

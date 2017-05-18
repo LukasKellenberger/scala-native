@@ -8,8 +8,9 @@
 #include "Log.h"
 #include "Object.h"
 #include "State.h"
+#include "utils/MathUtils.h"
 
-#define INITIAL_HEAP_SIZE (128*1024*1024)
+#define INITIAL_HEAP_SIZE (128 * 1024 *1024)
 
 
 
@@ -21,9 +22,8 @@ void scalanative_init() {
 }
 
 void* scalanative_alloc_raw(size_t size) {
-    //assert(size % 8 == 0);
     assert(size <= MAX_BLOCK_SIZE);
-    size = (size + sizeof(word_t) - 1 ) / sizeof(word_t) * sizeof(word_t);
+    size = roundToNextMultiple(size, WORD_SIZE);
     if(heap == NULL) {
         scalanative_init();
     }
@@ -51,7 +51,7 @@ void* scalanative_alloc_raw_atomic(size_t size) {
 }
 
 void* scalanative_alloc(void* info, size_t size) {
-    size = (size + sizeof(word_t) - 1 ) / sizeof(word_t) * sizeof(word_t);
+    size = roundToNextMultiple(size, WORD_SIZE);
 
     void** alloc = (void**) heap_allocSmall(heap, size);
     *alloc = info;
@@ -59,7 +59,7 @@ void* scalanative_alloc(void* info, size_t size) {
 }
 
 void* scalanative_alloc_large(void* info, size_t size) {
-    size = (size + sizeof(word_t) - 1 ) / sizeof(word_t) * sizeof(word_t);
+    size = roundToNextMultiple(size, WORD_SIZE);
 
     void** alloc = (void**) heap_allocLarge(heap, size);
     *alloc = info;

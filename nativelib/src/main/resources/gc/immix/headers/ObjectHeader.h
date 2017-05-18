@@ -102,6 +102,10 @@ static inline void object_setSize(ObjectHeader* objectHeader, size_t size) {
     objectHeader->header.size = _size;
 }
 
+static inline ObjectHeader* object_fromMutatorAddress(word_t* address) {
+    return (ObjectHeader*) (address - WORDS_IN_OBJECT_HEADER);
+}
+
 
 
 #endif //IMMIX_OBJECTHEADER_H
