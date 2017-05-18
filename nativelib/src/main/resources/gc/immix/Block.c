@@ -25,7 +25,7 @@ void block_recycle(Allocator* allocator, BlockHeader* blockHeader) {
         int16_t lineIndex = 0;
         int lastRecyclable = -1;
         while(lineIndex < LINE_COUNT) {
-            LineHeader* lineHeader = &blockHeader->lineHeaders[lineIndex];
+            LineHeader* lineHeader = block_getLineHeader(blockHeader, lineIndex);
             if(line_header_isMarked(lineHeader)) {
                 // Unmark line
                 line_header_unmark(lineHeader);
@@ -55,7 +55,7 @@ void block_recycle(Allocator* allocator, BlockHeader* blockHeader) {
                 lineIndex++;
                 uint8_t size = 1;
                 while(lineIndex < LINE_COUNT
-                      && !line_header_isMarked(lineHeader = &blockHeader->lineHeaders[lineIndex])) {
+                      && !line_header_isMarked(lineHeader = block_getLineHeader(blockHeader, lineIndex))) {
                     size++;
                     lineIndex++;
                     line_header_setEmpty(lineHeader);

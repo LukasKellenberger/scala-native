@@ -31,9 +31,9 @@ static inline bool isWordAligned(word_t* word) {
 
 
 ObjectHeader* getInLine(BlockHeader* blockHeader, int lineIndex, word_t* word) {
-    assert(line_header_containsObject(&blockHeader->lineHeaders[lineIndex]));
+    assert(line_header_containsObject(block_getLineHeader(blockHeader, lineIndex)));
 
-    ObjectHeader* current = line_header_getFirstObject(&blockHeader->lineHeaders[lineIndex]);
+    ObjectHeader* current = line_header_getFirstObject(block_getLineHeader(blockHeader, lineIndex));
     ObjectHeader* next = object_nextObject(current);
 
     word_t* lineEnd = block_getLineAddress(blockHeader, lineIndex) + WORDS_IN_LINE;
@@ -82,11 +82,11 @@ ObjectHeader* object_getObject(word_t* word) {
     }
 
     int lineIndex = block_getLineIndexFromWord(blockHeader, word);
-    while(lineIndex > 0 && !line_header_containsObject(&blockHeader->lineHeaders[lineIndex])) {
+    while(lineIndex > 0 && !line_header_containsObject(block_getLineHeader(blockHeader, lineIndex))) {
         lineIndex--;
     }
 
-    if(line_header_containsObject(&blockHeader->lineHeaders[lineIndex])) {
+    if(line_header_containsObject(block_getLineHeader(blockHeader, lineIndex))) {
         return getInLine(blockHeader, lineIndex, word);
     } else {
 #ifdef DEBUG_PRINT
@@ -150,7 +150,7 @@ void object_mark(ObjectHeader* objectHeader) {
         assert(endIndex >= 0 && endIndex < LINE_COUNT);
         assert(startIndex <= endIndex);
         for (int i = startIndex; i <= endIndex; i++) {
-            LineHeader *lineHeader = &blockHeader->lineHeaders[i];
+            LineHeader *lineHeader = block_getLineHeader(blockHeader, i);
             line_header_mark(lineHeader);
         }
     }

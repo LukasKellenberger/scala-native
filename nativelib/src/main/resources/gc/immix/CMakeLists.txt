@@ -25,7 +25,6 @@ set(SOURCE_FILES
         ImmixGC.c
         LargeAllocator.c
         LargeAllocator.h
-        Line.c
         Line.h
         Log.h
         Marker.c

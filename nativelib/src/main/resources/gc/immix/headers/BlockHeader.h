@@ -93,5 +93,9 @@ static inline uint32_t block_getLineIndexFromWord(BlockHeader* blockHeader, word
     return (uint32_t)((word_t)word - (word_t)firstWord) >> LINE_SIZE_BITS;
 }
 
+static inline LineHeader* block_getLineHeader(BlockHeader* blockHeader, int lineIndex) {
+    return &blockHeader->lineHeaders[lineIndex];
+}
+
 
 #endif //IMMIX_BLOCKHEADER_H
