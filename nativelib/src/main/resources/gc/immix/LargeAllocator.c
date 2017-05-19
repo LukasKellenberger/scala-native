@@ -5,10 +5,20 @@
 #include "utils/MathUtils.h"
 #include "Object.h"
 #include "Log.h"
+#include "headers/ObjectHeader.h"
 
 inline static int size_to_linked_list(size_t size) {
     assert(size >= MIN_BLOCK_SIZE);
     return log2_floor(size) - LARGE_OBJECT_MIN_SIZE_BITS;
+}
+
+
+static inline size_t Chunk_getSize(Chunk* chunk) {
+    return (chunk->header.size << WORD_SIZE_BITS);
+}
+
+static inline void Chunk_setSize(Chunk* chunk, size_t size) {
+    chunk->header.size = (uint32_t) (size >> WORD_SIZE_BITS);
 }
 
 void freeList_init(FreeList* freeList) {
@@ -73,7 +83,7 @@ void LargeAllocator_addChunk(LargeAllocator *allocator, Chunk *chunk, size_t tot
 
         Chunk* currentChunk = (Chunk*) current;
         freeList_addBlockLast(&allocator->freeLists[listIndex], (Chunk*)current);
-        currentChunk->header.size = (uint32_t)chunkSize;
+        Chunk_setSize(currentChunk, chunkSize);
         currentChunk->header.type = object_large;
         Object_setFree((ObjectHeader *) currentChunk);
         Bitmap_setBit(allocator->bitmap, current);
@@ -97,7 +107,7 @@ ObjectHeader* LargeAllocator_getBlock(LargeAllocator *allocator, size_t requeste
         return NULL;
     }
 
-    size_t chunkSize = chunk->header.size;
+    size_t chunkSize = Chunk_getSize(chunk);
     assert(chunkSize >= MIN_BLOCK_SIZE);
 
     if(chunkSize - MIN_BLOCK_SIZE >= actualBlockSize) {
@@ -121,8 +131,8 @@ void freeList_print(FreeList* list, int i) {
     Chunk* current = list->first;
     printf("list %d: ", i);
     while(current != NULL) {
-        assert((1 << (i + LARGE_OBJECT_MIN_SIZE_BITS)) == current->header.size);
-        printf("[%p %u] -> ", current, current->header.size);
+        assert((1 << (i + LARGE_OBJECT_MIN_SIZE_BITS)) == Chunk_getSize(current));
+        printf("[%p %zu] -> ", current, Chunk_getSize(current));
         current = current->next;
     }
     printf("\n");

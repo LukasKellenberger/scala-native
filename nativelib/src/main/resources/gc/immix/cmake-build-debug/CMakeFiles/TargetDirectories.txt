@@ -1,3 +1,0 @@
-/Users/lukaskellenberger/Developer/scala-native/nativelib/src/main/resources/gc/immix/cmake-build-debug/CMakeFiles/edit_cache.dir
-/Users/lukaskellenberger/Developer/scala-native/nativelib/src/main/resources/gc/immix/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/Users/lukaskellenberger/Developer/scala-native/nativelib/src/main/resources/gc/immix/cmake-build-debug/CMakeFiles/immix.dir

@@ -94,11 +94,11 @@ static inline size_t Object_size(ObjectHeader *objectHeader) {
     uint32_t size = objectHeader->header.size;
     assert((Object_isStandardObject(objectHeader) && size < LARGE_BLOCK_SIZE) || !Object_isStandardObject(objectHeader));
 
-    return size;
+    return size << WORD_SIZE_BITS;
 }
 
 static inline void Object_setSize(ObjectHeader *objectHeader, size_t size) {
-    uint32_t _size = (uint32_t)size;
+    uint32_t _size = (uint32_t)(size >> WORD_SIZE_BITS);
     assert(!Object_isStandardObject(objectHeader) || (Object_isStandardObject(objectHeader) && _size > 0 && _size < LARGE_BLOCK_SIZE));
     objectHeader->header.size = _size;
 }

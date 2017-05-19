@@ -158,5 +158,5 @@ void Object_mark(ObjectHeader *objectHeader) {
 }
 
 size_t Object_chunkSize(ObjectHeader *objectHeader) {
-    return (Object_size(objectHeader) + MIN_BLOCK_SIZE - 1) / MIN_BLOCK_SIZE * MIN_BLOCK_SIZE;//roundToNextMultiple(object_size(objectHeader), MIN_BLOCK_SIZE);//
+    return (Object_size(objectHeader) + MIN_BLOCK_SIZE - 1) / MIN_BLOCK_SIZE * MIN_BLOCK_SIZE;
 }

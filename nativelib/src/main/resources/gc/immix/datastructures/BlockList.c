@@ -24,7 +24,7 @@ BlockHeader* _getNextBlock(word_t* heapStart, BlockHeader* header) {
 }
 
 
-void BlockList_init(BlockList *blockList, word_t *heapStart){
+void BlockList_init(BlockList *blockList, word_t *heapStart) {
     blockList->heapStart= heapStart;
     blockList->first = NULL;
     blockList->last = NULL;
