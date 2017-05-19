@@ -40,7 +40,7 @@ Heap* Heap_create(size_t initialSize) {
 
     heap->smallHeapSize = initialSize;
     heap->heapStart = smallHeapStart;
-    heap->heapEnd = smallHeapStart + initialSize / sizeof(word_t);
+    heap->heapEnd = smallHeapStart + initialSize / WORD_SIZE;
     heap->allocator = Allocator_create(smallHeapStart, initialSize / BLOCK_TOTAL_SIZE);
 
 
@@ -57,7 +57,7 @@ Heap* Heap_create(size_t initialSize) {
 word_t* Heap_allocLarge(Heap *heap, uint32_t objectSize) {
     assert(objectSize % 8 == 0);
 
-    uint32_t size = objectSize + sizeof(word_t); // Add header
+    uint32_t size = objectSize + OBJECT_HEADER_SIZE; // Add header
     ObjectHeader* object = LargeAllocator_getBlock(heap->largeAllocator, size);
     if(object != NULL) {
         Object_setObjectType(object, object_large);
@@ -112,7 +112,7 @@ word_t* allocSmallSlow(Heap* heap, uint32_t size) {
 
 INLINE word_t* Heap_allocSmall(Heap *heap, uint32_t objectSize) {
     assert(objectSize % 8 == 0);
-    uint32_t size = objectSize + sizeof(word_t); // Add header
+    uint32_t size = objectSize + OBJECT_HEADER_SIZE; // Add header
     ObjectHeader *block = (ObjectHeader *) Allocator_alloc(heap->allocator, size);
     if (block != NULL) {
         Object_setObjectType(block, object_standard);
@@ -134,7 +134,7 @@ INLINE word_t* Heap_allocSmall(Heap *heap, uint32_t objectSize) {
 word_t* Heap_alloc(Heap *heap, uint32_t objectSize) {
     assert(objectSize % 8 == 0);
 
-    if(objectSize + sizeof(word_t) >= LARGE_BLOCK_SIZE) {
+    if(objectSize + OBJECT_HEADER_SIZE >= LARGE_BLOCK_SIZE) {
         return Heap_allocLarge(heap, objectSize);
     } else {
         return Heap_allocSmall(heap, objectSize);

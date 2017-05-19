@@ -54,8 +54,8 @@ void mark(Heap *heap, Stack *stack) {
 
         if(object->rtti->rt.id == __object_array_id) {
             // remove header and rtti from size
-            size_t size = Object_size(object) - 2 * sizeof(word_t);
-            size_t nbWords = size / sizeof(word_t);
+            size_t size = Object_size(object) - OBJECT_HEADER_SIZE - WORD_SIZE;
+            size_t nbWords = size / WORD_SIZE;
             for(int i = 0; i < nbWords; i++) {
 
                 word_t* field = object->fields[i];
@@ -69,7 +69,7 @@ void mark(Heap *heap, Stack *stack) {
             int64_t* ptr_map = object->rtti->refMapStruct;
             int i=0;
             while(ptr_map[i] != -1) {
-                word_t* field = object->fields[ptr_map[i]/sizeof(word_t) - 1];
+                word_t* field = object->fields[ptr_map[i]/WORD_SIZE - 1];
                 ObjectHeader* fieldObject = Object_fromMutatorAddress(field);
                 if(heap_isObjectInHeap(heap, fieldObject) && !Object_isMarked(fieldObject)) {
                     markObject(heap, stack, fieldObject);

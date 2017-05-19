@@ -59,7 +59,7 @@ bool Allocator_initCursors(Allocator *allocator) {
  * Overflow allocation uses only free blocks, it is used when the bump limit of the fast allocator is too small to fit
  * the block to alloc.
  */
-word_t* overflow_allocation(Allocator* allocator, size_t size) {
+word_t* overflowAllocation(Allocator *allocator, size_t size) {
     word_t* start = allocator->largeCursor;
     word_t* end = (word_t*)((uint8_t*)start + size);
 
@@ -72,7 +72,7 @@ word_t* overflow_allocation(Allocator* allocator, size_t size) {
         allocator->largeBlock = block;
         allocator->largeCursor = Block_getFirstWord(block);
         allocator->largeLimit = Block_getBlockEnd(block);
-        return overflow_allocation(allocator, size);
+        return overflowAllocation(allocator, size);
     }
 
     if(end == allocator->largeLimit) {
@@ -94,7 +94,7 @@ INLINE word_t* Allocator_alloc(Allocator *allocator, size_t size) {
 
     if(end > allocator->limit) {
         if(size > LINE_SIZE) {
-            return overflow_allocation(allocator, size);
+            return overflowAllocation(allocator, size);
         } else {
             if(getNextLine(allocator)) {
                 return Allocator_alloc(allocator, size);
