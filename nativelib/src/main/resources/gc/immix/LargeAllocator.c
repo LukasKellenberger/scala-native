@@ -75,7 +75,7 @@ void LargeAllocator_addChunk(LargeAllocator *allocator, Chunk *chunk, size_t tot
         freeList_addBlockLast(&allocator->freeLists[listIndex], (Chunk*)current);
         currentChunk->header.size = (uint32_t)chunkSize;
         currentChunk->header.type = object_large;
-        Object_setNotAllocated((ObjectHeader *) currentChunk);
+        Object_setFree((ObjectHeader *) currentChunk);
         Bitmap_setBit(allocator->bitmap, current);
 
         current += chunkSize;
@@ -153,7 +153,7 @@ void LargeAllocator_sweep(LargeAllocator *allocator) {
     while(current != heapEnd) {
         assert(Bitmap_getBit(allocator->bitmap, (ubyte_t *) current));
         if(Object_isMarked(current)) {
-            Object_unmarkObjectHeader(current);
+            Object_setAllocated(current);
 
             current = Object_nextLargeObject(current);
         } else {

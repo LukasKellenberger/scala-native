@@ -15,11 +15,16 @@ typedef enum {
     object_large = 0x2,
 } ObjectType;
 
+typedef enum {
+    object_free = 0x0,
+    object_allocated = 0x1,
+    object_marked = 0x2,
+} ObjectFlag;
+
 typedef struct {
     uint32_t size;
     uint8_t type;
-    uint8_t marked;
-    uint8_t allocated; // used only for large objects
+    uint8_t flag;
 } ObjectHeaderLine;
 
 typedef struct {
@@ -51,27 +56,23 @@ typedef struct {
 } ObjectHeader;
 
 static inline bool Object_isMarked(ObjectHeader *objectHeader) {
-    return objectHeader->header.marked == 0x1;
+    return objectHeader->header.flag == object_marked;
 }
 
 static inline void Object_markObjectHeader(ObjectHeader *objectHeader) {
-    objectHeader->header.marked = 0x1;
-}
-
-static inline void Object_unmarkObjectHeader(ObjectHeader *objectHeader) {
-    objectHeader->header.marked = 0x0;
+    objectHeader->header.flag = object_marked;
 }
 
 static inline void Object_setAllocated(ObjectHeader *objectHeader) {
-    objectHeader->header.allocated = 0x1;
+    objectHeader->header.flag = object_allocated;
 }
 
-static inline void Object_setNotAllocated(ObjectHeader *objectHeader) {
-    objectHeader->header.allocated = 0x0;
+static inline void Object_setFree(ObjectHeader *objectHeader) {
+    objectHeader->header.flag = object_free;
 }
 
 static inline bool Object_isAllocated(ObjectHeader *objectHeader) {
-    return objectHeader->header.allocated;
+    return objectHeader->header.flag == object_allocated;
 }
 
 static inline bool Object_isStandardObject(ObjectHeader *objectHeader) {

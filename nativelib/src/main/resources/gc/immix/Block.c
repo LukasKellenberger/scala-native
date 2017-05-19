@@ -28,9 +28,9 @@ INLINE void recycleMarkedLine(BlockHeader* blockHeader, LineHeader* lineHeader, 
         word_t *lineEnd = Block_getLineAddress(blockHeader, lineIndex) + WORDS_IN_LINE;
         while (object != NULL && (word_t *) object < lineEnd) {
             if(Object_isMarked(object)) {
-                Object_unmarkObjectHeader(object);
+                Object_setAllocated(object);
             } else {
-                Object_setNotAllocated(object);
+                Object_setFree(object);
             }
             object = Object_nextObject(object);
         }
