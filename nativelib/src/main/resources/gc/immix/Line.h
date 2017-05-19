@@ -6,30 +6,27 @@
 #include "headers/LineHeader.h"
 #include "headers/BlockHeader.h"
 
-/*ObjectHeader* line_header_getFirstObject(LineHeader*);
-void line_header_update(BlockHeader* blockHeader, word_t* objectStart);*/
+static INLINE ObjectHeader* Line_getFirstObject(LineHeader *lineHeader) {
+    assert(Line_containsObject(lineHeader));
+    BlockHeader* blockHeader = Block_blockHeaderFromLineHeader(lineHeader);
+    uint8_t offset = Line_getFirstObjectOffset(lineHeader);
 
-INLINE ObjectHeader* line_header_getFirstObject(LineHeader* lineHeader) {
-    assert(line_header_containsObject(lineHeader));
-    BlockHeader* blockHeader = block_blockHeaderFromLineHeader(lineHeader);
-    uint8_t offset = line_header_getFirstObjectOffset(lineHeader);
+    uint32_t lineIndex = Block_getLineIndexFromLineHeader(blockHeader, lineHeader);
 
-    uint32_t lineIndex = block_getLineIndexFromLineHeader(blockHeader, lineHeader);
-
-    return (ObjectHeader*)block_getLineWord(blockHeader, lineIndex, offset / WORD_SIZE);
+    return (ObjectHeader*) Block_getLineWord(blockHeader, lineIndex, offset / WORD_SIZE);
 
 }
 
-INLINE void line_header_update(BlockHeader* blockHeader, word_t* objectStart) {
+static INLINE void Line_update(BlockHeader *blockHeader, word_t *objectStart) {
 
-    int lineIndex = block_getLineIndexFromWord(blockHeader, objectStart);
-    LineHeader* lineHeader = block_getLineHeader(blockHeader, lineIndex);
+    int lineIndex = Block_getLineIndexFromWord(blockHeader, objectStart);
+    LineHeader* lineHeader = Block_getLineHeader(blockHeader, lineIndex);
 
 
-    if(!line_header_containsObject(lineHeader)) {
+    if(!Line_containsObject(lineHeader)) {
         uint8_t offset = (uint8_t)((word_t)objectStart & LINE_SIZE_MASK);
 
-        line_header_setOffset(lineHeader, offset);
+        Line_setOffset(lineHeader, offset);
     }
 }
 

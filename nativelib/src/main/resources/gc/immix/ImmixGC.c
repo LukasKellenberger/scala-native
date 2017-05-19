@@ -17,8 +17,8 @@
 void scalanative_collect();
 
 void scalanative_init() {
-    heap = heap_create(INITIAL_HEAP_SIZE);
-    stack = stack_alloc(INITIAL_STACK_SIZE);
+    heap = Heap_create(INITIAL_HEAP_SIZE);
+    stack = Stack_alloc(INITIAL_STACK_SIZE);
 }
 
 void* scalanative_alloc_raw(size_t size) {
@@ -29,13 +29,13 @@ void* scalanative_alloc_raw(size_t size) {
     }
 
 
-    word_t* object = heap_alloc(heap, (uint32_t)size);
+    word_t* object = Heap_alloc(heap, (uint32_t) size);
     if(object == NULL) {
         scalanative_collect();
 
-        object = heap_alloc(heap, (uint32_t)size);
+        object = Heap_alloc(heap, (uint32_t) size);
         if(object == NULL) {
-            largeAllocator_print(heap->largeAllocator);
+            LargeAllocator_print(heap->largeAllocator);
             printf("Failed to alloc: %zu\n", size + 8);
             printf("No more memory available\n");
             fflush(stdout);
@@ -53,7 +53,7 @@ void* scalanative_alloc_raw_atomic(size_t size) {
 void* scalanative_alloc(void* info, size_t size) {
     size = roundToNextMultiple(size, WORD_SIZE);
 
-    void** alloc = (void**) heap_allocSmall(heap, size);
+    void** alloc = (void**) Heap_allocSmall(heap, size);
     *alloc = info;
     return (void*) alloc;
 }
@@ -61,7 +61,7 @@ void* scalanative_alloc(void* info, size_t size) {
 void* scalanative_alloc_large(void* info, size_t size) {
     size = roundToNextMultiple(size, WORD_SIZE);
 
-    void** alloc = (void**) heap_allocLarge(heap, size);
+    void** alloc = (void**) Heap_allocLarge(heap, size);
     *alloc = info;
     return (void*) alloc;
 }
@@ -71,7 +71,7 @@ void* alloc(size_t size) {
 }
 
 void scalanative_collect() {
-    heap_collect(heap, stack);
+    Heap_collect(heap, stack);
 }
 
 void scalanative_safepoint() {}

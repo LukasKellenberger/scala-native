@@ -6,8 +6,8 @@ set(CMAKE_CXX_STANDARD 11)
 set(SOURCE_FILES
         datastructures/Bitmap.c
         datastructures/Bitmap.h
-        datastructures/BlocList.c
-        datastructures/BlocList.h
+        datastructures/BlockList.c
+        datastructures/BlockList.h
         datastructures/Stack.c
         datastructures/Stack.h
         headers/BlockHeader.h

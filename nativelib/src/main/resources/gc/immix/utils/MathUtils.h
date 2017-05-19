@@ -1,7 +1,3 @@
-//
-// Created by Lukas Kellenberger on 20.04.17.
-//
-
 #ifndef IMMIX_MATHUTILS_H
 #define IMMIX_MATHUTILS_H
 
