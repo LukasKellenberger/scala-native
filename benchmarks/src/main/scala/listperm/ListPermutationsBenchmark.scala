@@ -1,6 +1,15 @@
 package listperm
 
-import benchmarks.{BenchmarkRunningTime, VeryLongRunningTime}
+import benchmarks.{
+  Benchmark,
+  BenchmarkCompanion,
+  BenchmarkRunningTime,
+  VeryLongRunningTime
+}
+
+object ListPermutationsBenchmark extends BenchmarkCompanion[Int] {
+  override def apply(): Benchmark[Int] = new ListPermutationsBenchmark()
+}
 
 class ListPermutationsBenchmark extends benchmarks.Benchmark[Int] {
   val size = 8

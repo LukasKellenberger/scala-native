@@ -22,7 +22,16 @@
  */
 package queens
 
-import benchmarks.{BenchmarkRunningTime, MediumRunningTime}
+import benchmarks.{
+  Benchmark,
+  BenchmarkCompanion,
+  BenchmarkRunningTime,
+  MediumRunningTime
+}
+
+object QueensBenchmark extends BenchmarkCompanion[Boolean] {
+  override def apply(): Benchmark[Boolean] = new QueensBenchmark()
+}
 
 class QueensBenchmark extends benchmarks.Benchmark[Boolean] {
   var freeMaxs: Array[Boolean] = _

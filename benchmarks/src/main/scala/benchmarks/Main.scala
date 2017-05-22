@@ -4,9 +4,14 @@ import java.lang.System.exit
 
 object Main {
   def main(args: Array[String]): Unit = {
-    val benchmarks = Discover.discovered.sortBy(_.getClass.getSimpleName)
+    val benchmarkNames = Discover.discovered.map(_.name)
+    val opts           = Opts(args, benchmarkNames)
 
-    val opts = Opts(args)
+    val benchmarks = opts
+      .filter(Discover.discovered)
+      .map(_.apply())
+      .sortBy(_.getClass.getSimpleName)
+
     val results = benchmarks.map { bench =>
       val iterations = if (!opts.test) bench.iterations() else 1
       bench.loop(iterations)

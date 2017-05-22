@@ -22,7 +22,16 @@
  */
 package permute
 
-import benchmarks.{BenchmarkRunningTime, ShortRunningTime}
+import benchmarks.{
+  Benchmark,
+  BenchmarkCompanion,
+  BenchmarkRunningTime,
+  ShortRunningTime
+}
+
+object PermuteBenchmark extends BenchmarkCompanion[Int] {
+  override def apply(): Benchmark[Int] = new PermuteBenchmark()
+}
 
 class PermuteBenchmark extends benchmarks.Benchmark[Int] {
   var count: Int    = _

@@ -45,11 +45,20 @@
 
 package richards
 
-import benchmarks.{BenchmarkRunningTime, ShortRunningTime}
+import benchmarks.{
+  Benchmark,
+  BenchmarkCompanion,
+  BenchmarkRunningTime,
+  ShortRunningTime
+}
 
 /**
  * Richards simulates the task dispatcher of an operating system.
  */
+object RichardsBenchmark extends BenchmarkCompanion[(Int, Int)] {
+  override def apply(): Benchmark[(Int, Int)] = new RichardsBenchmark()
+}
+
 class RichardsBenchmark extends benchmarks.Benchmark[(Int, Int)] {
   import Richards._
 

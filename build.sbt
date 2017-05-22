@@ -432,14 +432,14 @@ lazy val benchmarks =
           .flatMap(IO.relativizeFile(dir, _))
           .map(file => packageNameFromPath(file.toPath))
           .filter(_ != "benchmarks.Benchmark")
-          .mkString("Seq(new ", ", new ", ")")
+          .mkString("Seq(", ", ", ")")
         val file = (sourceManaged in Compile).value / "benchmarks" / "Discover.scala"
         IO.write(
           file,
           s"""
           package benchmarks
           object Discover {
-            val discovered: Seq[benchmarks.Benchmark[_]] = $benchmarks
+            val discovered: Seq[benchmarks.BenchmarkCompanion[_]] = $benchmarks
           }
         """
         )

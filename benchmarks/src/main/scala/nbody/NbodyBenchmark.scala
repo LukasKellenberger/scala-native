@@ -5,7 +5,16 @@
  */
 package nbody
 
-import benchmarks.{BenchmarkRunningTime, VeryLongRunningTime}
+import benchmarks.{
+  Benchmark,
+  BenchmarkCompanion,
+  BenchmarkRunningTime,
+  VeryLongRunningTime
+}
+
+object NbodyBenchmark extends BenchmarkCompanion[Double] {
+  override def apply(): Benchmark[Double] = new NbodyBenchmark()
+}
 
 class NbodyBenchmark extends benchmarks.Benchmark[Double] {
 

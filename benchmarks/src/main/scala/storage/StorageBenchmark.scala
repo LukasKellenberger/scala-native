@@ -24,8 +24,17 @@ package storage
 
 import java.util.Arrays
 
-import benchmarks.{BenchmarkRunningTime, MediumRunningTime}
+import benchmarks.{
+  Benchmark,
+  BenchmarkCompanion,
+  BenchmarkRunningTime,
+  MediumRunningTime
+}
 import som.Random
+
+object StorageBenchmark extends BenchmarkCompanion[Int] {
+  override def apply(): Benchmark[Int] = new StorageBenchmark()
+}
 
 class StorageBenchmark extends benchmarks.Benchmark[Int] {
   private var count: Int = _

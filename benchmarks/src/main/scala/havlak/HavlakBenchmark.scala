@@ -21,9 +21,18 @@
  */
 package havlak
 
-import benchmarks.{BenchmarkRunningTime, VeryLongRunningTime}
+import benchmarks.{
+  Benchmark,
+  BenchmarkCompanion,
+  BenchmarkRunningTime,
+  VeryLongRunningTime
+}
 
-class HavlakBenchmark extends benchmarks.Benchmark[Array[Int]] {
+object HavlakBenchmark extends BenchmarkCompanion[Array[Int]] {
+  override def apply(): Benchmark[Array[Int]] = new HavlakBenchmark()
+}
+
+class HavlakBenchmark extends Benchmark[Array[Int]] {
 
   override val runningTime: BenchmarkRunningTime = VeryLongRunningTime
 

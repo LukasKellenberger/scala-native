@@ -22,7 +22,16 @@
  */
 package towers
 
-import benchmarks.{BenchmarkRunningTime, ShortRunningTime}
+import benchmarks.{
+  Benchmark,
+  BenchmarkCompanion,
+  BenchmarkRunningTime,
+  ShortRunningTime
+}
+
+object TowersBenchmark extends BenchmarkCompanion[Int] {
+  override def apply(): Benchmark[Int] = new TowersBenchmark()
+}
 
 class TowersBenchmark extends benchmarks.Benchmark[Int] {
   final class TowersDisk(val size: Int, var next: TowersDisk = null)

@@ -36,11 +36,20 @@
  */
 
 package sha512
-import benchmarks.{BenchmarkRunningTime, UnknownRunningTime}
+import benchmarks.{
+  Benchmark,
+  BenchmarkCompanion,
+  BenchmarkRunningTime,
+  UnknownRunningTime
+}
 
 /**
  * SHA-512 hashing.
  */
+object SHA512Benchmark extends BenchmarkCompanion[Boolean] {
+  override def apply(): Benchmark[Boolean] = new SHA512Benchmark()
+}
+
 class SHA512Benchmark extends benchmarks.Benchmark[Boolean] {
 
   override val runningTime: BenchmarkRunningTime = UnknownRunningTime

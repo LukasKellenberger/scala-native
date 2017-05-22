@@ -42,7 +42,16 @@
 // http://benchmarksgame.alioth.debian.org/u64q/program.php?test=mandelbrot&lang=yarv&id=3
 package mandelbrot
 
-import benchmarks.{BenchmarkRunningTime, VeryLongRunningTime}
+import benchmarks.{
+  Benchmark,
+  BenchmarkCompanion,
+  BenchmarkRunningTime,
+  VeryLongRunningTime
+}
+
+object MandelbrotBenchmark extends BenchmarkCompanion[(Int, Int)] {
+  override def apply(): Benchmark[(Int, Int)] = new MandelbrotBenchmark()
+}
 
 class MandelbrotBenchmark extends benchmarks.Benchmark[(Int, Int)] {
 
