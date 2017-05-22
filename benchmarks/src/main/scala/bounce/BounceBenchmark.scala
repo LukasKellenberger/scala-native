@@ -23,7 +23,17 @@
 package bounce
 
 import benchmarks.{BenchmarkRunningTime, ShortRunningTime}
+import benchmarks.{
+  Benchmark,
+  BenchmarkCompanion,
+  BenchmarkRunningTime,
+  ShortRunningTime
+}
 import som.Random
+
+object BounceBenchmark extends BenchmarkCompanion[Int] {
+  override def apply(): Benchmark[Int] = new BounceBenchmark()
+}
 
 class BounceBenchmark extends benchmarks.Benchmark[Int] {
   private class Ball(random: Random) {

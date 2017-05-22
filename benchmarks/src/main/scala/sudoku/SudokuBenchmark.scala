@@ -10,9 +10,22 @@
 
 package sudoku
 
-import benchmarks.{BenchmarkRunningTime, LongRunningTime}
+import benchmarks.{
+  Benchmark,
+  BenchmarkCompanion,
+  BenchmarkRunningTime,
+  LongRunningTime
+}
 
+import scala.collection.mutable
 import scala.language.implicitConversions
+
+object SudokuBenchmark
+    extends BenchmarkCompanion[
+      Option[scala.collection.mutable.Map[String, String]]] {
+  override def apply(): Benchmark[Option[mutable.Map[String, String]]] =
+    new SudokuBenchmark()
+}
 
 class SudokuBenchmark
     extends benchmarks.Benchmark[Option[

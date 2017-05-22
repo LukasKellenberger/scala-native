@@ -42,7 +42,14 @@ package gcbench
 
 import benchmarks.{BenchmarkRunningTime, VeryLongRunningTime}
 
-class GCBenchBenchmark extends benchmarks.Benchmark[(Node, Array[Double])] {
+import benchmarks.{
+  Benchmark,
+  BenchmarkCompanion,
+  BenchmarkRunningTime,
+  VeryLongRunningTime
+}
+
+class GCBenchBenchmark extends Benchmark[(Node, Array[Double])] {
   override val runningTime: BenchmarkRunningTime = VeryLongRunningTime
 
   override def run(): (Node, Array[Double]) = GCBenchBenchmark.start()
@@ -54,7 +61,11 @@ class GCBenchBenchmark extends benchmarks.Benchmark[(Node, Array[Double])] {
 
 class Node(var left: Node, var right: Node, var i: Int, var j: Int)
 
-object GCBenchBenchmark {
+object GCBenchBenchmark extends BenchmarkCompanion[(Node, Array[Double])] {
+
+  override def apply(): Benchmark[(Node, Array[Double])] =
+    new GCBenchBenchmark()
+
   val kStretchTreeDepth: Int   = 18 // about 16Mb
   val kLongLivedTreeDepth: Int = 16 // about 4Mb
   val kArraySize: Int          = 500000 // about 4Mb

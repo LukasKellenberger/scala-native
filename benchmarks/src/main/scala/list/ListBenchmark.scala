@@ -22,7 +22,16 @@
  */
 package list
 
-import benchmarks.{BenchmarkRunningTime, ShortRunningTime}
+import benchmarks.{
+  Benchmark,
+  BenchmarkCompanion,
+  BenchmarkRunningTime,
+  ShortRunningTime
+}
+
+object ListBenchmark extends BenchmarkCompanion[Int] {
+  override def apply(): Benchmark[Int] = new ListBenchmark()
+}
 
 class ListBenchmark extends benchmarks.Benchmark[Int] {
   final class Element(var value: Any, var next: Element = null) {

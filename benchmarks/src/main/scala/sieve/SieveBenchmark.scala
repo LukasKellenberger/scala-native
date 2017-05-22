@@ -22,7 +22,16 @@
  */
 package sieve
 
-import benchmarks.{BenchmarkRunningTime, ShortRunningTime}
+import benchmarks.{
+  Benchmark,
+  BenchmarkCompanion,
+  BenchmarkRunningTime,
+  ShortRunningTime
+}
+
+object SieveBenchmark extends BenchmarkCompanion[Int] {
+  override def apply(): Benchmark[Int] = new SieveBenchmark()
+}
 
 class SieveBenchmark extends benchmarks.Benchmark[Int] {
   override val runningTime: BenchmarkRunningTime = ShortRunningTime

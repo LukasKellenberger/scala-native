@@ -22,6 +22,16 @@ case object MediumRunningTime   extends BenchmarkRunningTime(10000)
 case object ShortRunningTime    extends BenchmarkRunningTime(30000)
 case object UnknownRunningTime  extends BenchmarkRunningTime(1)
 
+trait BenchmarkCompanion[T] {
+  def apply(): Benchmark[T]
+
+  val name: String = {
+    val companionName = this.getClass.getName
+    // Remove `$` from companion object
+    companionName.substring(0, companionName.length - 1)
+  }
+}
+
 abstract class Benchmark[T]() {
   def run(): T
   def check(t: T): Boolean

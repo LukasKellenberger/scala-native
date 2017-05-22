@@ -16,7 +16,16 @@
 
 package tracer
 
-import benchmarks.{BenchmarkRunningTime, LongRunningTime}
+import benchmarks.{
+  Benchmark,
+  BenchmarkCompanion,
+  BenchmarkRunningTime,
+  LongRunningTime
+}
+
+object TracerBenchmark extends BenchmarkCompanion[Unit] {
+  override def apply(): Benchmark[Unit] = new TracerBenchmark()
+}
 
 class TracerBenchmark extends benchmarks.Benchmark[Unit] {
 

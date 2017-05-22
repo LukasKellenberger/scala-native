@@ -22,7 +22,17 @@
 package cd
 
 import benchmarks.{BenchmarkRunningTime, VeryLongRunningTime}
+import benchmarks.{
+  Benchmark,
+  BenchmarkCompanion,
+  BenchmarkRunningTime,
+  VeryLongRunningTime
+}
 import som._
+
+object CDBenchmark extends BenchmarkCompanion[(Int, Int)] {
+  override def apply(): Benchmark[(Int, Int)] = new CDBenchmark()
+}
 
 class CDBenchmark extends benchmarks.Benchmark[(Int, Int)] {
 
