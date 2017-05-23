@@ -1,6 +1,0 @@
-package benchmarks
-
-
-class Reporter {
-
-}

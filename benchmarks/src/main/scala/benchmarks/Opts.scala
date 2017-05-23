@@ -1,6 +1,6 @@
 package benchmarks
 
-final class Opts(val format: Format = TextFormat,
+final class Opts(val format: Format = FileFormat,
                  val test: Boolean = false,
                  val names: List[String] = List()) {
   private def copy(format: Format = this.format,

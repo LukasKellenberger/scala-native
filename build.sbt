@@ -3,6 +3,7 @@ import scala.util.Try
 import scalanative.tools.OptimizerReporter
 import scalanative.sbtplugin.ScalaNativePluginInternal._
 import scalanative.io.packageNameFromPath
+import scalanative.sbtplugin.Benchmarks
 
 val toolScalaVersion      = "2.10.6"
 val libScalaVersion       = "2.11.11"
@@ -45,6 +46,9 @@ addCommandAlias(
 )
 
 lazy val publishSnapshot =
+  taskKey[Unit]("Publish snapshot to sonatype on every commit to master.")
+
+lazy val benchmarkTask =
   taskKey[Unit]("Publish snapshot to sonatype on every commit to master.")
 
 lazy val setUpTestingCompiler = Def.task {
@@ -419,13 +423,37 @@ lazy val sandbox =
     )
     .enablePlugins(ScalaNativePlugin)
 
+val impl = Def.task {
+  Benchmarks.showResults()
+}
+
+lazy val myawesomecommand: Command = Command.command("myawesomecommand") {
+  state =>
+    val extracted = Project.extract(state)
+    val dir       = extracted.get(scalaSource in Compile in benchmarks)
+    val benchs = (dir ** "*Benchmark.scala").get
+      .flatMap(IO.relativizeFile(dir, _))
+      .map(file => packageNameFromPath(file.toPath))
+      .filter(_ != "benchmarks.Benchmark")
+
+    val iterations = 3
+
+    "set logLevel in Global := Level.Error" :: "set showSuccess := false" :: (0 to iterations)
+      .foldLeft("benchmarkTask" :: state) {
+        case (st, _) =>
+          benchs.foldLeft(st) {
+            case (s, b) => s"benchmarks/run --test --name $b" :: s
+          }
+      }
+}
+
 lazy val benchmarks =
   project
     .in(file("benchmarks"))
     .settings(projectSettings)
     .settings(noPublishSettings)
     .settings(
-      nativeMode := "release",
+      nativeMode in Compile := "release",
       sourceGenerators in Compile += Def.task {
         val dir = (scalaSource in Compile).value
         val benchmarks = (dir ** "*Benchmark.scala").get
@@ -444,7 +472,10 @@ lazy val benchmarks =
         """
         )
         Seq(file)
-      }.taskValue
+      }.taskValue,
+      benchmarkTask := {
+        impl.value
+      }
     )
     .enablePlugins(ScalaNativePlugin)
 
@@ -470,3 +501,5 @@ lazy val testingCompiler =
       )
     )
     .dependsOn(testingCompilerInterface, nativelib)
+
+commands += myawesomecommand

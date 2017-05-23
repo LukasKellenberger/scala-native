@@ -1,5 +1,7 @@
 package benchmarks
 
+import java.io._
+
 import scala.compat.Platform.EOL
 
 /** Describes hwo to display the benchmarks results */
@@ -69,6 +71,39 @@ object CSVFormat extends Format {
     rows.map(_.elements.mkString(",")).mkString(EOL)
 
   }
+}
+
+object FileFormat extends Format {
+  val SUCCEEDED = 0
+  val FAILED    = 1
+  val DISABLED  = 2
+
+  override def show(results: Seq[BenchmarkResult]): String = {
+    def resultToEntry(result: BenchmarkResult): String = result match {
+      case BenchmarkCompleted(_, iter, timesNs, _) =>
+        (SUCCEEDED :: iter :: timesNs.mkString(",") :: Nil).mkString(":")
+      case _: BenchmarkFailed =>
+        (FAILED :: 0 :: Nil).mkString(":")
+      case _: BenchmarkDisabled =>
+        (DISABLED :: 0 :: Nil).mkString(":")
+    }
+
+    def showWriteResult(result: BenchmarkResult) = {
+      val dir = new File("benchmarks/target/results")
+      dir.mkdirs()
+      val file = dir.toPath.resolve(result.name.replace(".", "-")).toFile
+
+      if (!file.exists()) file.createNewFile()
+
+      val printWriter = new PrintWriter(new FileOutputStream(file, true))
+      val entry       = resultToEntry(result)
+      printWriter.println(entry)
+      printWriter.close()
+    }
+    results.foreach(showWriteResult)
+    ""
+  }
+
 }
 
 /** Trait for objects that can be formatted into a table */
