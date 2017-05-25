@@ -6,63 +6,69 @@ import java.io._
 import scala.compat.Platform.EOL
 import scala.io.Source
 
-
 abstract class Row(val name: String)
 
-case class SuccessfulRow(override val name: String, iter: Int, timesNs: Seq[Long]) extends Row(name)
+case class SuccessfulRow(override val name: String,
+                         iter: Int,
+                         timesNs: Seq[Long])
+    extends Row(name)
 case class FailedRow(override val name: String) extends Row(name)
 
 object Benchmarks {
-  def showResults(): Unit  = {
+  def showResults(): Unit = {
     val dir = new File("benchmarks/target/results/");
-    val names = dir.listFiles().map(_.toPath.getFileName.toString.replace("-", "."))
-    val res = names.map {
-      name =>
-        val dir = new File("benchmarks/target/results")
-        dir.mkdirs()
-        val file = dir.toPath.resolve(name.replace(".", "-")).toFile
+    val names =
+      dir.listFiles().map(_.toPath.getFileName.toString.replace("-", "."))
+    val res = names.map { name =>
+      val dir = new File("benchmarks/target/results")
+      dir.mkdirs()
+      val file = dir.toPath.resolve(name.replace(".", "-")).toFile
 
-        val rows = for (line <- Source.fromFile(file).getLines()) yield {
-          line.split(":").toList match {
-            case "0" :: iter :: timesNs :: Nil =>
-              SuccessfulRow(name, iter.toInt, timesNs.split(",").map(_.toLong))
-            case "1" ::  Nil =>
-              FailedRow(name)
-          }
+      val rows = for (line <- Source.fromFile(file).getLines()) yield {
+        line.split(":").toList match {
+          case "0" :: iter :: timesNs :: Nil =>
+            SuccessfulRow(name, iter.toInt, timesNs.split(",").map(_.toLong))
+          case _ =>
+            FailedRow(name)
         }
-
+      }
+      if (rows.exists(_.isInstanceOf[FailedRow])) {
+        FailedBenchmark(name)
+      } else {
         val (iters, times) = rows.foldLeft((0, List[Long]())) {
-          case ((totalIters, totalTimes), SuccessfulRow(_, iters, times)) => (totalIters + iters, times.toList ::: totalTimes)
+          case ((totalIters, totalTimes), SuccessfulRow(_, iters, times)) =>
+            (totalIters + iters, times.toList ::: totalTimes)
           case (acc, _) => acc
         }
 
-      CompletedBenchmark(name, iters, times)
+        CompletedBenchmark(name, iters, times)
+      }
     }
 
     println(TextFormat.show(res))
 
   }
 
-
 }
+
 /** A verbose human-friendly format. */
 object TextFormat {
 
-  def show(rows: Seq[CompletedBenchmark]): String = {
+  def show(rows: Seq[Formattable]): String = {
 
     val title = new Formattable {
       override def elements =
         Seq("Result",
-          "Name",
-          "iter",
-          "min [ms]",
-          "max [ms]",
-          "avg [ms]",
-          "stddev [ms]",
-          "median [ms]",
-          "p05 [ms]",
-          "p95 [ms]",
-          "avg [ms]")
+            "Name",
+            "iter",
+            "min [ms]",
+            "max [ms]",
+            "avg [ms]",
+            "stddev [ms]",
+            "median [ms]",
+            "p05 [ms]",
+            "p95 [ms]",
+            "avg [ms]")
     }
 
     Formattable.format(title +: rows)
@@ -72,29 +78,29 @@ object TextFormat {
 
 /** A row in the table for a benchmark that completed. */
 case class CompletedBenchmark(name: String,
-                        success: String,
-                        iterations: Int,
-                        min: String,
-                        max: String,
-                        avg: String,
-                        stddev: String,
-                        median: String,
-                        p95: String,
-                        p05: String,
-                        avgBetweenP05AndP95: String)
-  extends Formattable {
+                              success: String,
+                              iterations: Int,
+                              min: String,
+                              max: String,
+                              avg: String,
+                              stddev: String,
+                              median: String,
+                              p95: String,
+                              p05: String,
+                              avgBetweenP05AndP95: String)
+    extends Formattable {
   override def elements: Seq[String] =
     Seq(success,
-      name,
-      iterations.toString,
-      min,
-      max,
-      avg,
-      stddev,
-      median,
-      p95,
-      p05,
-      avgBetweenP05AndP95)
+        name,
+        iterations.toString,
+        min,
+        max,
+        avg,
+        stddev,
+        median,
+        p95,
+        p05,
+        avgBetweenP05AndP95)
 }
 
 object CompletedBenchmark {
@@ -144,6 +150,7 @@ case class FailedBenchmark(name: String) extends Formattable {
     Seq("[FAIL]", s"$name has failed")
 
 }
+
 /** Trait for objects that can be formatted into a table */
 trait Formattable {
   def elements: Seq[String]
