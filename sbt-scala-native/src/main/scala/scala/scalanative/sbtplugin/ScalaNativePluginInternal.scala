@@ -494,9 +494,9 @@ object ScalaNativePluginInternal {
   }
 
   private def garbageCollector(gc: String) = gc match {
-    case "none"  => GarbageCollector.None
-    case "boehm" => GarbageCollector.Boehm
-    case "immix" => GarbageCollector.Immix
+    case "none"         => GarbageCollector.None
+    case "boehm"        => GarbageCollector.Boehm
+    case "immix"        => GarbageCollector.Immix
     case "markandsweep" => GarbageCollector.MarkAndSweep
     case value =>
       throw new MessageOnlyException(

@@ -28,7 +28,7 @@ void scalanative_collect() {
     fflush(stdout);
 }
 
-void* allocate(size_t byteSize) {
+void* scalanative_alloc(void* info, size_t byteSize) {
     assert(heap != NULL);
 
     // Divide size by WORD_SIZE, round up and add 1 (for the header) to get the number of words
@@ -49,23 +49,21 @@ void* allocate(size_t byteSize) {
     assert(heap_isWordInHeap(heap, alloc));
 
     memset(alloc + 1, 0, (wordSize - 1) * WORD_SIZE);
-    return alloc + 1;
+    void** allocc = (void**)(alloc + 1);
+    *allocc = info;
+    return (void*)allocc;
 }
 
-void* scalanative_alloc(void* info, size_t size) {
-    void** alloc = (void**) allocate(size);
-    *alloc = info;
-
-    return (void*) alloc;
+void* scalanative_alloc_small(void* info, size_t size) {
+    return scalanative_alloc(info, size);
 }
 
-void* scalanative_alloc_raw(size_t size) {
-    return allocate(size);
+void* scalanative_alloc_large(void* info, size_t size) {
+    return scalanative_alloc(info, size);
 }
 
-void* scalanative_alloc_raw_atomic(size_t size) {
-    return allocate(size);
+void* scalanative_alloc_atomic(void* info, size_t size) {
+    return scalanative_alloc(info, size);
 }
-
 
 
