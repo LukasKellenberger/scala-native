@@ -6,12 +6,12 @@ import runtime.Intrinsics._
 package object runtime {
 
   /** Runtime Type Information. */
-  type Type = CStruct3[Int, String, Byte]
+  type Type = CStruct3[Int, Byte, String]
 
   implicit class TypeOps(val self: Ptr[Type]) extends AnyVal {
     def id: Int      = !(self._1)
-    def name: String = !(self._2)
-    def kind: Long   = !(self._3)
+    def kind: Long   = !(self._2)
+    def name: String = !(self._3)
   }
 
   /** Class runtime type information. */

@@ -28,8 +28,8 @@ typedef struct {
 typedef struct {
     struct {
         int32_t id;
-        word_t *name;
         int8_t kind;
+        word_t *name;
     } rt;
     int64_t size;
     struct {

@@ -32,7 +32,7 @@ class RuntimeTypeInformation(node: Scope) {
       case _: Struct => 2
       case _         => unreachable
     })
-    val base = Val.Struct(Rt.Type.name, Seq(typeId, typeStr, typeKind))
+    val base = Val.Struct(Rt.Type.name, Seq(typeId, typeKind, typeStr))
     node match {
       case cls: Class =>
         Val.Struct(
