@@ -5,6 +5,7 @@ package pass
 import scala.collection.mutable
 import analysis.ClassHierarchy._
 import nir._
+import analysis.DynamicHashMap
 
 /** Translates high-level structural-type method calls into
  *  low-level dispatch based on a dynmethodtable
@@ -49,19 +50,23 @@ class DynmethodLowering(implicit fresh: Fresh, top: Top) extends Pass {
 
         // Load the type information pointer
         val typeptr = let(Op.Load(Type.Ptr, obj))
+        // Get pointer to dynmap
+        val dynmapptr = let(Op.Elem(rtiType, typeptr, Seq(Val.Int(0), Val.Int(3))))
+        // Load pointer to dynmap
+        val dynmap = let(Op.Load(Type.Ptr, dynmapptr))
         // Load the pointer of the table size
         val methodCountPtr = let(
-          Op.Elem(rtiType, typeptr, Seq(Val.Int(0), Val.Int(3), Val.Int(0))))
+          Op.Elem(DynamicHashMap.dynMapType, dynmap, Seq(Val.Int(0), Val.Int(0))))
         // Load the table size
         val methodCount = let(Op.Load(Type.Int, methodCountPtr))
         throwIfCond(Op.Comp(Comp.Ieq, Type.Int, methodCount, Val.Int(0)))
         // If the size is greater than 0, call the dyndispatch runtime function
         val dyndispatchTablePtr = let(
-          Op.Elem(rtiType, typeptr, Seq(Val.Int(0), Val.Int(3), Val.Int(0))))
+          Op.Elem(rtiType, typeptr, Seq(Val.Int(0), Val.Int(3))))
         val methptrptr = let(
           Op.Call(dyndispatchSig,
                   dyndispatch,
-                  Seq(dyndispatchTablePtr, Val.Int(methodIndex)),
+                  Seq(dynmap, Val.Int(methodIndex)),
                   Next.None))
         throwIfNull(methptrptr)
         let(n, Op.Load(Type.Ptr, methptrptr))
