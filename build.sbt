@@ -442,29 +442,7 @@ lazy val benchmarks =
     .settings(projectSettings)
     .settings(noPublishSettings)
     .settings(
-      nativeMode := "release",
-      nativeGC := "markandsweep",
-      nativeOptimizerReporter := OptimizerReporter.toDirectory(
-        crossTarget.value),
-      sourceGenerators in Compile += Def.task {
-        val dir = (scalaSource in Compile).value
-        val benchmarks = (dir ** "*Benchmark.scala").get
-          .flatMap(IO.relativizeFile(dir, _))
-          .map(file => packageNameFromPath(file.toPath))
-          .filter(_ != "benchmarks.Benchmark")
-          .mkString("Seq(new ", ", new ", ")")
-        val file = (sourceManaged in Compile).value / "benchmarks" / "Discover.scala"
-        IO.write(
-          file,
-          s"""
-          package benchmarks
-          object Discover {
-            val discovered: Seq[benchmarks.Benchmark[_]] = $benchmarks
-          }
-        """
-        )
-        Seq(file)
-      }
+      nativeMode := "release"
     )
     .enablePlugins(ScalaNativePlugin)
 
@@ -529,4 +507,23 @@ lazy val testInterfaceSbtDefs =
       name := "test-interface-sbt-defs",
       libraryDependencies -= "org.scala-native" %%% "test-interface" % version.value % Test
     )
+    .enablePlugins(ScalaNativePlugin)
+
+lazy val benchmarkSuiteSettings =
+  projectSettings ++ noPublishSettings ++ {
+    nativeMode := "release"
+  }
+
+lazy val benchmarkdummy =
+  project
+    .in(file("benchmark-suite/dummy"))
+    .settings(benchmarkSuiteSettings)
+    .dependsOn(benchmarks)
+    .enablePlugins(ScalaNativePlugin)
+
+lazy val benchmarkgcbench =
+  project
+    .in(file("benchmark-suite/gcbench"))
+    .settings(benchmarkSuiteSettings)
+    .dependsOn(benchmarks)
     .enablePlugins(ScalaNativePlugin)

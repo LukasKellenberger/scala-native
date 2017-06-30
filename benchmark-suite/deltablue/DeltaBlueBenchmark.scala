@@ -48,6 +48,13 @@ import benchmarks.{BenchmarkRunningTime, MediumRunningTime}
 
 import scala.collection.mutable.{ArrayBuffer, ListBuffer, Stack}
 
+
+object DeltaBlueBenchmark {
+  def main(args: Array[String]): Unit = {
+    Benchmark.run(new DeltaBlueBenchmark(), args)
+  }
+}
+
 class DeltaBlueBenchmark extends benchmarks.Benchmark[Unit] {
 
   override val runningTime: BenchmarkRunningTime = MediumRunningTime

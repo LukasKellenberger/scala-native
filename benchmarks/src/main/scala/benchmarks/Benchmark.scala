@@ -1,27 +1,9 @@
 package benchmarks
 
-sealed abstract class BenchmarkResult(val name: String, val success: Boolean)
+import java.io._
 
-case class BenchmarkCompleted(override val name: String,
-                              iterations: Int,
-                              timesNs: Seq[Long],
-                              override val success: Boolean)
-    extends BenchmarkResult(name, success)
-
-case class BenchmarkFailed(override val name: String, cause: Throwable)
-    extends BenchmarkResult(name, false)
-
-case class BenchmarkDisabled(override val name: String)
-    extends BenchmarkResult(name, true)
-
-sealed class BenchmarkRunningTime(val iterations: Int)
-
-case object VeryLongRunningTime extends BenchmarkRunningTime(20)
-case object LongRunningTime     extends BenchmarkRunningTime(1000)
-case object MediumRunningTime   extends BenchmarkRunningTime(10000)
-case object ShortRunningTime    extends BenchmarkRunningTime(30000)
-case object UnknownRunningTime  extends BenchmarkRunningTime(1)
-
+import scala.io.Source
+import scala.scalanative.native.name
 import scalanative.native._
 @extern
 object cycleclock {
@@ -29,13 +11,46 @@ object cycleclock {
   def cycleclock(): Long = extern
 }
 
+object Benchmark {
+  private val resultDir = new File("benchmark-suite/results")
+
+  def run[T](benchmark: Benchmark[T], args: Array[String]): Unit = {
+    val outputFileName = args(0)
+    val iterations     = args(1).toInt
+
+    val result = benchmark.loop(iterations)
+    writeResult(result, outputFileName)
+
+  }
+
+  private def writeResult(result: BenchmarkResult, output: String): Unit = {
+    if (!resultDir.exists())
+      resultDir.mkdirs()
+
+    val outputFile = resultDir.toPath.resolve(output).toFile
+    if (!outputFile.exists())
+      outputFile.createNewFile()
+
+    val pw = new PrintWriter(new FileOutputStream(outputFile, true))
+    pw.println(BenchmarkResult.serialize(result))
+    pw.close()
+  }
+
+  def readResult(input: String): MultirunResult = {
+    val resultFile = resultDir.toPath.resolve(input).toFile
+    if (!resultFile.exists())
+      throw new Exception("Result file does not exit.")
+
+    val lines = Source.fromFile(resultFile).getLines()
+
+    MultirunResult(lines.map(BenchmarkResult.deserialize).toSeq)
+
+  }
+}
+
 abstract class Benchmark[T]() {
   def run(): T
   def check(t: T): Boolean
-
-  val runningTime: BenchmarkRunningTime
-
-  def iterations(): Int = runningTime.iterations
 
   private class BenchmarkDisabledException extends Exception
   final def disableBenchmark(): Nothing = throw new BenchmarkDisabledException
@@ -55,12 +70,15 @@ abstract class Benchmark[T]() {
         times(i) = end - start
         i = i + 1
       }
-
-      BenchmarkCompleted(this.getClass.getName, iterations, times, success)
+      if (success) {
+        BenchmarkCompleted(this.getClass.getName, times)
+      } else {
+        BenchmarkFailed(this.getClass.getName)
+      }
     } catch {
       case _: BenchmarkDisabledException =>
         BenchmarkDisabled(this.getClass.getName)
       case t: Throwable =>
-        BenchmarkFailed(this.getClass.getName, t)
+        BenchmarkFailed(this.getClass.getName)
     }
 }
