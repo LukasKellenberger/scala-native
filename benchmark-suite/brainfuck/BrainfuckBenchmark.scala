@@ -27,10 +27,15 @@
 package brainfuck
 
 import benchmarks.{BenchmarkRunningTime, LongRunningTime}
+import gcbench.GCBenchBenchmark
+
+object BrainfuckBenchmark {
+  def main(args: Array[String]): Unit = {
+    Benchmark.run(new BrainfuckBenchmark(), args)
+  }
+}
 
 class BrainfuckBenchmark extends benchmarks.Benchmark[String] {
-  override val runningTime: BenchmarkRunningTime = LongRunningTime
-
   override def run(): String = {
     new Program(Program.asText).run
   }

@@ -6,7 +6,7 @@ import scala.compat.Platform.EOL
 trait Format {
 
   /** Shows the given benchmark results. */
-  def show(results: Seq[BenchmarkResult]): String
+  def show(results: Seq[MultirunResult]): String
 
 }
 
@@ -22,7 +22,7 @@ object Format {
 /** A verbose human-friendly format. */
 object TextFormat extends Format {
 
-  override def show(results: Seq[BenchmarkResult]): String = {
+  override def show(results: Seq[MultirunResult]): String = {
 
     val title = new Formattable {
       override def elements =
@@ -40,15 +40,15 @@ object TextFormat extends Format {
     }
 
     val rows = results.sortBy {
-      case _: BenchmarkCompleted => 0
-      case _: BenchmarkDisabled  => 1
-      case _: BenchmarkFailed    => 2
+      case _: MultirunSuccess  => 0
+      case _: MultirunDisabled => 1
+      case _: MultirunFail     => 2
     } map {
-      case completed: BenchmarkCompleted =>
+      case completed: MultirunSuccess =>
         CompletedRow(completed)
-      case failed: BenchmarkFailed =>
-        FailedRow(failed.name, failed.cause)
-      case disabled: BenchmarkDisabled =>
+      case failed: MultirunFail =>
+        FailedRow(failed.name)
+      case disabled: MultirunDisabled =>
         DisabledRow(disabled.name)
     }
 
@@ -59,10 +59,10 @@ object TextFormat extends Format {
 
 /** Displays the benchmark results as CSV. */
 object CSVFormat extends Format {
-  override def show(results: Seq[BenchmarkResult]): String = {
+  override def show(results: Seq[MultirunResult]): String = {
     val rows =
       results.collect {
-        case completed: BenchmarkCompleted =>
+        case completed: MultirunSuccess =>
           CompletedRow(completed)
       }
 
@@ -131,24 +131,24 @@ case class CompletedRow(name: String,
 }
 
 object CompletedRow {
-  def apply(completed: BenchmarkCompleted): CompletedRow = {
+  def apply(completed: MultirunSuccess): CompletedRow = {
     import StatUtils._
     import completed._
 
-    val successStr = if (success) "[OK]" else "[FAIL]"
-    val timesMs    = timesNs map (_ / 1e6)
-    val sortedMs   = timesMs.sorted
-    val minMs      = timesMs.min
-    val maxMs      = timesMs.max
-    val avgMs      = average(timesMs)
+    val successStr = "[OK]"
+    val timesMlns  = times map (_ / 1e6)
+    val sortedMs   = timesMlns.sorted
+    val minMs      = timesMlns.min
+    val maxMs      = timesMlns.max
+    val avgMs      = average(timesMlns)
     val medianMs   = percentile(50, sortedMs)
     val p95Ms      = percentile(95, sortedMs)
     val p05Ms      = percentile(5, sortedMs)
-    val iterations = timesNs.length
+    val iterations = times.length
     val stddevMs =
-      Math.sqrt(timesMs.map(t => Math.pow(t - avgMs, 2) / iterations).sum)
+      Math.sqrt(timesMlns.map(t => Math.pow(t - avgMs, 2) / iterations).sum)
     val avgBetweenP05AndP95 =
-      average(timesMs filter (t => t >= p05Ms && t <= p95Ms))
+      average(timesMlns filter (t => t >= p05Ms && t <= p95Ms))
 
     CompletedRow(
       name,
@@ -173,19 +173,16 @@ case class DisabledRow(name: String) extends Formattable {
 }
 
 /** A row in the table for a benchmark that failed during execution. */
-case class FailedRow(name: String, cause: Throwable) extends Formattable {
+case class FailedRow(name: String) extends Formattable {
   override def elements: Seq[String] =
-    Seq("[FAIL]",
-        s"""$name has failed:
-           |${cause.getMessage}
-           |${cause.getStackTrace.mkString(EOL)}""".stripMargin)
+    Seq("[FAIL]", s"""$name has failed""".stripMargin)
 }
 
 /** Collection of functions useful to display the benchmark results. */
 private object StatUtils {
 
   /** Truncates `n` at `decimals` decimals. */
-  def format(n: Double, decimals: Int = 3): String = {
+  def format(n: Double, decimals: Int = 6): String = {
     val s = n.toString
     s.substring(0, s.indexOf('.') + decimals + 1)
   }

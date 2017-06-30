@@ -24,6 +24,12 @@ package cd
 import benchmarks.{BenchmarkRunningTime, VeryLongRunningTime}
 import som._
 
+object CDBenchmark {
+  def main(args: Array[String]): Unit = {
+    Benchmark.run(new CDBenchmark(), args)
+  }
+}
+
 class CDBenchmark extends benchmarks.Benchmark[(Int, Int)] {
 
   private val numAircrafts = Array(1000, 500, 250, 100, 10)

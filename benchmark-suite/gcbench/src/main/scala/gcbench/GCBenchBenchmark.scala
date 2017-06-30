@@ -40,10 +40,15 @@
 
 package gcbench
 
-import benchmarks.{BenchmarkRunningTime, VeryLongRunningTime}
+import benchmarks.Benchmark
+
+object GCBench {
+  def main(args: Array[String]): Unit = {
+    Benchmark.run(new GCBenchBenchmark(), args)
+  }
+}
 
 class GCBenchBenchmark extends benchmarks.Benchmark[(Node, Array[Double])] {
-  override val runningTime: BenchmarkRunningTime = VeryLongRunningTime
 
   override def run(): (Node, Array[Double]) = GCBenchBenchmark.start()
 
