@@ -21,7 +21,7 @@
  */
 package cd
 
-import benchmarks.{BenchmarkRunningTime, VeryLongRunningTime}
+import benchmarks.Benchmark
 import som._
 
 object CDBenchmark {
@@ -35,7 +35,6 @@ class CDBenchmark extends benchmarks.Benchmark[(Int, Int)] {
   private val numAircrafts = Array(1000, 500, 250, 100, 10)
   private var i            = 0
 
-  override val runningTime: BenchmarkRunningTime = VeryLongRunningTime
 
   override def run(): (Int, Int) = {
     val aircrafts = numAircrafts(i % numAircrafts.length)

@@ -2,8 +2,8 @@ package benchmarks
 
 object BenchmarkResult {
   private val CompletedID = 3
-  private val FailedID = 1
-  private val DisabledID = 2
+  private val FailedID    = 1
+  private val DisabledID  = 2
 
   def serialize(result: BenchmarkResult): String = result match {
     case BenchmarkCompleted(name, times) =>
@@ -30,14 +30,11 @@ object BenchmarkResult {
 
 sealed abstract class BenchmarkResult(val name: String)
 
-case class BenchmarkCompleted(override val name: String,
-                              timesNs: Seq[Long])
-  extends BenchmarkResult(name)
+case class BenchmarkCompleted(override val name: String, timesNs: Seq[Long])
+    extends BenchmarkResult(name)
 
 case class BenchmarkFailed(override val name: String)
-  extends BenchmarkResult(name)
+    extends BenchmarkResult(name)
 
 case class BenchmarkDisabled(override val name: String)
-  extends BenchmarkResult(name)
-
-
+    extends BenchmarkResult(name)
