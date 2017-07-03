@@ -506,9 +506,30 @@ lazy val benchmarkSuiteSettings =
     nativeMode := "release"
   }
 
-lazy val benchmarkdummy =
+lazy val benchmarksom =
   project
-    .in(file("benchmark-suite/dummy"))
+    .in(file("benchmark-suite/som"))
+    .settings(benchmarkSuiteSettings)
+    .enablePlugins(ScalaNativePlugin)
+
+lazy val benchmarkbrainfuck =
+  project
+    .in(file("benchmark-suite/brainfuck"))
+    .settings(benchmarkSuiteSettings)
+    .dependsOn(benchmarks)
+    .enablePlugins(ScalaNativePlugin)
+
+lazy val benchmarkcd =
+  project
+    .in(file("benchmark-suite/cd"))
+    .settings(benchmarkSuiteSettings)
+    .dependsOn(benchmarks)
+    .dependsOn(benchmarksom)
+    .enablePlugins(ScalaNativePlugin)
+
+lazy val benchmarkdeltablue =
+  project
+    .in(file("benchmark-suite/deltablue"))
     .settings(benchmarkSuiteSettings)
     .dependsOn(benchmarks)
     .enablePlugins(ScalaNativePlugin)

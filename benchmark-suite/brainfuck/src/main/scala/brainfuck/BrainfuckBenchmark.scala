@@ -26,8 +26,7 @@
 
 package brainfuck
 
-import benchmarks.{BenchmarkRunningTime, LongRunningTime}
-import gcbench.GCBenchBenchmark
+import benchmarks.Benchmark
 
 object BrainfuckBenchmark {
   def main(args: Array[String]): Unit = {
