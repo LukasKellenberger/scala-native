@@ -44,6 +44,8 @@ package deltablue
  * I've kept it this way to avoid deviating too much from the original
  * implementation.
  */
+import benchmarks.Benchmark
+
 import scala.collection.mutable.{ArrayBuffer, ListBuffer, Stack}
 
 object DeltaBlueBenchmark {
