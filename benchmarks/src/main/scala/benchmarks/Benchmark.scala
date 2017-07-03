@@ -1,6 +1,7 @@
 package benchmarks
 
 import java.io._
+import java.nio.file.Path
 
 import scala.io.Source
 import scala.scalanative.native.name
@@ -36,15 +37,23 @@ object Benchmark {
     pw.close()
   }
 
-  def readResult(input: String): MultirunResult = {
+  def readResult(input: Path): Seq[MultirunResult] = {
     val resultFile = resultDir.toPath.resolve(input).toFile
     if (!resultFile.exists())
       throw new Exception("Result file does not exit.")
 
-    val lines = Source.fromFile(resultFile).getLines()
+    if (resultFile.isDirectory) {
+      resultFile.listFiles().map(fileToResult)
+    } else {
+      Seq(fileToResult(resultFile))
+    }
+
+  }
+
+  private def fileToResult(file: File): MultirunResult = {
+    val lines = Source.fromFile(file).getLines()
 
     MultirunResult(lines.map(BenchmarkResult.deserialize).toSeq)
-
   }
 }
 

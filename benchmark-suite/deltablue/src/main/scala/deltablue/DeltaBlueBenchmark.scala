@@ -46,7 +46,6 @@ package deltablue
  */
 import scala.collection.mutable.{ArrayBuffer, ListBuffer, Stack}
 
-
 object DeltaBlueBenchmark {
   def main(args: Array[String]): Unit = {
     Benchmark.run(new DeltaBlueBenchmark(), args)
