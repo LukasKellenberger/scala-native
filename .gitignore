@@ -11,3 +11,4 @@ sbt-crossproject/
 
 CMakeLists.txt
 cmake-build-debug/
+benchmark-suite/results/
