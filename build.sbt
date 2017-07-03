@@ -509,6 +509,12 @@ lazy val testInterfaceSbtDefs =
     )
     .enablePlugins(ScalaNativePlugin)
 
+lazy val benchmarkSbtPlugin =
+  project
+    .in(file("benchmark-sbt-plugin"))
+    .settings(sbtPlugin := true)
+    .dependsOn(benchmarks)
+
 lazy val benchmarkSuiteSettings =
   projectSettings ++ noPublishSettings ++ {
     nativeMode := "release"
@@ -544,7 +550,7 @@ lazy val benchmarkdeltablue =
 
 lazy val benchmarkgcbench =
   project
-    .in(file("benchmark-suite/gcbench"))
+    .in(file(s"benchmark-suite/gcbench"))
     .settings(benchmarkSuiteSettings)
     .dependsOn(benchmarks)
     .enablePlugins(ScalaNativePlugin)

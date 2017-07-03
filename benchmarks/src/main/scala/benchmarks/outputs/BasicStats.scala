@@ -1,6 +1,20 @@
 package benchmarks
+package outputs
+
+import benchmarks._
 
 import scala.compat.Platform.EOL
+
+
+object BasicStats extends BenchmarkOutput {
+
+
+  override def generate(results: Seq[MultirunResult], args: List[String]): Unit = {
+    val format: Format = args.headOption.fold[Format](TextFormat)(Format(_))
+
+    println(format.show(results))
+  }
+}
 
 /** Describes hwo to display the benchmarks results */
 trait Format {

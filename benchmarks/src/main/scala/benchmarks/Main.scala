@@ -2,7 +2,8 @@ package benchmarks
 
 object Main {
   def main(args: Array[String]): Unit = {
+    val opts = Opts(args)
 
-    println(TextFormat.show(Seq(Benchmark.readResult(args(0)))))
+    opts.output.generate(Benchmark.readResult(opts.path), opts.outputArgs)
   }
 }

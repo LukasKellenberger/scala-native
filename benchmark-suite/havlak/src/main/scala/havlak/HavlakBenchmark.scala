@@ -23,9 +23,13 @@ package havlak
 
 import benchmarks.{BenchmarkRunningTime, VeryLongRunningTime}
 
-class HavlakBenchmark extends benchmarks.Benchmark[Array[Int]] {
+object HavlakBenchmark {
+  def main(args: Array[String]): Unit = {
+    new
+  }
+}
 
-  override val runningTime: BenchmarkRunningTime = VeryLongRunningTime
+class HavlakBenchmark extends benchmarks.Benchmark[Array[Int]] {
 
   override def run(): Array[Int] =
     new LoopTesterApp().main(15, 50, 10, 10, 5)
