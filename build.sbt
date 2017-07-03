@@ -501,16 +501,10 @@ lazy val testInterfaceSbtDefs =
     )
     .enablePlugins(ScalaNativePlugin)
 
-lazy val benchmarkSbtPlugin =
-  project
-    .in(file("benchmark-sbt-plugin"))
-    .settings(sbtPlugin := true)
-    .dependsOn(benchmarks)
-
 lazy val benchmarkSuiteSettings =
-  projectSettings ++ noPublishSettings ++ {
-    nativeMode := "release"
-  }
+  projectSettings ++ noPublishSettings ++ Seq(
+    nativeMode := "release",
+    nativeGC := "immix")
 
 lazy val benchmarksom =
   project
