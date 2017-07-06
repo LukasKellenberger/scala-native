@@ -20,20 +20,28 @@
  * SOFTWARE.
  ******************************************************************************/
 package json
-import benchmarks.{BenchmarkRunningTime, LongRunningTime}
+
+import benchmarks.Benchmark
 
 /**
  * This benchmark uses a variant of the JsonParser that operates only on
  * Strings, which is not very efficient. However, this is a more direct
  * comparison of what the SOM implementation does.
+ *
  * @author smarr
  */
+object JsonBenchmark {
+  def main(args: Array[String]): Unit = {
+    Benchmark.run(new JsonBenchmark(), args)
+  }
+}
+
 class JsonBenchmark extends benchmarks.Benchmark[JsonValue] {
 
-  override val runningTime: BenchmarkRunningTime = LongRunningTime
-
   override def run(): JsonValue = {
-    (new JsonPureStringParser(rapBenchmarkMinified)).parse()
+    val input = rapBenchmarkMinified
+
+    new JsonPureStringParser(input).parse()
   }
 
   override def check(result: JsonValue): Boolean = {

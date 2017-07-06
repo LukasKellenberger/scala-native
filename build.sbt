@@ -510,9 +510,8 @@ lazy val testInterfaceSbtDefs =
     .enablePlugins(ScalaNativePlugin)
 
 lazy val benchmarkSuiteSettings =
-  projectSettings ++ noPublishSettings ++ Seq(
-    nativeMode := "release",
-    nativeGC := "immix")
+  projectSettings ++ noPublishSettings ++ Seq(nativeMode := "release",
+                                              nativeGC := "immix")
 
 lazy val benchmarksom =
   project
@@ -527,24 +526,31 @@ lazy val benchmarkbrainfuck =
     .dependsOn(benchmarks)
     .enablePlugins(ScalaNativePlugin)
 
-lazy val benchmarkcd =
+lazy val benchmarkrandomtree =
   project
-    .in(file("benchmark-suite/cd"))
+    .in(file("benchmark-suite/randomtree"))
+    .settings(benchmarkSuiteSettings)
+    .dependsOn(benchmarks)
+    .enablePlugins(ScalaNativePlugin)
+
+lazy val benchmarkjson =
+  project
+    .in(file("benchmark-suite/json"))
     .settings(benchmarkSuiteSettings)
     .dependsOn(benchmarks)
     .dependsOn(benchmarksom)
     .enablePlugins(ScalaNativePlugin)
 
-lazy val benchmarkdeltablue =
+lazy val benchmarkgcbench =
   project
-    .in(file("benchmark-suite/deltablue"))
+    .in(file(s"benchmark-suite/gcbench"))
     .settings(benchmarkSuiteSettings)
     .dependsOn(benchmarks)
     .enablePlugins(ScalaNativePlugin)
 
-lazy val benchmarkgcbench =
+lazy val benchmarktracer =
   project
-    .in(file(s"benchmark-suite/gcbench"))
+    .in(file(s"benchmark-suite/tracer"))
     .settings(benchmarkSuiteSettings)
     .dependsOn(benchmarks)
     .enablePlugins(ScalaNativePlugin)

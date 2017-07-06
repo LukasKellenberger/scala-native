@@ -36,7 +36,8 @@ object BrainfuckBenchmark {
 
 class BrainfuckBenchmark extends benchmarks.Benchmark[String] {
   override def run(): String = {
-    new Program(Program.asText).run
+    val input = Program.asText
+    new Program(input).run
   }
 
   override def check(result: String) =

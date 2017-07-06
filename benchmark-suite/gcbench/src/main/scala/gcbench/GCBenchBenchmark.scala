@@ -50,7 +50,19 @@ object GCBench {
 
 class GCBenchBenchmark extends benchmarks.Benchmark[(Node, Array[Double])] {
 
-  override def run(): (Node, Array[Double]) = GCBenchBenchmark.start()
+  override def run(): (Node, Array[Double]) = {
+    val kStretchTreeDepth: Int   = 18 // about 16Mb
+    val kLongLivedTreeDepth: Int = 16 // about 4Mb
+    val kArraySize: Int          = 500000 // about 4Mb
+    val kMinTreeDepth: Int       = 4
+    val kMaxTreeDepth: Int       = 16
+
+    new GCBench(kStretchTreeDepth,
+                kLongLivedTreeDepth,
+                kArraySize,
+                kMinTreeDepth,
+                kMaxTreeDepth).start()
+  }
 
   override def check(result: (Node, Array[Double])): Boolean =
     result._1 != null && result._2(1000) == 1.0 / 1000
@@ -59,12 +71,11 @@ class GCBenchBenchmark extends benchmarks.Benchmark[(Node, Array[Double])] {
 
 class Node(var left: Node, var right: Node, var i: Int, var j: Int)
 
-object GCBenchBenchmark {
-  val kStretchTreeDepth: Int   = 18 // about 16Mb
-  val kLongLivedTreeDepth: Int = 16 // about 4Mb
-  val kArraySize: Int          = 500000 // about 4Mb
-  val kMinTreeDepth: Int       = 4
-  val kMaxTreeDepth: Int       = 16
+class GCBench(kStretchTreeDepth: Int,
+              kLongLivedTreeDepth: Int,
+              kArraySize: Int,
+              kMinTreeDepth: Int,
+              kMaxTreeDepth: Int) {
 
   // Nodes used by a tree of a given size
   def treeSize(i: Int): Int = {

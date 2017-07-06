@@ -25,7 +25,7 @@ import benchmarks.{BenchmarkRunningTime, VeryLongRunningTime}
 
 object HavlakBenchmark {
   def main(args: Array[String]): Unit = {
-    new
+    Benchmark.run(new HavlakBenchmark(), args)
   }
 }
 
