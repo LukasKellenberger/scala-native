@@ -16,7 +16,13 @@
 
 package tracer
 
-import benchmarks.{BenchmarkRunningTime, LongRunningTime}
+import benchmarks.Benchmark
+
+object TracerBenchmark {
+  def main(args: Array[String]): Unit = {
+    Benchmark.run(new TracerBenchmark(), args)
+  }
+}
 
 class TracerBenchmark extends benchmarks.Benchmark[Unit] {
 
@@ -31,8 +37,6 @@ class TracerBenchmark extends benchmarks.Benchmark[Unit] {
     renderHighlights = true,
     renderReflections = true
   )
-
-  override val runningTime: BenchmarkRunningTime = LongRunningTime
 
   override def run(): Unit =
     new RenderScene().renderScene(config, null)
