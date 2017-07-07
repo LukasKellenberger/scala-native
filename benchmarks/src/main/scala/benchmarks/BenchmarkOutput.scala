@@ -1,13 +1,16 @@
 package benchmarks
 
-import benchmarks.outputs.{BasicStats, Percentiles}
+import benchmarks.outputs.{BasicStats, IterationStats, Percentiles}
 
 object BenchmarkOutput {
   val defaultOutput = BasicStats
 
-  def apply(name: String): BenchmarkOutput =
-    Map("basicstats" -> BasicStats, "percentiles" -> Percentiles)
+  def apply(name: String): BenchmarkOutput = {
+    Map("basicstats"  -> BasicStats,
+        "percentiles" -> Percentiles,
+        "iterations"  -> IterationStats)
       .getOrElse(name, defaultOutput)
+  }
 }
 
 trait BenchmarkOutput {
