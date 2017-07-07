@@ -8,7 +8,7 @@ object Percentiles extends BenchmarkOutput {
     val count = args.headOption.fold(10)(_.toInt)
 
     val percentiles = results.collect {
-      case MultirunSuccess(name, times, _) if times.length >= count =>
+      case MultirunSuccess(name, times, _, _) if times.length >= count =>
         val sortedTimes = times.sorted
         val interval    = times.length.toDouble / count
         (name,
