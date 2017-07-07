@@ -502,8 +502,7 @@ lazy val testInterfaceSbtDefs =
     .enablePlugins(ScalaNativePlugin)
 
 lazy val benchmarkSuiteSettings =
-  projectSettings ++ noPublishSettings ++ Seq(nativeMode := "release",
-                                              nativeGC := "immix")
+  projectSettings ++ noPublishSettings ++ Seq(nativeMode := "release") ++ gcSettings
 
 lazy val benchmarksom =
   project
