@@ -12,20 +12,24 @@ object RandomTree {
 
 class RandomTree extends Benchmark[Unit] {
   override def run(): Unit = {
-    val maxChildren = 12
+    val maxChildren         = 12
     val randomGeneratorSeed = 0
-    val updateThreshold = 0.01
-    val nbPasses = 5
+    val updateThreshold     = 0.01
+    val nbPasses            = 5
 
-    new Tree(maxChildren, new Random(randomGeneratorSeed), updateThreshold, nbPasses).run()
+    new Tree(maxChildren,
+             new Random(randomGeneratorSeed),
+             updateThreshold,
+             nbPasses).run()
   }
 
   override def check(t: Unit): Boolean = true
 }
 
-
-
-class Tree(maxChildren: Int, rand: Random, updateThreshold: Double, nbPasses: Int) {
+class Tree(maxChildren: Int,
+           rand: Random,
+           updateThreshold: Double,
+           nbPasses: Int) {
   case class Node(depth: Int, children: Seq[Node])
 
   def random(depth: Int): Int = {
@@ -35,19 +39,19 @@ class Tree(maxChildren: Int, rand: Random, updateThreshold: Double, nbPasses: In
   def build(depth: Int): Node = {
     val childrenCount = random(depth)
 
-    val children = for(i <- 0 until childrenCount) yield {
+    val children = for (i <- 0 until childrenCount) yield {
       build(depth + 1)
     }
     Node(depth, children)
   }
 
   def run(): Unit = {
-    (0 until nbPasses).foldLeft(build(0)){ case (node, _) => traverse(node) }
+    (0 until nbPasses).foldLeft(build(0)) { case (node, _) => traverse(node) }
   }
 
   def traverse(node: Node): Node = {
     val children = node.children.map { child =>
-      if(rand.nextDouble() > updateThreshold) {
+      if (rand.nextDouble() > updateThreshold) {
         build(child.depth)
       } else {
         traverse(child)
@@ -56,4 +60,3 @@ class Tree(maxChildren: Int, rand: Random, updateThreshold: Double, nbPasses: In
     Node(node.depth, children)
   }
 }
-
