@@ -43,7 +43,9 @@ object Benchmark {
       throw new Exception("Result file does not exit.")
 
     if (resultFile.isDirectory) {
-      resultFile.listFiles().map(fileToResult)
+      resultFile.listFiles().collect {
+        case file if !file.getName.startsWith(".") => fileToResult(file)
+      }
     } else {
       Seq(fileToResult(resultFile))
     }

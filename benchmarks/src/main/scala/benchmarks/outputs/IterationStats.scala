@@ -9,17 +9,26 @@ object IterationStats extends BenchmarkOutput {
       case result @ MultirunSuccess(_, _, _, iters) if iters.isDefined =>
         result
     }
-    successes.foreach { success =>
+    val values = successes.map { success =>
       val iterations = success.iterationsPerRun.get
       val runs       = success.nbRuns
-      val (avg, std) = (0 until iterations).map { i =>
-        val values = (0 until runs).map(r => success.times(i + r * iterations))
-        val avg    = average(values)
-        (avg, standardDeviation(values, avg))
-      }.unzip
+      (success.name, (0 until iterations).map { i =>
+        (0 until runs).map(r => success.times(i + r * iterations))
+      })
+    }
 
-      println(s"${success.name},average,${avg.mkString(",")}")
-      println(s"${success.name},stddev,${std.mkString(",")}")
+    values.foreach {
+      case (name, vals) =>
+        val avgs = vals.map(average)
+        val stds = (vals zip avgs).map(t => standardDeviation(t._1, t._2))
+        val maxs = (vals zip avgs).map(t => t._1.max - t._2)
+        val mins = (vals zip avgs).map(t => t._2 - t._1.min)
+
+        println(s"$name,average,${avgs.mkString(",")}")
+        println(s"$name,stddev,${stds.mkString(",")}")
+        println(s"$name,max,${maxs.mkString(",")}")
+        println(s"$name,min,${mins.mkString(",")}")
+
     }
   }
 
