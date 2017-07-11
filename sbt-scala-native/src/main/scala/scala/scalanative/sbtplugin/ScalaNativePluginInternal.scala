@@ -194,7 +194,7 @@ object ScalaNativePluginInternal {
       val cwd       = nativeWorkdir.value
       val logger    = streams.value.log
       val classpath = (fullClasspath in Compile).value
-      val lib = cwd / "lib"
+      val lib       = cwd / "lib"
       val jar =
         classpath
           .map(entry => entry.data.abs)

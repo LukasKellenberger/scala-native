@@ -443,6 +443,7 @@ lazy val benchmarks =
     .settings(noPublishSettings)
     .settings(
       nativeMode := "release",
+      nativeGC := "markandsweep",
       nativeOptimizerReporter := OptimizerReporter.toDirectory(
         crossTarget.value),
       sourceGenerators in Compile += Def.task {
