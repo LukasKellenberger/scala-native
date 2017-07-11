@@ -510,7 +510,8 @@ lazy val testInterfaceSbtDefs =
     .enablePlugins(ScalaNativePlugin)
 
 lazy val benchmarkSuiteSettings =
-  projectSettings ++ noPublishSettings ++ Seq(nativeMode := "release") ++ gcSettings
+  projectSettings ++ noPublishSettings ++ Seq(nativeMode := "release") ++ gcSettings ++ Seq(
+    nativeGC := "markandsweep")
 
 lazy val benchmarksom =
   project
