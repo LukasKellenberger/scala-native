@@ -52,7 +52,7 @@ class _Object {
   protected def __clone(): _Object = {
     val ty    = runtime.getType(this)
     val size  = ty.size
-    val clone = runtime.GC.alloc(ty, size)
+    val clone = runtime.GC.alloc(ty, size, 0)
     `llvm.memcpy.p0i8.p0i8.i64`(clone.cast[Ptr[scala.Byte]],
                                 this.cast[Ptr[scala.Byte]],
                                 size,

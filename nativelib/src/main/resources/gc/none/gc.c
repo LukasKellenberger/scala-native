@@ -27,7 +27,7 @@ void scalanative_init() {
     end = current + CHUNK;
 }
 
-void *scalanative_alloc(void *info, size_t size) {
+void *scalanative_alloc(void *info, size_t size, int isObjectArray) {
     size = size + (8 - size % 8);
     if (current + size < end) {
         void **alloc = current;

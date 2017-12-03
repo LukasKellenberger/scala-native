@@ -527,7 +527,7 @@ final class ObjectArray private () extends Array[Object] {
   @inline protected override def clone(): ObjectArray = {
     val arrinfo = typeof[ObjectArray].cast[Ptr[ClassType]]
     val arrsize = sizeof[Header] + sizeof[Object] * length
-    val arr     = GC.alloc(arrinfo, arrsize)
+    val arr     = GC.alloc(arrinfo, arrsize, 1)
     `llvm.memcpy.p0i8.p0i8.i64`(arr.cast[Ptr[Byte]],
                                 this.cast[Ptr[Byte]],
                                 arrsize,
@@ -543,7 +543,7 @@ object ObjectArray {
   @inline def alloc(length: Int): ObjectArray = {
     val arrinfo = typeof[ObjectArray].cast[Ptr[ClassType]]
     val arrsize = sizeof[Header] + sizeof[Object] * length
-    val arr     = GC.alloc(arrinfo, arrsize).cast[Ptr[Header]]
+    val arr     = GC.alloc(arrinfo, arrsize, 1).cast[Ptr[Header]]
     arr.length = length
     arr.cast[ObjectArray]
   }

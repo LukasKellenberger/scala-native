@@ -11,7 +11,8 @@ import native._
 @extern
 object GC {
   @name("scalanative_alloc")
-  def alloc(info: Ptr[ClassType], size: CSize): Ptr[Byte] = extern
+  def alloc(info: Ptr[ClassType], size: CSize, isObjectArray: CInt): Ptr[Byte] =
+    extern
   @name("scalanative_alloc_atomic")
   def alloc_atomic(info: Ptr[ClassType], size: CSize): Ptr[Byte] = extern
   @name("scalanative_collect")

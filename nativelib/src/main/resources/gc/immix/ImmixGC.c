@@ -18,7 +18,7 @@ void scalanative_init() {
     stack = Stack_Alloc(INITIAL_STACK_SIZE);
 }
 
-void *scalanative_alloc(void *info, size_t size) {
+void *scalanative_alloc(void *info, size_t size, int isObjectArray) {
     size = MathUtils_RoundToNextMultiple(size, WORD_SIZE);
 
     void **alloc = (void **)Heap_Alloc(heap, size);
